@@ -1,0 +1,21 @@
+{
+    "name": "MDG.Editor",
+    "references": [
+        "Improbable.Gdk.BuildSystem",
+        "Improbable.Gdk.Core",
+        "Improbable.Gdk.Generated",
+        "Unity.Entities",
+        "MDG"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
