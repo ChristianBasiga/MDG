@@ -23,41 +23,12 @@ namespace MDG {
         private float timeInAir;
         private float jumpSpeed = 5.0f;
         private bool isJumping;
-        GameObject player;
 
-
-        GameObject Player
-        {
-            get
-            {
-                //Not going to work cause single scene may have multiple players all with player tag.
-                if (!player)
-                {
-                    GameObject[] gameObjects = GameObject.FindGameObjectsWithTag("Player");
-                    if (gameObjects.Length > 0)
-                        player = GameObject.FindGameObjectsWithTag("Player")[0];
-                }
-                return player;
-
-            }
-        }
-
-        CharacterController Controller
-        {
-            get
-            {
-                if (!controller)
-                {
-                    controller = Player.GetComponent<CharacterController>();
-                }
-
-                return controller;
-            }
-        }
+        
         //This will have reference to the reader and writer of component.
         void Start()
         {
-
+            controller = GetComponent<CharacterController>();
         }
 
         // Update is called once per frame
@@ -73,11 +44,11 @@ namespace MDG {
             float horizInput = Input.GetAxis(horizInputName) * speed;
             float vertInput = Input.GetAxis(vertInputName) * speed;
 
-            Vector3 forwardMovement = Player.transform.forward * vertInput;
-            Vector3 rightMovement = Player.transform.right * horizInput;
+            Vector3 forwardMovement = transform.forward * vertInput;
+            Vector3 rightMovement = transform.right * horizInput;
 
             //Applies transform.transalte & scales it by delta time.
-            Controller.SimpleMove(forwardMovement + rightMovement);
+            controller.SimpleMove(forwardMovement + rightMovement);
 
 
             //Update transform for synchro. Actually it says does it by itself. As long as 
@@ -106,12 +77,12 @@ namespace MDG {
                 float jumpForce = jumpFallOff.Evaluate(timeInAir);
 
                 //Move doesn't applie time delta time like simple move does.
-                Controller.Move(Vector3.up * jumpForce * jumpSpeed * Time.deltaTime);
+                controller.Move(Vector3.up * jumpForce * jumpSpeed * Time.deltaTime);
 
                 timeInAir += Time.deltaTime;
                 yield return null;
 
-            } while (Controller.collisionFlags != CollisionFlags.Below && Controller.collisionFlags != CollisionFlags.Above);
+            } while (controller.collisionFlags != CollisionFlags.Below && controller.collisionFlags != CollisionFlags.Above);
 
             isJumping = false;
 

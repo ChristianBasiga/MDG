@@ -41,6 +41,7 @@ namespace MDG
             }
             else
             {
+
                 builder.SetConnectionFlow(new ReceptionistFlow(CreateNewWorkerId(WorkerType)));
             }
 
@@ -50,12 +51,10 @@ namespace MDG
         protected override void HandleWorkerConnectionEstablished()
         {
 
-
-
             //Can specify how it creates objects to get from pool instead.
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World);
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
-            PlayerLifecycleHelper.AddClientSystems(Worker.World);
+            PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
         }
     }
 }

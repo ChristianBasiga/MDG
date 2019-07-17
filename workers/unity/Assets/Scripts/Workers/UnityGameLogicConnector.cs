@@ -16,10 +16,10 @@ namespace MDG
         [Require] private TransformInternalReader internalReader;
         private async void Start()
         {
-            PlayerLifecycleConfig.CreatePlayerEntityTemplate = CreatePlayerEntityTemplate;
 
             IConnectionFlow flow;
             ConnectionParameters connectionParameters;
+
 
             if (Application.isEditor)
             {
@@ -44,14 +44,21 @@ namespace MDG
         protected override void HandleWorkerConnectionEstablished()
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>();
-            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World);
+
+            IEntityGameObjectCreator defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
+            CustomObjectCreation customCreator = new CustomObjectCreation(defaultCreator, Worker.World, Worker.WorkerType);
+
+            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customCreator);
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
 
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
         }
 
     
-        private static EntityTemplate CreatePlayerEntityTemplate(string workerId, PlayerType playerType)
+        //Keep this the same , but just pass in stuff to playerCreationArguments to specify kind of player.
+        //Adding to snapshot would be entities that start off in game, not players that only come upon connection.
+        //And request player creation manually, setting atomatic to flase,
+        private static EntityTemplate CreatePlayerEntityTemplate(string workerId, byte[] playerCreationArguments)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
             var serverAttribute = WorkerType;
@@ -59,7 +66,7 @@ namespace MDG
             var template = new EntityTemplate();
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
-            template.AddComponent(new PlayerMetaData.Snapshot(playerType), clientAttribute);
+            //template.AddComponent(new PlayerMetaData.Snapshot(playerType), clientAttribute);
             template.SetReadAccess(serverAttribute);
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);

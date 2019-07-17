@@ -54,7 +54,7 @@ namespace MDG
                     pathToEntity = $"{pathToEntity}/Authoritative";
                 }
 
-                pathToEntity = $"{pathToEntity}/Player";
+                pathToEntity = $"{pathToEntity}/{type.ToString()}";
 
                 
             }
