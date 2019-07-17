@@ -2,6 +2,7 @@
 using Improbable.Gdk.Core;
 using Improbable.Gdk.GameObjectCreation;
 using Improbable.Gdk.PlayerLifecycle;
+using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ namespace MDG
         public const string WorkerType = "UnityClient";
 
         private async void Start()
+
         {
             var connParams = CreateConnectionParameters(WorkerType);
             connParams.Network.ConnectionType = NetworkConnectionType.Kcp;
@@ -47,8 +49,12 @@ namespace MDG
 
         protected override void HandleWorkerConnectionEstablished()
         {
+
+
+
             //Can specify how it creates objects to get from pool instead.
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World);
+            TransformSynchronizationHelper.AddClientSystems(Worker.World);
             PlayerLifecycleHelper.AddClientSystems(Worker.World);
         }
     }

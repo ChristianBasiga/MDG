@@ -2,16 +2,18 @@
 using Improbable.Gdk.Core;
 using Improbable.Gdk.GameObjectCreation;
 using Improbable.Gdk.PlayerLifecycle;
+using Improbable.Gdk.Subscriptions;
 using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
 using UnityEngine;
-
+using Player.Metadata;
 namespace MDG
 {
     public class UnityGameLogicConnector : WorkerConnector
     {
         public const string WorkerType = "UnityGameLogic";
-
+        [Require] private PositionWriter positionWriter;
+        [Require] private TransformInternalReader internalReader;
         private async void Start()
         {
             PlayerLifecycleConfig.CreatePlayerEntityTemplate = CreatePlayerEntityTemplate;
@@ -43,11 +45,13 @@ namespace MDG
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>();
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World);
+            TransformSynchronizationHelper.AddServerSystems(Worker.World);
 
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
         }
 
-        private static EntityTemplate CreatePlayerEntityTemplate(string workerId, byte[] serializedArguments)
+    
+        private static EntityTemplate CreatePlayerEntityTemplate(string workerId, PlayerType playerType)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
             var serverAttribute = WorkerType;
@@ -55,8 +59,13 @@ namespace MDG
             var template = new EntityTemplate();
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
-            TransformSynchronizationHelper.AddTransformSynchronizationComponents(template, clientAttribute);
+            template.AddComponent(new PlayerMetaData.Snapshot(playerType), clientAttribute);
+            template.SetReadAccess(serverAttribute);
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
+            template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
+
+            TransformSynchronizationHelper.AddTransformSynchronizationComponents(template, serverAttribute);
+            
 
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);

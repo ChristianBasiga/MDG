@@ -1,0 +1,16 @@
+package player.metadata;
+
+enum PlayerType{
+
+    HUNTER = 0;
+    HUNTED = 1;
+}
+
+
+// Just this for now.
+component PlayerMetaData{
+
+    id = 101;
+    PlayerType player_type = 1;
+
+}
