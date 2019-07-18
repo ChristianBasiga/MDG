@@ -7,6 +7,8 @@ using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
 using UnityEngine;
 using Player.Metadata;
+using Unity.Entities;
+
 namespace MDG
 {
     public class UnityGameLogicConnector : WorkerConnector
@@ -45,29 +47,53 @@ namespace MDG
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>();
 
-            IEntityGameObjectCreator defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-            CustomObjectCreation customCreator = new CustomObjectCreation(defaultCreator, Worker.World, Worker.WorkerType);
+            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World);
 
-            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customCreator);
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
 
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
+
+            //So when worker connection established, create player.
+
+
+            // When this connection is established it needs to come with info on which one the player is.
+            // Fpr testomg spawn both types.
+            //So it failes because of this.
+           
+
+
+
+
         }
 
-    
-        //Keep this the same , but just pass in stuff to playerCreationArguments to specify kind of player.
-        //Adding to snapshot would be entities that start off in game, not players that only come upon connection.
-        //And request player creation manually, setting atomatic to flase,
-        private static EntityTemplate CreatePlayerEntityTemplate(string workerId, byte[] playerCreationArguments)
+        //Move this and the creation requests to manager and just have this call it from manager.
+        private void OnCreatePlayerResponse(PlayerCreator.CreatePlayer.ReceivedResponse response)
+        {
+            if (response.StatusCode != StatusCode.Success)
+            {
+                Debug.LogWarning($"Error: {response.Message}");
+            }
+        }
+
+
+
+
+        //Move this to templates file.
+        public static EntityTemplate CreatePlayerEntityTemplate(string workerId, byte[] playerCreationArguments)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
             var serverAttribute = WorkerType;
 
+            //Deserializate playerCreationArguments.
+            DTO.PlayerConfig creationArgs = DTO.Converters.DeserializeArguments<DTO.PlayerConfig>(playerCreationArguments);
+
             var template = new EntityTemplate();
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
-            //template.AddComponent(new PlayerMetaData.Snapshot(playerType), clientAttribute);
-            template.SetReadAccess(serverAttribute);
+
+
+            template.AddComponent(new PlayerMetaData.Snapshot(creationArgs.playerType), clientAttribute);
+
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
 
@@ -76,7 +102,6 @@ namespace MDG
 
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
-
             return template;
         }
     }

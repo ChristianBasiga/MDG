@@ -24,7 +24,7 @@ namespace MDG
         //Make worker type an enum to parse.
         public CustomObjectCreation(IEntityGameObjectCreator _default, World world, string workerType)
         {
-            this._default = default;
+            this._default = _default;
             this._world = world;
             this._workerType = workerType;
             //Then initializes own creators.
@@ -38,35 +38,52 @@ namespace MDG
             Metadata.Component metaData = entity.GetComponent<Metadata.Component>();
 
             string pathToEntity = $"Prefabs/{_workerType}";
-
+            Debug.Log(metaData.EntityType);
             //Create constants page for this later on as well.
-            if (metaData.EntityType == "Player")
+            if (metaData.EntityType.Equals("Player"))
             {
                 //Also need to add component of what kind of player it is.
+
+                
                 PlayerType type = entity.GetComponent<PlayerMetaData.Component>().PlayerType;
 
-
-                //Authority may be applicable to unit actions, but not really. can change as needed late ron.
-                var hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
-
-                if (hasAuthority)
+                Debug.Log(type);
+                try
                 {
-                    pathToEntity = $"{pathToEntity}/Authoritative";
+                    //Only client one running.
+
+
+                    //Authority may be applicable to unit actions, but not really. can change as needed late ron.
+                    var hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
+
+                    if (hasAuthority)
+                        pathToEntity = $"{pathToEntity}/Authoritative";
+
+                }
+                catch (System.Exception err)
+                {
+                    Debug.LogError(err);
+
                 }
 
                 pathToEntity = $"{pathToEntity}/{type.ToString()}";
 
                 
             }
-            else if (metaData.EntityType == "Unit")
+            else
             {
+                Debug.Log("Using default");
+                _default.OnEntityCreated(entity, linker);
+                return;
 
             }
 
 
+            Debug.Log(pathToEntity);
             //Change to get from pool instead later on in final version of project.
             Object prefab = Resources.Load(pathToEntity);
             GameObject gameObject = Object.Instantiate(prefab) as GameObject;
+            gameObject.name = $"{prefab.name}(SpatialOS: {entity.SpatialOSEntityId}, Worker: {_workerType})";
 
             //Seems like can inject components is that better to just add or not add or to just have diff similiar prefabs?
             linker.LinkGameObjectToSpatialOSEntity(entity.SpatialOSEntityId, gameObject);
@@ -76,6 +93,7 @@ namespace MDG
         {
 
             //Add back to pool or whatever.
+            _default.OnEntityRemoved(entityId);
         }
 
     }
