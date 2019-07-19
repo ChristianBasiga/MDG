@@ -1,4 +1,4 @@
-package player.metadata;
+package mdg.player.metadata;
 
 enum PlayerType{
 

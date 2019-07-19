@@ -6,8 +6,7 @@ using Improbable.Gdk.Subscriptions;
 using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
 using UnityEngine;
-using Player.Metadata;
-using Unity.Entities;
+using Mdg.Player.Metadata;
 
 namespace MDG
 {
@@ -47,9 +46,15 @@ namespace MDG
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>();
 
-            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World);
+            GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
+
+            CustomObjectCreation customCreator = new CustomObjectCreation(defaultCreator, Worker.World, Worker.WorkerType);
+
+            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customCreator);
+           // GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World);
 
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
+
 
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
 
@@ -90,14 +95,13 @@ namespace MDG
             var template = new EntityTemplate();
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
-
-
+            template.AddComponent(new Mdg.Player.PlayerTransform.Snapshot(), clientAttribute);
             template.AddComponent(new PlayerMetaData.Snapshot(creationArgs.playerType), clientAttribute);
 
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
 
-            TransformSynchronizationHelper.AddTransformSynchronizationComponents(template, serverAttribute);
+            TransformSynchronizationHelper.AddTransformSynchronizationComponents(template, clientAttribute);
             
 
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);

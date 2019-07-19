@@ -7,7 +7,7 @@ using Improbable.Gdk.Subscriptions;
 using Improbable.Gdk.PlayerLifecycle;
 using Unity.Entities;
 using Improbable;
-using Player.Metadata;
+using Mdg.Player.Metadata;
 namespace MDG
 {
     //Will have reference to all creators and factories such as default, player, unit and spawner.

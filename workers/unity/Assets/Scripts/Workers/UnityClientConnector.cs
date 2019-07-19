@@ -4,7 +4,7 @@ using Improbable.Gdk.GameObjectCreation;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
-using Player.Metadata;
+using Mdg.Player.Metadata;
 using UnityEngine;
 
 namespace MDG

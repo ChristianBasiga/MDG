@@ -1,16 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Improbable.Gdk.Core;
 using UnityEngine;
-using Improbable.Gdk.Subscriptions;
-using Improbable.Gdk.TransformSynchronization;
 
-
+using Mdg.Player;
 namespace MDG {
     
     public class PlayerMove : MonoBehaviour
     {
-        public const string WorkerType = "UnityClient";
+
+        public delegate void PlayerMoveHandler(Vector3 position, Vector3 rotation);
+        public event PlayerMoveHandler OnPlayerMove;
 
         [SerializeField] private string horizInputName, vertInputName;
         [SerializeField] private float speed = 20;
@@ -50,6 +49,10 @@ namespace MDG {
             //Applies transform.transalte & scales it by delta time.
             controller.SimpleMove(forwardMovement + rightMovement);
 
+            if (horizInput != 0 || vertInput != 0)
+            {
+                OnPlayerMoveHandler();
+            }
 
             //Update transform for synchro. Actually it says does it by itself. As long as 
         }
@@ -74,6 +77,7 @@ namespace MDG {
             //To prevent clipping with camera, move camera down to 0.9, and make clipping plane 0.1 to fill up that space.
             do
             {
+                OnPlayerMoveHandler();
                 float jumpForce = jumpFallOff.Evaluate(timeInAir);
 
                 //Move doesn't applie time delta time like simple move does.
@@ -86,6 +90,12 @@ namespace MDG {
 
             isJumping = false;
 
+        }
+
+
+        private void OnPlayerMoveHandler()
+        {
+            OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
         }
     }
 
