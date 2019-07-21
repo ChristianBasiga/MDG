@@ -90,13 +90,16 @@ namespace MDG
             var serverAttribute = WorkerType;
 
             //Deserializate playerCreationArguments.
-            DTO.PlayerConfig creationArgs = DTO.Converters.DeserializeArguments<DTO.PlayerConfig>(playerCreationArguments);
-
             var template = new EntityTemplate();
+
+            if (playerCreationArguments.Length > 0)
+            {
+                DTO.PlayerConfig creationArgs = DTO.Converters.DeserializeArguments<DTO.PlayerConfig>(playerCreationArguments);
+                template.AddComponent(new PlayerMetaData.Snapshot(creationArgs.playerType), clientAttribute);
+            }
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
             template.AddComponent(new Mdg.Player.PlayerTransform.Snapshot(), clientAttribute);
-            template.AddComponent(new PlayerMetaData.Snapshot(creationArgs.playerType), clientAttribute);
 
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);

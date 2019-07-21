@@ -62,22 +62,7 @@ namespace MDG
 
             //Can specify how it creates objects to get from pool instead.
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
-            PlayerLifecycleHelper.AddClientSystems(Worker.World);
-
-            
-            var playerCreationSystem = Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
-            playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
-            {
-                playerType = PlayerType.HUNTED
-            }));
-
-            /*
-            playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
-            {
-                playerType = PlayerType.HUNTER
-            }));
-            */
-    
+            PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
 
         }
     }
