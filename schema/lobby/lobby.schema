@@ -1,0 +1,21 @@
+package mdg_schema.lobby;
+
+// Don't actually need lobby component.
+// Lobby will be the worker that manages rooms.
+type ActiveToggleRequest{
+    uint64 room_id = 1;
+    bool flag = 2;
+}
+
+type ActiveToggleResponse{
+    uint64 room_id = 1;
+    bool active = 2;
+}
+
+//So now this is mainly required to set lobby id.
+component Lobby{
+    id = 401;
+    list<uint64> rooms = 1;
+    EntityId entity_id = 2;
+    command ActiveToggleResponse toggle_room(ActiveToggleRequest);
+}

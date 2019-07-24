@@ -43,37 +43,24 @@ namespace MDG
             Metadata.Component metaData = entity.GetComponent<Metadata.Component>();
 
             string pathToEntity = $"Prefabs/{_workerType}";
-            Debug.Log(metaData.EntityType);
             //Create constants page for this later on as well.
             if (metaData.EntityType.Equals("Player"))
             {
-                //Also need to add component of what kind of player it is.
-
-                
                 PlayerType type = entity.GetComponent<PlayerMetaData.Component>().PlayerType;
-
-                Debug.Log(type);
                 try
                 {
-                    //Only client one running.
-
-
                     //Authority may be applicable to unit actions, but not really. can change as needed late ron.
                     var hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
-
                     if (hasAuthority)
                         pathToEntity = $"{pathToEntity}/Authoritative";
-
                 }
                 catch (System.Exception err)
                 {
                     Debug.LogError(err);
 
                 }
-
                 pathToEntity = $"{pathToEntity}/{type.ToString()}";
-
-                
+                CreateEnityObject(entity, linker, pathToEntity, null);
             }
             else if (metaData.EntityType.Equals("Room"))
             {
@@ -107,6 +94,7 @@ namespace MDG
         {
             //Change to get from pool instead later on in final version of project.
             Object prefab = Resources.Load(pathToEntity);
+            //Debug.LogError(pathToEntity);
             GameObject gameObject = Object.Instantiate(prefab) as GameObject;
             if (parent)
             {
