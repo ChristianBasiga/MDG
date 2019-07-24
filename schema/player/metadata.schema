@@ -1,16 +1,12 @@
-package mdg.player.metadata;
-
-enum PlayerType{
-
-    HUNTER = 0;
-    HUNTED = 1;
-}
-
+package mdg_schema.player;
+import "player/type.schema";
 
 // Just this for now.
 component PlayerMetaData{
 
-    id = 101;
-    PlayerType player_type = 1;
-
+    id = 200;
+    string user_name = 1;
+    PlayerType player_type = 2;
+    
+   
 }

@@ -1,0 +1,7 @@
+package mdg_schema.player;
+
+enum PlayerType{
+
+    HUNTER = 0;
+    HUNTED = 1;
+}

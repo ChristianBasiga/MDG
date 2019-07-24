@@ -7,7 +7,8 @@ using Improbable.Gdk.Subscriptions;
 using Improbable.Gdk.PlayerLifecycle;
 using Unity.Entities;
 using Improbable;
-using Mdg.Player.Metadata;
+using MdgSchema.Player;
+using MdgSchema.Lobby;
 
 namespace MDG
 {
@@ -18,6 +19,9 @@ namespace MDG
         private readonly IEntityGameObjectCreator _default;
         private readonly World _world;
         private readonly string _workerType;
+
+        //Could add reader
+        
 
         //Look into being able to add multiple custom creators and see if can do that instead.   
         //I can still do factory plan this way.
@@ -71,6 +75,17 @@ namespace MDG
 
                 
             }
+            else if (metaData.EntityType.Equals("Room"))
+            {
+                //Room probably doesn't need to be prefab, but I guess could be prefab of UI.
+                pathToEntity = $"{pathToEntity}/Room";
+            }
+            else if (metaData.EntityType.Equals("Lobby"))
+            {
+                pathToEntity = $"{pathToEntity}/Lobby";
+               // _default.OnEntityCreated(entity, linker)
+                CreateEnityObject(entity, linker, pathToEntity, null);
+            }
             else
             {
                 Debug.Log("Using default");
@@ -79,15 +94,6 @@ namespace MDG
 
             }
 
-
-            Debug.Log(pathToEntity);
-            //Change to get from pool instead later on in final version of project.
-            Object prefab = Resources.Load(pathToEntity);
-            GameObject gameObject = Object.Instantiate(prefab) as GameObject;
-            gameObject.name = $"{prefab.name}(SpatialOS: {entity.SpatialOSEntityId}, Worker: {_workerType})";
-
-            //Seems like can inject components is that better to just add or not add or to just have diff similiar prefabs?
-            linker.LinkGameObjectToSpatialOSEntity(entity.SpatialOSEntityId, gameObject);
         }
 
         public void OnEntityRemoved(EntityId entityId)
@@ -97,5 +103,18 @@ namespace MDG
             _default.OnEntityRemoved(entityId);
         }
 
+        void CreateEnityObject(SpatialOSEntity entity, EntityGameObjectLinker linker, string pathToEntity, Transform parent)
+        {
+            //Change to get from pool instead later on in final version of project.
+            Object prefab = Resources.Load(pathToEntity);
+            GameObject gameObject = Object.Instantiate(prefab) as GameObject;
+            if (parent)
+            {
+                gameObject.transform.parent = parent;
+            }
+            gameObject.name = $"{prefab.name}(SpatialOS: {entity.SpatialOSEntityId}, Worker: {_workerType})";
+            //Seems like can inject components is that better to just add or not add or to just have diff similiar prefabs?
+            linker.LinkGameObjectToSpatialOSEntity(entity.SpatialOSEntityId, gameObject);
+        }
     }
 }

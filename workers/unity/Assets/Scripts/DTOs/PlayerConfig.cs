@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 //Change this name to all come from base mdg package.
-using Mdg.Player.Metadata;
+using MdgSchema.Player;
 using System;
 
 namespace MDG.DTO

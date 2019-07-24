@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Improbable;
 using Improbable.Gdk.Subscriptions;
-using Mdg.Player;
+using MdgSchema.Player;
 
 namespace MDG.Synchronization
 {

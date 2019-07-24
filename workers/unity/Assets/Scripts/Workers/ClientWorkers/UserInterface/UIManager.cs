@@ -1,7 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Mdg.Player.Metadata;
+using MdgSchema.Player;
+
 
 namespace MDG.ClientSide.UserInterface
 {
@@ -15,8 +16,6 @@ namespace MDG.ClientSide.UserInterface
 
         public void SelectRole(string role)
         {
-            Debug.LogError($"Role :{role}");
-            Debug.Log(PlayerType.HUNTED.ToString());
             PlayerType type = (PlayerType) System.Enum.Parse(typeof(PlayerType), role);
             OnRoleSelected?.Invoke(type);
 

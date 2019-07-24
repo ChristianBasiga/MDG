@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-using Mdg.Player;
 namespace MDG {
     
     public class PlayerMove : MonoBehaviour

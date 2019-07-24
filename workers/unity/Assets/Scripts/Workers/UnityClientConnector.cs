@@ -4,7 +4,6 @@ using Improbable.Gdk.GameObjectCreation;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
-using Mdg.Player.Metadata;
 using UnityEngine;
 
 namespace MDG
@@ -12,13 +11,11 @@ namespace MDG
     public class UnityClientConnector : WorkerConnector
     {
         public const string WorkerType = "UnityClient";
-
         private async void Start()
-
         {
             var connParams = CreateConnectionParameters(WorkerType);
             connParams.Network.ConnectionType = NetworkConnectionType.Kcp;
-
+            
             var builder = new SpatialOSConnectionHandlerBuilder()
                 .SetConnectionParameters(connParams);
 
@@ -46,24 +43,18 @@ namespace MDG
                 builder.SetConnectionFlow(new ReceptionistFlow(CreateNewWorkerId(WorkerType)));
             }
 
-            PlayerLifecycleConfig.CreatePlayerEntityTemplate = UnityGameLogicConnector.CreatePlayerEntityTemplate;
+            PlayerLifecycleConfig.CreatePlayerEntityTemplate = Player.Templates.CreatePlayerEntityTemplate;
 
             await Connect(builder, new ForwardingDispatcher()).ConfigureAwait(false);
         }
 
         protected override void HandleWorkerConnectionEstablished()
         {
-
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-
             CustomObjectCreation customCreator = new CustomObjectCreation(defaultCreator, Worker.World, Worker.WorkerType);
-
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customCreator );
-
-            //Can specify how it creates objects to get from pool instead.
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
-
         }
     }
 }

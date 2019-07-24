@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 //Should rename schema before this gets too big.
-using Mdg.Player.Metadata;
+using MdgSchema.Player;
 using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
 
@@ -39,7 +39,7 @@ namespace MDG.ClientSide
                 playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
                 {
                     playerType = type
-                }));
+                }), OnCreatePlayerResponse);
             }
             else
             {
@@ -47,5 +47,19 @@ namespace MDG.ClientSide
             }
             
         }
+
+        //Move this and the creation requests to manager and just have this call it from manager.
+        private void OnCreatePlayerResponse(PlayerCreator.CreatePlayer.ReceivedResponse response)
+        {
+            if (response.StatusCode != Improbable.Worker.CInterop.StatusCode.Success)
+            {
+                Debug.LogWarning($"Error: {response.Message}");
+            }
+            else
+            {
+                Debug.LogError("Player Created");
+            }
+        }
+
     }
 }
