@@ -1,22 +1,7 @@
 package mdg_schema.lobby;
-import "player/type.schema";
 
-type RoomJoinRequest{
-    player.PlayerType type = 1;
-    string user_name = 2;
-}
-
-type RoomJoinResponse{
-    bool joined = 1;
-}
  
-type ClearRoomRequest{
-    list<string> user_names = 1;
-}
 
-type ClearRoomResponse{
-    bool cleared = 1;
-}
 
 component Room {
   id = 400;
@@ -25,6 +10,4 @@ component Room {
   bool hunter_joined = 3;
   uint32 hunted_count = 4; 
   bool room_filled = 5;
-  command RoomJoinResponse join_room(RoomJoinRequest);
-  command ClearRoomResponse clear_room(ClearRoomRequest);
 }

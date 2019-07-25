@@ -12,10 +12,36 @@ type ActiveToggleResponse{
     bool active = 2;
 }
 
+import "player/type.schema";
+
+type RoomJoinRequest{
+    player.PlayerType type = 1;
+    string user_name = 2;
+    int32 room_joining = 3;
+}
+
+type RoomJoinResponse{
+    bool joined = 1;
+    int32 room_size = 2;
+    bool hunter_joined = 3;
+    string response_id = 4;
+}
+
+type ClearRoomRequest{
+    list<string> user_names = 1;
+    int32 room_id = 2;
+}
+
+type ClearRoomResponse{
+    bool cleared = 1;
+}
+
 //So now this is mainly required to set lobby id.
 component Lobby{
     id = 401;
-    list<uint64> rooms = 1;
-    EntityId entity_id = 2;
+    list<int32> rooms = 1;
     command ActiveToggleResponse toggle_room(ActiveToggleRequest);
+    command RoomJoinResponse join_room(RoomJoinRequest);
+    command ClearRoomResponse clear_room(ClearRoomRequest);
+    event RoomJoinResponse joined_room;
 }
