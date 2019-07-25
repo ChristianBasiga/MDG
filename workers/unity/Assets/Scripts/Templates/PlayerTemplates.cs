@@ -12,6 +12,9 @@ namespace MDG.Player
 {
     public class Templates
     {
+        // If can't reproduce it like this, look at entity creation again.
+        //But worst case I simply add the lobby components to respective player if authoritiave client
+        //so that they may send commands.
         public static EntityTemplate CreatePlayerEntityTemplate(string workerId, byte[] playerCreationArguments)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);

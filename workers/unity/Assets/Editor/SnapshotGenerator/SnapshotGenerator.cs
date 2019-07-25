@@ -27,7 +27,12 @@ namespace MDG.Editor
             var snapshot = new Snapshot();
 
             AddPlayerSpawner(snapshot);
+            AddLobby(snapshot);
             return snapshot;
+        }
+        private static void AddLobby(Snapshot snapshot)
+        {
+            snapshot.AddEntity(Lobby.Templates.CreateLobbyTemplate());
         }
 
         private static void AddPlayerSpawner(Snapshot snapshot)

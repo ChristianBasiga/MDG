@@ -7,36 +7,75 @@ using Improbable.Gdk.Subscriptions;
 
 namespace MDG.Lobby
 {
+
+    //For tetsing just put here.
+    public struct Room
+    {
+        public bool hunterJoined;
+        //List of players;
+        public int playerCount;
+        const int maxRoomSize = 4;
+        public bool IsRoomFilled()
+        {
+            return playerCount == maxRoomSize;
+        }
+    }
     // This worker manages writing of rooms.
     // It will intercept joinRoom commands made to room components
     // and write accordingly.
     public class LobbyWorker : MonoBehaviour
     {
-        [Require] RoomCommandReceiver roomJoinReceiver;
-        bool addedReceiverCallback = false;
-
+        [Require] LobbyCommandReceiver lobbyCommandReceiver;
+        [Require] LobbyWriter lobbyWriter;
+        List<Room> rooms;
 
         private void Start()
         {
-            roomJoinReceiver.OnJoinRoomRequestReceived += OnJoinRoomRequestReceived;
+            lobbyCommandReceiver.OnJoinRoomRequestReceived += OnJoinRoomRequestReceived;
         }
-        private void OnJoinRoomRequestReceived(Room.JoinRoom.ReceivedRequest obj)
+   
+        private void OnJoinRoomRequestReceived(MdgSchema.Lobby.Lobby.JoinRoom.ReceivedRequest obj)
         {
-            Debug.Log("Received req");
-            //Checks if can join room.
-            RoomJoinResponse payload = new RoomJoinResponse
+            List<Int32> roomKeys = lobbyWriter.Data.Rooms;
+            RoomJoinResponse payload = JoinRoom(obj.Payload, roomKeys);
+
+            //To Update component.
+            lobbyWriter.SendUpdate(new MdgSchema.Lobby.Lobby.Update
             {
-                Joined = true
-            };
-            Room.JoinRoom.Response res = new Room.JoinRoom.Response
+                Rooms = roomKeys
+            });
+            MdgSchema.Lobby.Lobby.JoinRoom.Response response = new MdgSchema.Lobby.Lobby.JoinRoom.Response
             {
-                Payload = payload
+                Payload = payload,
+                RequestId = obj.RequestId
             };
-            roomJoinReceiver.SendJoinRoomResponse(res); 
+            lobbyCommandReceiver.SendJoinRoomResponse(response);
+            if (payload.Joined)
+            {
+                lobbyWriter.SendJoinedRoomEvent(payload);
+            }
         }
-        // Update is called once per frame
-        void Update()
+
+        private RoomJoinResponse JoinRoom(MdgSchema.Lobby.RoomJoinRequest payload, List<Int32> currentRooms)
         {
-        }
+            bool isHunter = payload.Type == MdgSchema.Player.PlayerType.HUNTER;
+            Room room = rooms[currentRooms[payload.RoomJoining]];
+            if (room.IsRoomFilled() || (room.hunterJoined && isHunter))
+            {
+                return new RoomJoinResponse { Joined = false };
+            }
+            room.hunterJoined = isHunter; 
+            room.playerCount += 1;
+            currentRooms[payload.RoomJoining] = room.IsRoomFilled() ? 1 : 0;
+            System.Guid guid = System.Guid.NewGuid();
+
+            return new RoomJoinResponse {
+                Joined = true,
+                HunterJoined = room.hunterJoined,
+                RoomSize = room.playerCount,
+                ResponseId = guid.ToString()
+            };
+       }
+
     }
 }

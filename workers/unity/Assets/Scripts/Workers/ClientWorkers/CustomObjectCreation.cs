@@ -53,6 +53,7 @@ namespace MDG
                     var hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
                     if (hasAuthority)
                         pathToEntity = $"{pathToEntity}/Authoritative";
+
                 }
                 catch (System.Exception err)
                 {
@@ -60,27 +61,28 @@ namespace MDG
 
                 }
                 pathToEntity = $"{pathToEntity}/{type.ToString()}";
-                CreateEnityObject(entity, linker, pathToEntity, null);
             }
-            else if (metaData.EntityType.Equals("Room"))
-            {
-                //Room probably doesn't need to be prefab, but I guess could be prefab of UI.
-                pathToEntity = $"{pathToEntity}/Room";
-            }
-            else if (metaData.EntityType.Equals("Lobby"))
-            {
-                pathToEntity = $"{pathToEntity}/Lobby";
-               // _default.OnEntityCreated(entity, linker)
-                CreateEnityObject(entity, linker, pathToEntity, null);
-            }
-            else
+            else if (metaData.EntityType.Equals("PlayerCreator"))
             {
                 Debug.Log("Using default");
                 _default.OnEntityCreated(entity, linker);
                 return;
 
             }
+            else if (metaData.EntityType.Equals("Lobby"))
+            {
+                //Then I just need to link entity to 2 different game objects. I get it now.
 
+                //Adds server worker.
+                pathToEntity = $"{pathToEntity}/{metaData.EntityType}";
+                CreateEnityObject(entity, linker, pathToEntity, null);
+
+                //Client worker
+                Object clientLobbyPrefab = Resources.Load($"Prefabs/{UnityClientConnector.WorkerType}/Lobby");
+                GameObject gameObject = Object.Instantiate(clientLobbyPrefab) as GameObject;
+                linker.LinkGameObjectToSpatialOSEntity(entity.SpatialOSEntityId, gameObject);
+                gameObject.name = $"{gameObject.name}(SpatialOS: {entity.SpatialOSEntityId}, Worker: {UnityClientConnector.WorkerType})";
+            }
         }
 
         public void OnEntityRemoved(EntityId entityId)

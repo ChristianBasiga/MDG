@@ -34,7 +34,6 @@ namespace MDG.ClientSide
 
             if (connector)
             {
-                Debug.Log("Here???" + type.ToString());
                 var playerCreationSystem = connector.Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
                 playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
                 {
