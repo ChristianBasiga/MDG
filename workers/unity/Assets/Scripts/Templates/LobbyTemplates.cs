@@ -1,10 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MdgSchema.Lobby;
 using Improbable.Gdk.Core;
 using Improbable;
-using MdgSchema.Lobby;
 
 namespace MDG.Lobby
 {
@@ -17,10 +15,9 @@ namespace MDG.Lobby
             template.AddComponent(new Metadata.Snapshot("Lobby"), UnityGameLogicConnector.WorkerType);
             template.AddComponent(new Position.Snapshot(), UnityGameLogicConnector.WorkerType);
             template.AddComponent(new Persistence.Snapshot(), UnityGameLogicConnector.WorkerType);
-            template.AddComponent(new MdgSchema.Lobby.Lobby.Snapshot(new List<System.Int32>()), UnityGameLogicConnector.WorkerType);
+            template.AddComponent(new MdgSchema.Lobby.Lobby.Snapshot(), UnityGameLogicConnector.WorkerType);
             template.SetReadAccess(UnityClientConnector.WorkerType, UnityGameLogicConnector.WorkerType, MobileClientWorkerConnector.WorkerType);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);
-            template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityClientConnector.WorkerType);
 
             return template;
         }
