@@ -10,9 +10,7 @@ namespace MDG.Logging
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Configure()
         {
-            Debug.Log("I am called");
             FileInfo fileInfo = new FileInfo($"{Application.dataPath}/Config/log4net.xml");
-            Debug.Log(fileInfo.FullName);
             XmlConfigurator.Configure(fileInfo);
         }
     }

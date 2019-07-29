@@ -6,8 +6,8 @@ using log4net.Core;
 
 
 
-//namespace MDG.Logging
-//{
+namespace MDG.Logging
+{
     public class UnityLogAppender : AppenderSkeleton
     {
         delegate void LogMethod(string msg);
@@ -25,4 +25,4 @@ using log4net.Core;
             logMethod(message);
         }
     }
-//S}
+}
