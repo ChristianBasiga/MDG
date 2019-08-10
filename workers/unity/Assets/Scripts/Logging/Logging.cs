@@ -5,37 +5,17 @@ using log4net;
 
 namespace MDG.Logging
 {
-    //Test script.
-    public class Logging : MonoBehaviour
+    public class LoggingManager : MonoBehaviour
     {
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(MonoBehaviour));
         // Start is called before the first frame update
-        void Start()
+        
+        public ILog GetMonoLogger
         {
-               
+            get { return Log; }
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-
-            if (Input.GetKeyDown(KeyCode.D))
-            {
-                Debug.Log(Log.IsDebugEnabled);
-                Log.Debug("hello");
-
-            }
-            else if (Input.GetKeyDown(KeyCode.W))
-            {
-                Debug.Log(Log.IsWarnEnabled);
-                Log.Warn("world");
-            }
-            else if (Input.GetKeyDown(KeyCode.E))
-            {
-                Debug.Log(Log.IsErrorEnabled);
-                Log.Error("error");
-            }
-        }
+       
     }
 }
