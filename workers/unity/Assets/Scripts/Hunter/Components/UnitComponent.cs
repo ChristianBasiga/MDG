@@ -6,6 +6,7 @@ using MDG.Common;
 using Improbable.Gdk.Core;
 using Improbable;
 using Unity.Collections;
+using MdgSchema.Common;
 
 namespace MDG.Hunter.Components {
 
@@ -26,11 +27,13 @@ namespace MDG.Hunter.Components {
         public int amountToSpawn;
     }*/
 
-    [RemoveAtEndOfTick]
-    public struct InitialPosition: IComponentData
+
+    //Add more to later.
+    public struct EnemyComponent: IComponentData
     {
-        public Coordinates coordinates;
+        GameEntityTypes enemyType;
     }
+
 
     //All Unit entities also have whats in their vision.
     //Vision and AI are two different systems though.

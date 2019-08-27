@@ -47,10 +47,6 @@ namespace MDG.Hunter.Systems.UnitCreation
             ProcessUnitPositionSetup();
         }
 
-        private void ProcessUnitRequests()
-        {
-            // Bit harder to think about.
-        }
 
         private void ProcessUnitCreation()
         {
@@ -116,8 +112,7 @@ namespace MDG.Hunter.Systems.UnitCreation
                     entityIdToPosition.Remove(id.EntityId);
                 }
             });
-            // After setup, at end of every frame, remove a unit spawner for new ones to come in.
-            // Should happen after use unit spawner to make request.
+            
         }
     }
 }

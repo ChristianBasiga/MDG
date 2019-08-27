@@ -105,7 +105,7 @@ namespace MDG
                                 _world.EntityManager.SetComponentData(unitSpawner, new UnitSpawner.Component
                                 {
                                     AmountToSpawn = 1,
-                                    Position = startingCoords
+                                    Position = new Coordinates(0,0,0)
                                 });
                             }
                         }
@@ -149,6 +149,11 @@ namespace MDG
                         _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadWrite<CommandListener>());
                         //Later on actually will do adding instead of changing command meta data like attempted originally.
                         _world.EntityManager.AddComponentData(unitEntity, new CommandMetadata { CommandType = CommandType.None });
+                    }
+                    else
+                    {
+                        //If no autority then it is other play unit, meanign for POC, enemy.
+                        _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadOnly<EnemyComponent>());
                     }
                 }
                 //then init system will apply needed components regardless
