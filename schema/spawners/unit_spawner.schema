@@ -1,0 +1,30 @@
+package mdg_schema.spawners;
+import "improbable/standard_library.schema";
+import "improbable/vector3.schema";
+
+enum UnitTypes{
+    COLLECTOR = 0;
+}
+//Move this to payloads folder as needed.
+type UnitSpawnRequest {
+    UnitTypes type = 1;
+}
+
+type UnitSpawnResponse {
+    bool spawned = 1;
+}
+
+//Could launch 5 events, incase position handler 
+type SpawnUnitEvent {
+    int32 amount_to_spawn = 1;
+    list<improbable.Coordinates> positions = 2;
+}
+//All spawners will be in the 700s.
+component UnitSpawner{
+    id = 700;
+    int32 amount_to_spawn = 1;
+    improbable.Coordinates position  = 2;
+    command UnitSpawnResponse spawn_unit(UnitSpawnRequest);
+    event SpawnUnitEvent requested_spawn;
+}
+

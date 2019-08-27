@@ -1,48 +1,46 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Panda;
+
 using MDG.Game;
 using log4net;
+using System.Linq;
+using MDG.Common;
+
 namespace MDG.Units
 {
     public class UnitAI : MonoBehaviour
+
     {
-
+        /*
         UnitVision vision;
-        UnitState state;
-        List<Interactable> nearby;
+        // Replacing this state with a controller that has access to component.
+        // essentially renaming it, or could keep it same and state also as component that has it's actual state
+        // and basically just wraps state around to have methods.
 
-        void Start()
-        {
-            vision.OnQueryMatch += UpdateNearbyState;
-        }
-
-        void UpdateNearbyState(Interactable i)
-        {
-            switch (i.type)
-            {
-                case InteractableTypes.Enemy:
-                    state.AddEnemyNearby(i);
-                break;
-
-                case InteractableTypes.Resourcee:
-                    state.AddResourceNearby(i);
-                break;
-
-                default:
-                    return;
-            }
-            //If didn't hit any cases this will remain false or set by different task.
-            state.UpdatedThisFrame = true;
-        }
-
+            
         #region BT Tasks
+
+
+        // Need to design how commands for each unit will be structured as well.
+        [Task]
+        protected virtual bool DidReceiveNewCommand()
+        {
+            return state.ReceivedNewCommand;
+        }
+
         [Task]
         //Collect and ReactToEnemy will be chained through decorations.
         protected virtual void CollectResource()
         {
-            //Base adds to inventory.
+            // Get posiiton of nearest resource and begin moving towards it.
+            List<Interactable> nearbyResources = vision.GetVision(InteractableTypes.Resource);
+            Interactable closest = nearbyResources.OrderBy((Interactable i) => Vector3.Distance(i.transform.position, transform.position)).Last();
+            
+            // Simplicity sake closest, later on will weigh options with avl tree that is changing based on state.
+            // Also create even distrubtion of units over a collection of resources.
+            Vector3.MoveTowards(transform.position, closest.transform.position, Time.deltaTime * state.Speed);      
+            //Must also avoid obstacles, so likely have to implement nav mesh as well.
         }
 
         [Task]
@@ -54,7 +52,7 @@ namespace MDG.Units
         [Task]
         bool IsDead()
         {
-            return state.health <= 0;
+            return state.Health <= 0;
         }
 
         [Task]
@@ -64,40 +62,20 @@ namespace MDG.Units
         }
 
         [Task]
-        void CheckNearby(string[] checking)
+        bool CheckNearby(string typeString = null)
         {
-            List<InteractableTypes> query = new List<InteractableTypes>();
-
-            foreach(string typeString in checking)
+            InteractableTypes type;
+            if (typeString == null)
             {
-                InteractableTypes type;
-                if (System.Enum.TryParse(typeString, out type))
-                {
-                    query.Add(type);
-                }
-                else
-                {
-                    //Replace with log4net once merged from logging branch.
-                    Debug.Log($"{typeString} is not an Interactable Type");  
-                    Task.current.Fail();
-                }
+                return vision.HasVision();
             }
-            vision.GetSight(query);
-            Task.current.Succeed();
+            else if (System.Enum.TryParse(typeString, out type))
+            {
+                return vision.HasVision(type);
+            }
+            return false;
         }
-
-        [Task]
-        bool CheckNearbyEnemy()
-        {
-            return state.UpdatedThisFrame && state.IsEnemyNearby();
-        }
-
-        [Task]
-        bool CheckNearbyResource()
-        {
-            return state.UpdatedThisFrame && state.IsResourceNearby();
-        }
-
         #endregion
+        */
     }
 }

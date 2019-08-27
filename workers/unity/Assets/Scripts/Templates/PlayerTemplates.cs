@@ -7,6 +7,7 @@ using Improbable;
 using MdgSchema.Player;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
+using MdgSchema.Common;
 
 namespace MDG.Player
 {
@@ -28,6 +29,9 @@ namespace MDG.Player
                 DTO.PlayerConfig creationArgs = DTO.Converters.DeserializeArguments<DTO.PlayerConfig>(playerCreationArguments);
                 //The creation args would come from room clear request / start game request.
                 template.AddComponent(new PlayerMetaData.Snapshot("username",creationArgs.playerType), clientAttribute);
+
+                //Factory instead incase of other roles down the line.
+                template = creationArgs.playerType == PlayerType.HUNTER ? AddHunterComponents(template) : AddHunterComponents(template);
             }
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
@@ -38,6 +42,19 @@ namespace MDG.Player
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
             return template;
         }
+
+        private static EntityTemplate AddHunterComponents(EntityTemplate template)
+        {
+            template.AddComponent(new GameMetadata.Snapshot(GameEntityTypes.Hunter), UnityGameLogicConnector.WorkerType);
+            return template;
+        }
+
+        private static EntityTemplate AddHuntedComponents(EntityTemplate template)
+        {
+            return template;
+        }
+             
+
 
     }
 }

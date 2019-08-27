@@ -1,0 +1,10 @@
+tree("Root")
+	Race
+		tree("BeAlive")
+		tree("QueryCommand")
+		tree("Die")
+		
+tree("QueryCommand")
+	Sequence
+		HasCommand
+		tree("DoCommand")

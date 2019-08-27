@@ -3,17 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using MDG.Units;
 using MDG.Interfaces;
+using MDG.States;
+
 namespace MDG.Game.Resources
 {
-    public class Resource : MonoBehaviour, IVisible
+    enum ResourceType
     {
 
-        public bool isVisible(UnitModel unit)
-        {
-            //Each resource will mention if visible to this Unit
-            return true;
-        }
-
-        
     }
+  
 }

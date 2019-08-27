@@ -5,17 +5,11 @@ using log4net;
 
 namespace MDG.Logging
 {
-    public class LoggingManager : MonoBehaviour
+    public class LoggingManager
     {
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(MonoBehaviour));
+        public  static readonly ILog Log = LogManager.GetLogger(typeof(MonoBehaviour));
         // Start is called before the first frame update
-        
-        public ILog GetMonoLogger
-        {
-            get { return Log; }
-        }
 
-       
     }
 }

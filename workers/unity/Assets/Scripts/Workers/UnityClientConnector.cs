@@ -4,13 +4,19 @@ using Improbable.Gdk.GameObjectCreation;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
+using MDG.Common.Systems;
+using MDG.Hunter.Systems;
+using MDG.Hunter.Systems.UnitCreation;
 using UnityEngine;
 
 namespace MDG
 {
+    //Need to figure out spawnign stuff on server side and not.
     public class UnityClientConnector : WorkerConnector
     {
         public const string WorkerType = "UnityClient";
+        public GameObject surface;
+        public CustomGameObjectCreator customGameObjectCreator { get; private set; }
         private async void Start()
         {
             var connParams = CreateConnectionParameters(WorkerType);
@@ -50,11 +56,23 @@ namespace MDG
 
         protected override void HandleWorkerConnectionEstablished()
         {
-            GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-            CustomObjectCreation customCreator = new CustomObjectCreation(defaultCreator, Worker.World, Worker.WorkerType);
-            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customCreator );
+            if (customGameObjectCreator == null)
+            {
+                GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
+                customGameObjectCreator = new CustomGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
+                customGameObjectCreator.surface = surface;
+                GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customGameObjectCreator);
+            }
+            // So syncing works in dev scene but positions not in sync in other scene.
+
+            
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
+            UnitCreationHelper.AddClientSystems(Worker.World);
+            Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
+            Worker.World.GetOrCreateSystem<MouseInputSystem>();
+            Worker.World.GetOrCreateSystem<CommandGiveSystem>();
+            Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
         }
     }
 }

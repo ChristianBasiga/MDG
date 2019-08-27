@@ -20,7 +20,7 @@ namespace MDG.Logging
 
         protected override void Append(LoggingEvent loggingEvent)
         {
-            Debug.Log("Logger name " + loggingEvent.LoggerName);
+
             LogMethod logMethod = logMethods[loggingEvent.Level];
             string message = RenderLoggingEvent(loggingEvent);
             logMethod(message);

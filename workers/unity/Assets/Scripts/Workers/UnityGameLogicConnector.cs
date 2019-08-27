@@ -8,6 +8,10 @@ using Improbable.Worker.CInterop;
 using UnityEngine;
 using MdgSchema.Player;
 using MdgSchema.Lobby;
+using MDG.Hunter.Systems.UnitCreation;
+using MDG.Hunter.Systems;
+using MDG.Common.Systems;
+
 namespace MDG
 {
     public class UnityGameLogicConnector : WorkerConnector
@@ -42,15 +46,14 @@ namespace MDG
 
         protected override void HandleWorkerConnectionEstablished()
         {
-            Worker.World.GetOrCreateSystem<MetricSendSystem>();
-
-            GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-
-            CustomObjectCreation customCreator = new CustomObjectCreation(defaultCreator, Worker.World, Worker.WorkerType);
-            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customCreator);
+            Worker.World.GetOrCreateSystem<MetricSendSystem>(); 
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
+            //UnitCreationHelper.AddServerSystems(Worker.World);
+            //UnitCreationHelper.AddClientSystems(Worker.World);
+            //Create helper on entity for server and client systems
+            //for current systems INit, just client.
         }
-                
+
     }
 }

@@ -6,7 +6,5 @@ component PlayerMetaData{
 
     id = 200;
     string user_name = 1;
-    PlayerType player_type = 2;
-    
-   
+    PlayerType player_type = 2; 
 }

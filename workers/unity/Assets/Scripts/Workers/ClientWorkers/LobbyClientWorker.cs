@@ -41,10 +41,6 @@ namespace MDG.Lobby
                 int room_id = i;
                 joinButton.onClick.AddListener( delegate()
                 {
-                   
-                    //This normally fixes issue.
-                    //Joined in will actually be derived from active player in scene, need to figure out how will store that better.
-                    //Going ham for POC, but planning should be to design this well. But once working can always redesign for rest of sem.
                     this.JoinRoom(room_id, PlayerType.HUNTER);
                 });
                 rooms.Add(room);

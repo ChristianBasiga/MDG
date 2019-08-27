@@ -27,9 +27,17 @@ namespace MDG.Editor
             var snapshot = new Snapshot();
 
             AddPlayerSpawner(snapshot);
-            AddLobby(snapshot);
+            // AddLobby(snapshot);
+            //AddUnitSpawner(snapshot);
             return snapshot;
         }
+
+        // Should also add GameManager
+        private static void AddUnitSpawner(Snapshot snapshot)
+        {
+            snapshot.AddEntity(MDG.Hunter.Unit.Templates.GetUnitSpawnerTemplate());
+        }
+
         private static void AddLobby(Snapshot snapshot)
         {
             snapshot.AddEntity(Lobby.Templates.CreateLobbyTemplate());

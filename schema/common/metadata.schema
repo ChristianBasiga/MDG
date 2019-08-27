@@ -1,0 +1,14 @@
+package mdg_schema.common;
+enum GameEntityTypes{
+    Hunted = 1;
+    Hunter = 3;
+    Unit = 4;
+    Invalid = 5;
+    Resource = 6;
+    //Other additions will be added as needed.
+}
+
+component GameMetadata{
+    id = 809;
+    GameEntityTypes type = 1;
+}

@@ -29,21 +29,18 @@ namespace MDG.Lobby
         [Require] LobbyCommandReceiver lobbyCommandReceiver;
         [Require] LobbyWriter lobbyWriter;
         List<Room> rooms;
-
         // Need to reference pool data and max count, for now just magic number.
         const int MaxRooms = 5;
         private void Start()
         {
             lobbyCommandReceiver.OnJoinRoomRequestReceived += OnJoinRoomRequestReceived;
             rooms = new List<Room>();
-
             //Populate rooms, then send update for clients to make activate same amount of rooms from pool.
             for (int i = 0; i < MaxRooms; ++i)
             {
                 rooms.Add(new Room());
             }
         }
-
     
         private void OnJoinRoomRequestReceived(MdgSchema.Lobby.Lobby.JoinRoom.ReceivedRequest req)
         {
