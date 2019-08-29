@@ -70,11 +70,8 @@ namespace MDG.Common.Systems
                         switch (response.StatusCode)
                         {
                             case Improbable.Worker.CInterop.StatusCode.Success:
-                                Debug.LogError("Collided");
                                 entityIdToCollisions[queryIdToEntityId[requestId]] = response.Result.Keys.ToList();
-                                // I guess this is why usually do latter
                                 toRemove.Add(requestId);
-
                                 break;
                             case Improbable.Worker.CInterop.StatusCode.Timeout:
                                 //request again.

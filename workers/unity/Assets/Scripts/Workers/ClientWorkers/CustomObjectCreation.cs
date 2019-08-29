@@ -42,16 +42,16 @@ namespace MDG
         //Starting points will be 10% off whatever bounds are.
         private static List<Coordinates> startingPoints = new List<Coordinates>
         {
-            new Coordinates(width - (width * 0.1f), 0, length * 0.6),
-            new Coordinates((-width) + (width * 0.1f), 0, -length * 0.6),
+            new Coordinates(width - (width * 0.1f), 100, length * 0.6),
+            new Coordinates((-width) + (width * 0.1f), 100, -length * 0.6),
         };
 
 
         private static List<Coordinates> initialUnitCoordinates = new List<Coordinates>
         {
-            new Coordinates((width * 0.4f), 10, 0),
-            new Coordinates((width * 0.4f), 10, (length * 0.6f)),
-            new Coordinates((width * 0.4f), 10, -(length * 0.6f)),
+            new Coordinates( width + (width * 0.1f), 20, 0),
+            new Coordinates( width + (width * 0.1f), 20, (length * 0.6f)),
+            new Coordinates( width + (width * 0.1f), 20, -(length * 0.6f)),
         };
 
         //Look into being able to add multiple custom creators and see if can do that instead.   
@@ -99,13 +99,13 @@ namespace MDG
                             int multiplier = startingPointsUsed == 1 ? 1 : -1;
                             for (int i = 0; i < initialUnitCoordinates.Count; ++i)
                             {
-                                Vector3 updated = (multiplier * initialUnitCoordinates[i].ToUnityVector() + startingPoints[startingPointsUsed].ToUnityVector());
+                                Vector3 updated = initialUnitCoordinates[i].ToUnityVector();// + startingPoints[startingPointsUsed].ToUnityVector());
                                 Coordinates startingCoords = new Coordinates(updated.x, updated.y, updated.z);
                                 Entity unitSpawner = _world.EntityManager.CreateEntity(typeof(UnitSpawner.Component));
                                 _world.EntityManager.SetComponentData(unitSpawner, new UnitSpawner.Component
                                 {
                                     AmountToSpawn = 1,
-                                    Position = new Coordinates(0,0,0)
+                                    Position = startingCoords
                                 });
                             }
                         }
@@ -119,11 +119,12 @@ namespace MDG
                     return;
                 }
 
+                Debug.LogError($" has authority: {hasAuthority} and spawning hunter");
 
                 pathToEntity = $"{pathToEntity}/{type.ToString()}";
                 GameObject created = CreateEnityObject(entity, linker, pathToEntity, null, null);
-                Vector3 vector3 = startingPoints[startingPointsUsed++].ToUnityVector();
-                created.transform.position = new Vector3(vector3.x, created.transform.position.y, vector3.z);
+                Vector3 startingPoint = startingPoints[startingPointsUsed].ToUnityVector();
+                created.transform.position = startingPoint;
                 GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
                 created.tag = "MainCamera";
 
@@ -132,7 +133,6 @@ namespace MDG
             {
                 // So if have authority over Unit
                 string authority = "";
-                Debug.LogError(startingPointsUsed);
                 // Get correct Unit GameObjectPrefab.
                 // its the same entity, whether or not the current worker has authority over this entity is irrelevant.
                 // if didn't before and has now then added to same fucking entity.
@@ -146,8 +146,9 @@ namespace MDG
                     {
                         pathToEntity = $"{pathToEntity}/Authoritative";
                         authority = "authority";
-                        _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadWrite<CommandListener>());
+                        _world.EntityManager.AddComponentData(unitEntity, new CommandListener { CommandType = CommandType.None });
                         //Later on actually will do adding instead of changing command meta data like attempted originally.
+                        //command meta data isn't required, command listener fulfillsthat role
                         _world.EntityManager.AddComponentData(unitEntity, new CommandMetadata { CommandType = CommandType.None });
                     }
                     else
@@ -199,6 +200,16 @@ namespace MDG
 
             //Add back to pool or whatever.
             _default.OnEntityRemoved(entityId);
+
+            List<GameObject> linkedGameObjects;
+            if (entityToGameObjects.TryGetValue(entityId, out linkedGameObjects))
+            {
+                // Destroy GameObject represnting it and remove from mappings.
+                foreach (GameObject gameObject in linkedGameObjects)
+                {
+                    gameObject.SetActive(false);
+                }
+            }
         }
 
         GameObject CreateEnityObject(SpatialOSEntity entity, EntityGameObjectLinker linker, string pathToEntity, Transform parent = null, System.Type[] ecsComponents = null)

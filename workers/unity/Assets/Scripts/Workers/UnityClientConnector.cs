@@ -56,19 +56,21 @@ namespace MDG
 
         protected override void HandleWorkerConnectionEstablished()
         {
-            if (customGameObjectCreator == null)
-            {
+           // if (customGameObjectCreator == null)
+           // {
                 GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
                 customGameObjectCreator = new CustomGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
                 customGameObjectCreator.surface = surface;
                 GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customGameObjectCreator);
-            }
+            //}
             // So syncing works in dev scene but positions not in sync in other scene.
 
             
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
             UnitCreationHelper.AddClientSystems(Worker.World);
+            // This should actually be in server side, but later.
+            Worker.World.GetOrCreateSystem<StatUpdateSystem>();
             Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
             Worker.World.GetOrCreateSystem<MouseInputSystem>();
             Worker.World.GetOrCreateSystem<CommandGiveSystem>();

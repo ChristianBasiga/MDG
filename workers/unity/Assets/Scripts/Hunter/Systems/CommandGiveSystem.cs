@@ -122,7 +122,7 @@ namespace MDG.Hunter.Systems
                     {
                         commandPending = new CommandPending
                         {
-                            CommandMetaData = CommandType.Collect,
+                            CommandMetaData = CommandType.Attack,
                             Dest = mouseInputComponent.LastClickedPos,
                             TargetId = rightClickedId
                         };

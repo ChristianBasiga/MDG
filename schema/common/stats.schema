@@ -1,0 +1,19 @@
+// Should think about this more.    
+package mdg_schema.common;
+type DamageRequest{
+    int32 damage = 1;
+    EntityId to_damage = 2;
+}
+
+type DamageResponse{
+
+    bool did_die = 1;
+    EntityId entity_died = 2;
+}
+
+component Stats {
+
+    id = 666;
+    int32 health = 1;
+    command DamageResponse damage_entity    (DamageRequest);
+}

@@ -5,6 +5,8 @@ using UnityEngine.AI;
 
 using MDG.Hunter.Components;
 using Improbable.Gdk.Core;
+using Improbable.Gdk.Subscriptions;
+using Improbable;
 
 namespace MDG.Hunter.Monobehaviours
 {
@@ -15,6 +17,7 @@ namespace MDG.Hunter.Monobehaviours
         NavMeshObstacle obstacle;
         Vector3 targetDestination;
         UnitMovementWriter UnitMovementWriter;
+        [Require] PositionWriter positionWriter;
         //Later on initialize depending on target Id.
         protected float minDistance = 0.001f;
         Vector3[] corners;
@@ -24,26 +27,21 @@ namespace MDG.Hunter.Monobehaviours
         public override void Initialize(EntityId id, CommandListener commandData)
         {
             targetDestination = commandData.TargetPosition;
-            UnitMovementWriter = GetComponent<UnitMovementWriter>();
-            agent = GetComponent<NavMeshAgent>();
-
-            StartCoroutine(CommandCoroutine());
-            // To save time perhaps can start moving.
-            /*NavMeshPath navMeshPath = new NavMeshPath();
-            
-            if (!agent.CalculatePath(targetDestination, navMeshPath))
-            {
-                FinishCommand();
-            }
-            corners = navMeshPath.corners;*/
+            targetDestination.y = transform.position.y;
             base.Initialize(id, commandData);
         }
 
+        protected virtual void Start()
+        {
+            UnitMovementWriter = GetComponent<UnitMovementWriter>();
+            agent = GetComponent<NavMeshAgent>();
+            StartCoroutine(CommandCoroutine());
+        }
 
-        IEnumerator CommandCoroutine()
+
+        protected override IEnumerator CommandCoroutine()
         {
 
-            yield return new WaitUntil(() => { return executingCommand; });
 
             // To save time perhaps can start moving.
             NavMeshPath navMeshPath = new NavMeshPath();
@@ -56,10 +54,11 @@ namespace MDG.Hunter.Monobehaviours
             //int cornerCount = 0;
             //obstacle.enabled = true;
             yield return new WaitForEndOfFrame();
-            while (executingCommand)
+            while (this.enabled)
             {
+                yield return new WaitUntil(() => { return executingCommand; });
                 //yield return new WaitUntil(() => { return navMeshPath.status == NavMeshPathStatus.PathPartial || navMeshPath.status == NavMeshPathStatus.PathComplete; });
-                if (IsAtLocation())
+                if (DoneExecuting())
                 {
                     FinishCommand();
                 }
@@ -70,7 +69,7 @@ namespace MDG.Hunter.Monobehaviours
         }
 
 
-        public bool IsAtLocation()
+        protected override bool DoneExecuting()
         {
             float distance = Mathf.Sqrt(Mathf.Pow(targetDestination.x - transform.position.x, 2) + 
                 Mathf.Pow(targetDestination.z - transform.position.z, 2));

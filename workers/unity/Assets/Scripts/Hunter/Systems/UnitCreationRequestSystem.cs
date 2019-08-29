@@ -18,7 +18,10 @@ using MDG.Hunter.Components;
 
 namespace MDG.Hunter.Systems.UnitCreation
 {
+
+    [AlwaysUpdateSystem]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
+    [DisableAutoCreation]
     //This should actually also be on client side only.
     public class UnitCreationRequestSystem : ComponentSystem
     {
@@ -62,7 +65,6 @@ namespace MDG.Hunter.Systems.UnitCreation
                 }               
                 spawner.AmountToSpawn = 0;
             });
-            PostUpdateCommands.DestroyEntity(filter);
             //Then query create entity responses in client world and look for unit creations.
             if (creationRequestToPosition.Count > 0)
             {
@@ -72,15 +74,14 @@ namespace MDG.Hunter.Systems.UnitCreation
                     ref readonly var response = ref responses[i];
                     //if matched, then we got response.
                     Coordinates positionForUnit;
-
                     //Map entityId to position for that entity.
                     if (creationRequestToPosition.TryGetValue(response.RequestId, out positionForUnit))
                     {
-                        creationRequestToPosition.Remove(response.RequestId);
                         switch (response.StatusCode)
                         {
                             case StatusCode.Success:
                                 entityIdToPosition[response.EntityId.Value] = positionForUnit;
+                                creationRequestToPosition.Remove(response.RequestId);
                                 Debug.LogError($"created unit {response.Message}");
                                 break;
                             default:
@@ -107,6 +108,7 @@ namespace MDG.Hunter.Systems.UnitCreation
                 Coordinates positionToSet;
                 if (entityIdToPosition.TryGetValue(id.EntityId, out positionToSet))
                 {
+                    Debug.LogError(" I happen");
 
                     position.Coords = positionToSet;
                     entityIdToPosition.Remove(id.EntityId);

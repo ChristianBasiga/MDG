@@ -40,10 +40,12 @@ namespace MDG.Hunter.Unit
             template.AddComponent(new Metadata.Snapshot { EntityType = "Unit" }, serverAttribute);
             template.AddComponent(new GameMetadata.Snapshot { Type = GameEntityTypes.Unit }, serverAttribute);
             template.AddComponent(new EntityTransform.Snapshot(), clientAttribute);
+
+            template.AddComponent(new Stats.Snapshot{ Health = 5}, clientAttribute);
             // Actuall this is collider on entity, so position will always be unit position
             // prob shouldn't track this here.
             template.AddComponent(new EntityCollider.Snapshot {
-                Radius = 10.0f,
+                Radius = 5.0f,
                 ColliderType = ColliderType.SPHERE
             }, serverAttribute);
 

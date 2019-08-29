@@ -26,8 +26,8 @@ namespace MDG.Hunter.Systems
     ///  But I suppose the process and acting accorindgly could become a behaviour tree.
     /// </summary>
     [DisableAutoCreation]
+    [AlwaysUpdateSystem]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
-    [UpdateAfter(typeof(CommandGiveSystem))]
     public class CommandUpdateSystem : ComponentSystem
     {
         private bool assignedJobHandle = false;
@@ -46,25 +46,24 @@ namespace MDG.Hunter.Systems
 
         public struct CommandExecutionJob : IJobForEach<CommandListener, SpatialEntityId>
         {
-            // Problem with setting to none is it makes it run through last executed again.
-            // But 
-            public void Execute([ChangedFilter] ref CommandListener commandListener, [ReadOnly] ref SpatialEntityId spatialEntityId)
+            //re add changed filer later after move collision code to own system.
+            public void Execute( ref CommandListener commandListener, [ReadOnly] ref SpatialEntityId spatialEntityId)
             {
+               
                 if (commandListener.CommandType == CommandType.None) return;
-                // Only if not already running.
+
+                // I could make this more scalable through reflection like I did with encounters in DF mod
+                // create mapping of Command Type to type, reduce overhead of getting type.
                 switch (commandListener.CommandType)
                 {
                     case CommandType.Collect:
                         OnCommandExecute?.Invoke(spatialEntityId.EntityId, typeof(CollectBehaviour), commandListener);
                         break;
                     case CommandType.Move:
-                        //This will invoke OnCommandExecute passing in entity Id and the command payload.
                         OnCommandExecute?.Invoke(spatialEntityId.EntityId, typeof(MoveBehaviour), commandListener);
                         break;
                     case CommandType.Attack:
-                        Debug.LogError("attacking, need to implement attack behaviour");
-                        //First test what I have so far.
-                        //Will be another job, simply widdles down all enemies, LeftToDo: Implement simple attack behaviour.
+                        OnCommandExecute?.Invoke(spatialEntityId.EntityId, typeof(AttackBehaviour), commandListener);
                         break;
                 }
                 commandListener.CommandType = CommandType.None;
@@ -128,6 +127,7 @@ namespace MDG.Hunter.Systems
             {
                 ref readonly var eventPayload = ref eventPayloads[i];
                 // We only care about Units. But others can get events received in other systems upon the same worker.
+                // Insead of this check could include authortitive version of a component in query, but this works.
                 if (eventPayload.Event.Payload.TypeOfEntity != GameEntityTypes.Unit ||  !PlayerLifecycleHelper.IsOwningWorker(eventPayload.EntityId, workerSystem.World))
                 {
                     continue;
@@ -152,10 +152,10 @@ namespace MDG.Hunter.Systems
 
                         Vector3 unitPos = EntityManager.GetComponentData<Position.Component>(collideeEntity).Coords.ToUnityVector();
                         Vector3 nearestAllyPos = new Vector3(Mathf.Infinity, Mathf.Infinity);
+                        Vector3 nearestEnemyPos = new Vector3(Mathf.Infinity, Mathf.Infinity);
 
-
-                        float? nearestEnemyDistance = Mathf.Infinity;
-                        float? nearestAllyDistance = Mathf.Infinity;
+                        float nearestEnemyDistance = Mathf.Infinity;
+                        float nearestAllyDistance = Mathf.Infinity;
                         // Get all enemies and all friendlies 
 
                         //Similiar logic but more efficent and end result will differ later on.
@@ -172,6 +172,7 @@ namespace MDG.Hunter.Systems
                                 {
                                     nearestEnemy = id.EntityId;
                                     nearestEnemyDistance = distanceToEnemy;
+                                    nearestEnemyPos = position.Coords.ToUnityVector();
                                 }
                             }
                         });
@@ -180,7 +181,7 @@ namespace MDG.Hunter.Systems
                         {
                             if (unitCollisionMappings[collidee].Contains(id.EntityId))
                             {
-                                Debug.LogError("With friendly");
+                               Debug.LogError("With friendly");
                                 numberOfFriendlies += 1;
                                 float distanceToAlly = Vector3.Distance(unitPos, position.Coords.ToUnityVector());
                                 if (distanceToAlly < nearestEnemyDistance)
@@ -194,22 +195,30 @@ namespace MDG.Hunter.Systems
                         // Update command accordingly. I could implmenet an attack but just logging cause lol.
                         // Then for targetid, workers will jsut get entity and get position from that. until command revoked.
                         // This sets it for next frame, which will cause auto destruction of previous command.
-                        // Hope this fkcing works man.
+
+                        //Instead of sending as postupdate might actually have to update accordingl.
+                        //Later try set component via EntityManager instead of Post, as post may end up being multiple frames down the road
+                        //but I need it now for command update to work with [ChangedFilter]
                         if (numberOfFriendlies > numberOfEnemies && numberOfEnemies > 0)
-                        {
-                            PostUpdateCommands.SetComponent(collideeEntity, new CommandMetadata { CommandType = CommandType.Attack, TargetId = nearestEnemy  });
+                        { 
+                            Debug.LogError("Collding with friends more han enemies");
+
+                            Debug.LogError(nearestEnemyPos);
+                            PostUpdateCommands.SetComponent(collideeEntity, new CommandListener { CommandType = CommandType.Attack, TargetId = nearestEnemy, TargetPosition = nearestEnemyPos });
+
                         }
                         else if (numberOfEnemies > numberOfFriendlies && numberOfFriendlies > 0)
                         {
-                            PostUpdateCommands.SetComponent(collideeEntity, new CommandMetadata { CommandType = CommandType.Move, TargetId = nearestAlly, TargetPosition = nearestAllyPos });
+                            Debug.LogError("COlliding with enemy  more than friends");
+                            Debug.LogError(nearestAllyPos);
+                            PostUpdateCommands.SetComponent(collideeEntity, new CommandListener { CommandType = CommandType.Move, TargetId = nearestAlly, TargetPosition = nearestAllyPos });
+
                         }
                         else if (numberOfEnemies > 0)
                         {
-                            Debug.LogError("COlliding with enemy ");
-                            PostUpdateCommands.SetComponent(collideeEntity, new CommandMetadata { CommandType = CommandType.Attack, TargetId = nearestEnemy });
+                            Debug.LogError(nearestEnemyPos);
+                            PostUpdateCommands.SetComponent(collideeEntity, new CommandListener { CommandType = CommandType.Attack, TargetId = nearestEnemy, TargetPosition = nearestEnemyPos });
                         }
-                        // If equal let natural behaviour take over.
-
                     }
                 }
             }
