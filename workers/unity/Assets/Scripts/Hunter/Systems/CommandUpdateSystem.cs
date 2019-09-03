@@ -43,7 +43,6 @@ namespace MDG.Hunter.Systems
         //Each unit should be abel to get GameObject attached to via SpatialEntityId
         public static event CommandUpdateEventHandler OnCommandExecute;
         public static event CommandUpdateEventHandler OnCommandTerminated;
-
         public struct CommandExecutionJob : IJobForEach<CommandListener, SpatialEntityId>
         {
             //re add changed filer later after move collision code to own system.

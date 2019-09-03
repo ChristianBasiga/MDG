@@ -11,8 +11,11 @@
     "com.improbable.gdk.transformsynchronization": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.transformsynchronization",
     "com.unity.ads": "2.0.8",
     "com.unity.analytics": "3.3.2",
+    "com.unity.entities": "0.1.1-preview",
+    "com.unity.mathematics": "1.1.0",
     "com.unity.package-manager-ui": "2.1.2",
     "com.unity.purchasing": "2.0.6",
+    "com.unity.rendering.hybrid": "0.0.1-preview.13",
     "com.unity.textmeshpro": "2.0.0",
     "com.unity.timeline": "1.0.0",
     "com.unity.xr.legacyinputhelpers": "2.0.2",
@@ -46,6 +49,5 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  },
-  "registry": "https://staging-packages.unity.com"
+  }
 }

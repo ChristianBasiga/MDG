@@ -110,8 +110,10 @@ namespace MDG.Hunter.Systems
                 if (mouseInputComponent.RightClick && commandGiver.HasSelected && commandGiver.SelectedListener.IsValid())
                 {
                     CommandPending commandPending;
+                    CommandType commandType = CommandType.None;
                     if (!rightClickedId.IsValid())
                     {
+                        commandType = CommandType.Move;
                         commandPending = new CommandPending
                         {
                             CommandMetaData = CommandType.Move,
@@ -120,13 +122,26 @@ namespace MDG.Hunter.Systems
                     }
                     else
                     {
-                        commandPending = new CommandPending
+
+                        // Dest for these actually locaton of unit but for this frame that is same.
+                        // then during execution of command get position of target id.
+                        switch (rightClickedMeta)
                         {
-                            CommandMetaData = CommandType.Attack,
-                            Dest = mouseInputComponent.LastClickedPos,
-                            TargetId = rightClickedId
-                        };
+                            case GameEntityTypes.Unit:
+                                commandType = CommandType.Attack;
+                                break;
+                            case GameEntityTypes.Resource:
+                                commandType = CommandType.Collect;
+                                break;
+                        }
+                       
                     }
+                    commandPending = new CommandPending
+                    {
+                        CommandMetaData = commandType,
+                        Dest = mouseInputComponent.LastClickedPos,
+                        TargetId = rightClickedId,
+                    };
                     commandPending.CommandListenerId = commandGiver.SelectedListener;
                     commandsPending[index[0]++] = commandPending;
                     commandGiver.HasSelected = false;
