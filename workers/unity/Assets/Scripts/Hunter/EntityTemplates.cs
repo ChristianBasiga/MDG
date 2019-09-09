@@ -7,6 +7,7 @@ using Improbable;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
+using MdgSchema.Units;
 namespace MDG.Hunter.Unit
 {
     public class Templates
@@ -50,15 +51,19 @@ namespace MDG.Hunter.Unit
             }, serverAttribute);
 
             template.AddComponent(new Position.Snapshot(), clientAttribute);
-            // Must have read access from both sides.
             template.SetReadAccess(clientAttribute, UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);
-
             return template;
         }
         public static EntityTemplate GetCollectorUnitEntityTemplate(string workerType)
         {
             EntityTemplate template = GetUnitEntityTemplate(workerType);
+            var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerType);
+
+            template.AddComponent(new MdgSchema.Units.Unit.Snapshot
+            {
+                Type = UnitTypes.COLLECTOR
+            }, clientAttribute);
             //Add Collect specific components here such as inventory and health.
             return template;
         }

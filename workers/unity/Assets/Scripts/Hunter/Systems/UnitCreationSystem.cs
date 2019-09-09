@@ -9,6 +9,7 @@ using Improbable.Gdk.Core.Commands;
 using Improbable.Worker.CInterop;
 namespace MDG.Hunter.Systems.UnitCreation {
 
+    /*
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class UnitCreationSystem : ComponentSystem
@@ -94,5 +95,5 @@ namespace MDG.Hunter.Systems.UnitCreation {
             }
             #endregion
         }
-    }
+    }*/
 }

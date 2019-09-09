@@ -14,6 +14,8 @@ using MDG.Common.Systems;
 
 namespace MDG
 {
+
+    // These are just examples.
     public class UnityGameLogicConnector : WorkerConnector
     {
         public const string WorkerType = "UnityGameLogic";
@@ -48,7 +50,7 @@ namespace MDG
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>(); 
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
-            Worker.World.GetOrCreateSystem<CollisionDetectionSystem>();
+            //Worker.World.GetOrCreateSystem<CollisionDetectionSystem>();
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
             //UnitCreationHelper.AddServerSystems(Worker.World);
             //UnitCreationHelper.AddClientSystems(Worker.World);

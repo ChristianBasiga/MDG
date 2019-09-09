@@ -1,58 +1,79 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using Zenject;
+using Unity.Entities;
+using Improbable;
+using Unity.Rendering;
 
 namespace MDG.Hunter.Monobehaviours
 {
     public class CameraController : MonoBehaviour
     {
-        private Vector2 panningBorder;
-        private int panningSpeed;
-        //Will inject panning border and speed later on
-        private Vector2 panningBounds;
-        private float scrollSpeed;
-        Camera camera;
-        void Start()
+        public class Settings
         {
-            panningBorder = new Vector2(Screen.width * 0.2f, Screen.height * 0.2f);
-            panningSpeed = 50;
-            scrollSpeed = 20;
-            panningBounds = new Vector2(110, 110);
-            camera = GetComponent<Camera>();
+            public Vector2 panningBorder;
+            public float panningSpeed;
+            public Vector2 panningBounds;
+            public float scrollSpeed;
+
+            public Settings(Vector2 panningBorder, Vector2 panningBounds, float panningSpeed, float scrollSpeed)
+            {
+                this.panningBorder = panningBorder;
+                this.panningBounds = panningBounds;
+                this.panningSpeed = panningSpeed;
+                this.scrollSpeed = scrollSpeed;
+            }
         }
-        
+        Settings cameraSettings;
+        new Camera camera;
+        //This way caninject new camera settings as needed.
+        [Inject]
+        public void Initialize(Settings cameraSettings)
+        {
+            this.cameraSettings = cameraSettings;
+        }
+
+       
+        private void Start()
+        {
+            camera = GetComponent<Camera>();
+            if (cameraSettings == null)
+            {
+                cameraSettings = new Settings(new Vector2(Screen.width * 0.2f, Screen.height * 0.2f),
+                new Vector2(100, 100),
+                10.0f,
+                100.0f);
+            }
+        }
         void Update()
         {
             Vector3 mousePosition = Input.mousePosition;
             Vector3 newCameraPosition = transform.position;
-
             if (mousePosition.y > Screen.height || mousePosition.y < 0 || mousePosition.x > Screen.width ||  mousePosition.x < 0)
             {
                 return;
             }
-
-            if (mousePosition.y >= Screen.height - panningBorder.y)
+            if (mousePosition.y >= Screen.height - cameraSettings.panningBorder.y)
             {
-                newCameraPosition.z += panningSpeed * Time.deltaTime;
+                newCameraPosition.z += cameraSettings.panningSpeed * Time.deltaTime;
             }
-            else if (mousePosition.y <= panningBorder.y)
+            else if (mousePosition.y <= cameraSettings.panningBorder.y)
             {
-                newCameraPosition.z += -panningSpeed * Time.deltaTime;
+                newCameraPosition.z += -cameraSettings.panningSpeed * Time.deltaTime;
             }
-
-            if (mousePosition.x >= Screen.width - panningBorder.x)
+            if (mousePosition.x >= Screen.width - cameraSettings.panningBorder.x)
             {
-                newCameraPosition.x += panningSpeed * Time.deltaTime;
+                newCameraPosition.x += cameraSettings.panningSpeed * Time.deltaTime;
             }
-            else if (mousePosition.x <= panningBorder.x)
+            else if (mousePosition.x <= cameraSettings.panningBorder.x)
             {
-                newCameraPosition.x += -panningSpeed * Time.deltaTime;
+                newCameraPosition.x += -cameraSettings.panningSpeed * Time.deltaTime;
             }
             float scroll = Input.GetAxis("Mouse ScrollWheel");
-            camera.orthographicSize -= scroll * scrollSpeed * 100.0f * Time.deltaTime;
-            newCameraPosition.x = Mathf.Clamp(newCameraPosition.x, -panningBounds.x, panningBounds.x);
-            newCameraPosition.z = Mathf.Clamp(newCameraPosition.z, -panningBounds.y, panningBounds.y);
+            camera.orthographicSize -= scroll * cameraSettings.scrollSpeed * 100.0f * Time.deltaTime;
+            newCameraPosition.x = Mathf.Clamp(newCameraPosition.x, -cameraSettings.panningBounds.x, cameraSettings.panningBounds.x);
+            newCameraPosition.z = Mathf.Clamp(newCameraPosition.z, -cameraSettings.panningBounds.y, cameraSettings.panningBounds.y);
             transform.position = newCameraPosition;
         }
 

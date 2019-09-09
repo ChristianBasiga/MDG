@@ -10,8 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 6686197693189272425}
   - component: {fileID: 7668512465938155829}
-  - component: {fileID: 8757373760259392570}
   - component: {fileID: 2157318345873296378}
+  - component: {fileID: 6595395144218299492}
+  - component: {fileID: 339959015613328047}
   m_Layer: 0
   m_Name: HUNTER
   m_TagString: Untagged
@@ -40,15 +41,24 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6686197693189272427}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62060494f8a5f6144b2920c9996de6c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hunterCamera: {fileID: 0}
-  resourceClickable: {fileID: 0}
-  units: []
---- !u!20 &8757373760259392570
+--- !u!114 &2157318345873296378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6686197693189272427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5ba2a4d61d35fc45b2146807f4c551b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!20 &6595395144218299492
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -75,7 +85,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 150
+  orthographic size: 5
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -91,15 +101,17 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!114 &2157318345873296378
+--- !u!114 &339959015613328047
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6686197693189272427}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5ba2a4d61d35fc45b2146807f4c551b, type: 3}
+  m_Script: {fileID: 11500000, guid: 28333876a32c14d48b3e74999a80ddd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+  material: {fileID: 2100000, guid: b1ca011c5f92d4fd4b5aeac44fd607c6, type: 2}

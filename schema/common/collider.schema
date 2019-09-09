@@ -1,4 +1,5 @@
 package mdg_schema.common;
+// All common components be in 800 range.
 import "improbable/standard_library.schema";
 import "common/metadata.schema";
 enum ColliderType{
@@ -13,7 +14,7 @@ type CollisionEventPayload{
 
 //Perhaps a sphere one for now.
 component EntityCollider{
-    id = 810;
+    id = 800;
     float radius = 1;
     ColliderType collider_type = 2;
     event CollisionEventPayload on_collision;

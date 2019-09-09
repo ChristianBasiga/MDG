@@ -5,7 +5,6 @@ using UnityEngine;
 using Unity.Entities;
 using Improbable.Gdk.Core;
 using MdgSchema.Common;
-
 namespace MDG.Common.Systems
 {
     [DisableAutoCreation]

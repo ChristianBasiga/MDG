@@ -7,7 +7,6 @@ using MDG.Hunter.Components;
 using MDG.Hunter.Commands;
 using UnityEngine.Jobs;
 using Unity.Collections;
-using Unity.Transforms;
 using Improbable.Gdk.Core;
 using MDG.Hunter.Monobehaviours;
 using System.Linq;
@@ -117,10 +116,12 @@ namespace MDG.Hunter.Systems
 
         protected override void OnUpdate()
         {
+
             CommandExecutionJob commandExecutionJob = new CommandExecutionJob();
             CommandExecuteJobHandle = commandExecutionJob.Schedule(this);
             CommandExecuteJobHandle.Complete();
             //Receives events for collision.
+            /*
             var eventPayloads = componentUpdateSystem.GetEventsReceived<EntityCollider.OnCollision.Event>();
             for (int i = 0; i < eventPayloads.Count; ++i)
             {
@@ -219,8 +220,10 @@ namespace MDG.Hunter.Systems
                             PostUpdateCommands.SetComponent(collideeEntity, new CommandListener { CommandType = CommandType.Attack, TargetId = nearestEnemy, TargetPosition = nearestEnemyPos });
                         }
                     }
+                    
                 }
-            }
+                
+            }*/
         }
     }
 }

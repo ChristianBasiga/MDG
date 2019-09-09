@@ -13,7 +13,7 @@ type DamageResponse{
 
 component Stats {
 
-    id = 666;
+    id = 802;
     int32 health = 1;
     command DamageResponse damage_entity    (DamageRequest);
 }

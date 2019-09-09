@@ -9,6 +9,6 @@ enum GameEntityTypes{
 }
 
 component GameMetadata{
-    id = 809;
+    id = 801;
     GameEntityTypes type = 1;
 }

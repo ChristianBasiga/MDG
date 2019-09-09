@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-//Should rename schema before this gets too big.
 using MdgSchema.Player;
 using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
@@ -14,28 +13,37 @@ using Improbable.Gdk.Core.Commands;
 using Unity.Collections;
 using Unity.Entities;
 using Improbable.Gdk.Subscriptions;
-
+using Zenject;
 namespace MDG.ClientSide
 {
     public class GameManager : MonoBehaviour
     {
+
+
+        int levelWidth;
+        int levelLength;
+        public Mesh mesh;
+        public Material material;
         CommandSystem commandSystem;
+
         [SerializeField]
         private UserInterface.UIManager uiManager;
-
-        [SerializeField]
-        private Camera originalCamera;
-
-        private long? playerRequestId;
-
         PlayerType playerSelected;
+        
+        public void Init(int levelLength, int levelWidth)
+        {
+            this.levelWidth = levelWidth;
+            this.levelLength = levelLength;
+        }
+        
         // Start is called before the first frame update
+
         void Start()
         {
             uiManager.OnRoleSelected += CreatePlayer;
-
         }
 
+        // Ideally launcher opens this and select player already, but for nw this is fine.
         void CreatePlayer(PlayerType type)
         {
             UnityClientConnector connector = GetComponent<UnityClientConnector>();
@@ -65,13 +73,7 @@ namespace MDG.ClientSide
             }
             else
             {
-                if (playerSelected == PlayerType.HUNTER)
-                {
-                    UnityClientConnector connector = GetComponent<UnityClientConnector>();
-                    //Could have a system that initializes player on start up with the non spatialOS components.
-                    //Spawn Units as well.
-                    UnitCreationRequestSystem unitCreationSystem = connector.Worker.World.GetOrCreateSystem<UnitCreationRequestSystem>();
-                }
+              
             }
         }
 

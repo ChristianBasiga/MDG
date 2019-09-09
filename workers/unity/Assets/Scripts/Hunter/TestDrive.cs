@@ -11,31 +11,18 @@ using MDG.Common.Components;
 using MDG.Hunter.Systems;
 using System.Linq;
 using Improbable.Gdk.Subscriptions;
-using MdgSchema.Common;
+using MdgSchema.Units;
 using MdgSchema.Spawners;
+using Zenject;
 
 namespace MDG.Hunter.Testing
 {
     //This will essentially be the monobehaviour of the hunter.
     public class TestDrive : MonoBehaviour
     {
-        public Camera hunterCamera;
-        public ClickableMonobehaviour resourceClickable;
-
-
-
-     
-
-        [SerializeField]
-        public ClickableMonobehaviour[] units;
-       
         [SerializeField]
         public Dictionary<Commands.CommandType, TextAsset[]> commandToBehaviourTreesScripts;
-
-        //For reference to entity to game object mapping.
         private CustomGameObjectCreator CustomGameObjectCreator;
-
-
         public struct PendingCommand
         {
             public EntityId commandListener;
@@ -44,17 +31,16 @@ namespace MDG.Hunter.Testing
         }
         Queue<PendingCommand> pendingCommands;
 
+        void Initialize(CustomGameObjectCreator customGameObjectCreator)
+        {
 
-
-
+        }
         // Start is called before the first frame update
         void Start()
         {
             
             commandToBehaviourTreesScripts = new Dictionary<Commands.CommandType, TextAsset[]>();
             pendingCommands = new Queue<PendingCommand>();
-
-
             string[] commandTypes = System.Enum.GetNames(typeof(Commands.CommandType));
             foreach (string commandType in commandTypes)
             {
@@ -62,27 +48,10 @@ namespace MDG.Hunter.Testing
                     Resources.LoadAll<TextAsset>($"BehaviourTreeScripts/{commandType}/");
             }
 
-            this.CustomGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().customGameObjectCreator;
-            // Another problem with this is that since all same world and all share same system.
-            // then when another command giver causes event to invoke, this client will
-            // will invoke on their version of the component as they share the same id.
-            // which also brings to question of one entity mapped to multiple gameobjects.
-            // may not be problem for case of move commands, since essentially will cause them to be in sync
-            // but will be problem for collect  / attack commands. So how I queue up commands to run on a Unit has to change as well
-            // unless I only process if in my scene it is authoritative
-            // that's a crucial detail. So it will be entity to GameObjects mapping.
-            // more often than not there will only be two gameObjects per entry.
-            // I check which is in my scene, and that is how I'll know.
-            // still requires a find, but can think of few ways to avoid that, but for now its fine.
             CommandUpdateSystem.OnCommandExecute += QueueCommandToExecute;
             StartCoroutine(ExecutePendingCommandRoutine());
         }
 
-        // Could have button, then on click, it needs to send update to UnitSpawner.
-        // So could create UnitSpawner as a SpatialOS entity to only spawn in client side.
-        // I have entityId of myself as hunter. With that I can update component.
-        // so instead of creating new entity as unit spawner can add unit spawner to Hunter.
-        // makes updates to it more seemless, which would be ideal and makes sense, I mean hunter is a unit spawner.
         public void CreateUnit(UnitTypes typeToCreate)
         {
 
@@ -115,9 +84,6 @@ namespace MDG.Hunter.Testing
 
         void QueueCommandToExecute(EntityId commandListener, System.Type type, CommandListener commandPayload)
         {
-
-            // To add before queing command to execute
-            // verify that I have authority over this entity.
             PendingCommand pendingCommand = new PendingCommand
             {
                 commandListener = commandListener,

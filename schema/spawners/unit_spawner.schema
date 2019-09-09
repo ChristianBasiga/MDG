@@ -1,13 +1,11 @@
 package mdg_schema.spawners;
 import "improbable/standard_library.schema";
 import "improbable/vector3.schema";
+import "units/unit_types.schema";
 
-enum UnitTypes{
-    COLLECTOR = 0;
-}
 //Move this to payloads folder as needed.
 type UnitSpawnRequest {
-    UnitTypes type = 1;
+    units.UnitTypes type = 1;
 }
 
 type UnitSpawnResponse {

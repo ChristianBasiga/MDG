@@ -13,7 +13,8 @@ namespace MDG.Hunter.Systems.UnitCreation
 
         public static void AddServerSystems(World world)
         {
-            world.GetOrCreateSystem<UnitCreationSystem>();
+            //world.GetOrCreateSystem<UnitCreationSystem>();
+           
         }
     }
 }

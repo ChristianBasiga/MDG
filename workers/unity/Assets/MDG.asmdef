@@ -9,7 +9,17 @@
         "Unity.Entities",
         "Unity.Entities.Hybrid",
         "Unity.Mathematics",
-        "Improbable.Gdk.GameObjectCreation"
+        "Improbable.Gdk.GameObjectCreation",
+        "Zenject",
+        "Zenject-Editor",
+        "Zenject-PoolMonitor-Editor",
+        "Zenject-ReflectionBaking-Editor",
+        "Unity.Transforms",
+        "Unity.Transforms.Hybrid",
+        "Unity.Transforms.PerformanceTests",
+        "Unity.Rendering.Hybrid",
+        "Unity.Collections",
+        "Unity.Mathematics.Extensions"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
