@@ -6,7 +6,7 @@ using Unity.Entities;
 using Improbable;
 using Unity.Mathematics;
 using Improbable.Gdk.Core;
-
+using MdgSchema.Common;
 
 namespace MDG.Common.Systems
 {
@@ -19,10 +19,10 @@ namespace MDG.Common.Systems
         {
             base.OnCreate();
             authPosQuery = GetEntityQuery(
-                ComponentType.ReadWrite<Position.Component>(),
-                ComponentType.ReadOnly<Position.ComponentAuthority>()
+                ComponentType.ReadWrite<EntityTransform.Component>(),
+                ComponentType.ReadOnly<EntityTransform.ComponentAuthority>()
             );
-            authPosQuery.SetFilter(Position.ComponentAuthority.Authoritative);
+            authPosQuery.SetFilter(EntityTransform.ComponentAuthority.Authoritative);
 
         }
         protected override void OnUpdate()
@@ -31,12 +31,12 @@ namespace MDG.Common.Systems
             if (movedForawrd)
             {
                 // Mayhaps only update actual position down line.
-                Entities.With(authPosQuery).ForEach((ref Position.Component position, ref Unity.Transforms.Translation translation) =>
+                Entities.With(authPosQuery).ForEach((ref EntityTransform.Component position) =>
                 {
-                        Debug.LogError("Moving forward");
-                        position.Coords = new Coordinates(position.Coords.X + 1, position.Coords.Y, position.Coords.Z);
-                        //Vector3 vector3 = position.Coords.ToUnityVector();
-                        //translation.Value = new float3(vector3.x, vector3.y, vector3.z);
+                    Debug.LogError("Moving forward");
+                    position.Position = position.Position + new Vector3f(position.Position.X + 1, 0, 0);
+                    //Vector3 vector3 = position.Coords.ToUnityVector();
+                    //translation.Value = new float3(vector3.x, vector3.y, vector3.z);
                 });
             }
 

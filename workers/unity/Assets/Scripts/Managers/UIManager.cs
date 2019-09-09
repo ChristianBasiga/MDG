@@ -6,9 +6,12 @@ using MdgSchema.Player;
 
 namespace MDG.ClientSide.UserInterface
 {
+   
     public class UIManager : MonoBehaviour
     {
+        //Inject these later.
         public GameObject roleSelectionUI;
+        public Transform selectionGrid;
 
         public delegate void RoleSelectedHandler(PlayerType type);
         public event RoleSelectedHandler OnRoleSelected;
@@ -21,8 +24,5 @@ namespace MDG.ClientSide.UserInterface
 
             roleSelectionUI.SetActive(false);
         }
-
-       
-
     }
 }

@@ -105,6 +105,7 @@ namespace MDG.Common.Systems {
             EntityManager entityManager = World.Active.EntityManager;
 
             //Check if clicked anything and get clicked entity id.
+            // Replace how I do this.
             if (Physics.Raycast(mouseRay, out RaycastHit raycastHit))
             {
                 // Gotta add extra check for validity later.

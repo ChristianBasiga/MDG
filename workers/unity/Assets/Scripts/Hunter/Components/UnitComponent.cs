@@ -45,4 +45,10 @@ namespace MDG.Hunter.Components {
         //Width, Height, Depth
         public Vector3 LineOfSight;
     }
+
+    public struct UnitSpawner : IComponentData
+    {
+        public int AmountToSpawn;
+        public Vector3f Position;
+    }
 }

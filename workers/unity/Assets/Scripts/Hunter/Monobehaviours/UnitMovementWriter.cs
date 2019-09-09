@@ -1,5 +1,6 @@
 ﻿using Improbable;
 using Improbable.Gdk.Subscriptions;
+using MdgSchema.Common;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,12 +12,12 @@ namespace MDG.Hunter.Monobehaviours
     //
     public class UnitMovementWriter : MonoBehaviour
     {
-        [Require] PositionWriter positionWriter;
+        [Require] EntityTransformWriter positionWriter;
         public void UpdatePosition(Vector3 position)
         {
-            positionWriter.SendUpdate(new Position.Update
+            positionWriter.SendUpdate(new EntityTransform.Update
             {
-                Coords = new Coordinates { X = transform.position.x, Y = transform.position.y, Z = transform.position.z }
+                Position = Vector3f.FromUnityVector(position)
             });
         }
     }

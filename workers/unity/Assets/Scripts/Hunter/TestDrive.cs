@@ -47,40 +47,12 @@ namespace MDG.Hunter.Testing
                 commandToBehaviourTreesScripts[(Commands.CommandType)System.Enum.Parse(typeof(Commands.CommandType), commandType)] =
                     Resources.LoadAll<TextAsset>($"BehaviourTreeScripts/{commandType}/");
             }
+            this.CustomGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().customGameObjectCreator;
 
             CommandUpdateSystem.OnCommandExecute += QueueCommandToExecute;
             StartCoroutine(ExecutePendingCommandRoutine());
         }
 
-        public void CreateUnit(UnitTypes typeToCreate)
-        {
-
-            //In future unit spawner should also take in kind of Unit to spawn.
-            //Maybe client connector / game manager have this.
-            //Game manager should also be an entity honestly.
-            LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
-            //Can turn UnitSpawner to non spatial later
-            Entity unitSpawner = linkedEntityComponent.Worker.EntityManager.CreateEntity(typeof(UnitSpawner.Component));
-            //Get position too???????? mayhaps its own system.
-           
-            linkedEntityComponent.Worker.EntityManager.SetComponentData(unitSpawner, new UnitSpawner.Component {
-
-                AmountToSpawn = 1,
-                Position = new Improbable.Coordinates
-                {
-                    X = 1.0,
-                    Y = 10.0,
-                    Z = 1.0
-                } });
-        }
-
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Z))
-            {
-                CreateUnit(UnitTypes.COLLECTOR);
-            }
-        }
 
         void QueueCommandToExecute(EntityId commandListener, System.Type type, CommandListener commandPayload)
         {

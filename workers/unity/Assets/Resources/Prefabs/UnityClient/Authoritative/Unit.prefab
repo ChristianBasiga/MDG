@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 1239168726090287049}
   - component: {fileID: 1239168726090287048}
   - component: {fileID: 1239168726090287047}
-  - component: {fileID: 1879512790}
   - component: {fileID: -5918345958932264438}
   - component: {fileID: -6803481168121852531}
+  - component: {fileID: -3073178280501918816}
   m_Layer: 0
   m_Name: Unit
   m_TagString: Untagged
@@ -80,23 +80,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &1879512790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1239168726090287045}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d78feab8868282945ad03dd56b17ce6c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ReceiveStrategies:
-  - {fileID: 11400000, guid: d876a43cd6cc95e409c20896328de047, type: 2}
-  SendStrategies:
-  - {fileID: 11400000, guid: d5d05622e59ed9248a442b66054f6607, type: 2}
-  SetKinematicWhenNotAuthoritative: 1
 --- !u!136 &-5918345958932264438
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -132,4 +115,16 @@ NavMeshAgent:
   m_Height: 2
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 2
+--- !u!114 &-3073178280501918816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239168726090287045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8658e4ff243f96748abc79a66772e98a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

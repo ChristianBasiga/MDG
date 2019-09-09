@@ -18,6 +18,7 @@ using Zenject;
 using MDG.ClientSide;
 using MDG.Common.Components;
 using Unity.Mathematics;
+using MdgSchema.Common;
 
 namespace MDG.Hunter.Systems.UnitCreation
 {
@@ -33,8 +34,8 @@ namespace MDG.Hunter.Systems.UnitCreation
         private WorkerSystem workerSystem;
         private EntityQuery filter;
         private EntityQuery unitSetupQuery;
-        private Dictionary<long, Coordinates> creationRequestToPosition;
-        private Dictionary<EntityId, Coordinates> entityIdToPosition;
+        private Dictionary<long, Vector3f> creationRequestToPosition;
+        private Dictionary<EntityId, Vector3f> entityIdToPosition;
 
         // Maybe this will be stored else where, like a mesh factory.
         private Dictionary<UnitTypes, RenderMesh> unitTypeToRenderMesh;
@@ -48,15 +49,18 @@ namespace MDG.Hunter.Systems.UnitCreation
         {
             base.OnCreate();
             commandSystem = World.GetExistingSystem<CommandSystem>();
-            filter = GetEntityQuery(ComponentType.ReadWrite<UnitSpawner.Component>());
+            filter = GetEntityQuery(ComponentType.ReadWrite<Components.UnitSpawner>());
             unitSetupQuery = GetEntityQuery(
                 ComponentType.ReadOnly<MdgSchema.Units.Unit.Component>(),
-                ComponentType.ReadOnly<SpatialEntityId>()
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadWrite<EntityTransform.Component>(),
+                ComponentType.ReadOnly<EntityTransform.ComponentAuthority>()
             );
+            unitSetupQuery.SetFilter(EntityTransform.ComponentAuthority.Authoritative);
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             entitySystem = World.GetExistingSystem<EntitySystem>();
-            creationRequestToPosition = new Dictionary<long, Coordinates>();
-            entityIdToPosition = new Dictionary<EntityId, Coordinates>();
+            creationRequestToPosition = new Dictionary<long, Vector3f>();
+            entityIdToPosition = new Dictionary<EntityId, Vector3f>();
 
         }
 
@@ -71,7 +75,7 @@ namespace MDG.Hunter.Systems.UnitCreation
         {
             // Queues all Units to spawn.
             // Instead of iterating through unit spawners, 
-            Entities.With(filter).ForEach((ref SpatialEntityId spatialEntityId, ref UnitSpawner.Component spawner) =>
+            Entities.With(filter).ForEach((Unity.Entities.Entity entity, ref Components.UnitSpawner spawner) =>
             {
                 if (spawner.AmountToSpawn > 0)
                 {
@@ -79,9 +83,12 @@ namespace MDG.Hunter.Systems.UnitCreation
                     EntityTemplate template = Unit.Templates.GetCollectorUnitEntityTemplate(workerSystem.WorkerId);
                     long requestId = commandSystem.SendCommand(new WorldCommands.CreateEntity.Request(template));
                     creationRequestToPosition[requestId] = spawner.Position;
-                    commandSystem.SendCommand(new WorldCommands.DeleteEntity.Request(spatialEntityId.EntityId));
+                    spawner.AmountToSpawn = 0;
                 }
-                spawner.AmountToSpawn = 0;
+                else
+                {
+                    PostUpdateCommands.DestroyEntity(entity);
+                }
             });
 
             //Then query create entity responses in client world and look for unit creations.
@@ -91,11 +98,8 @@ namespace MDG.Hunter.Systems.UnitCreation
                 for (int i = 0; i < responses.Count; ++i)
                 {
                     ref readonly var response = ref responses[i];
-                    //if matched, then we got response.
-                    Coordinates positionForUnit;
-
                     //Map entityId to position for that entity.
-                    if (creationRequestToPosition.TryGetValue(response.RequestId, out positionForUnit))
+                    if (creationRequestToPosition.TryGetValue(response.RequestId, out Vector3f positionForUnit))
                     {
                         switch (response.StatusCode)
                         {
@@ -119,25 +123,26 @@ namespace MDG.Hunter.Systems.UnitCreation
             if (entityIdToPosition.Count == 0) return;
             UnityClientConnector gm = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>();
             CustomGameObjectCreator creator = gm.customGameObjectCreator;
-            Debug.LogError(creator);
-            //Mayhaps, I can set hte acive world to client world??
-            foreach (var world in World.AllWorlds)
+            Entities.With(unitSetupQuery).ForEach((ref SpatialEntityId id, ref MdgSchema.Units.Unit.Component unitComponent, ref EntityTransform.Component position) =>
             {
-                Debug.LogError(world.Name);
-            }
-            Entities.With(unitSetupQuery).ForEach((ref SpatialEntityId id, ref MdgSchema.Units.Unit.Component unitComponent) =>
-            {
-                
-                if (entityIdToPosition.TryGetValue(id.EntityId, out Coordinates positionToSet))
+                if (entityIdToPosition.TryGetValue(id.EntityId, out Vector3f positionToSet))
                 {
-                    if (creator.EntityToGameObjects.TryGetValue(id.EntityId, out List<GameObject> gameobjects))
+                    position.Position = positionToSet;
+                    entityIdToPosition.Remove(id.EntityId);
+                    if (creator.EntityToGameObjects.TryGetValue(id.EntityId, out List<GameObject> gameObjects))
                     {
-                        Debug.LogError(gameobjects[0].name);
-                        Debug.LogError(gameobjects[0].transform.position);
-                        Debug.LogError(positionToSet);
-                        Debug.LogError(positionToSet.ToUnityVector());
-                        gameobjects[0].transform.position = positionToSet.ToUnityVector();
-                        entityIdToPosition.Remove(id.EntityId);
+                        // Could put this back to r
+                        GameObject gameObject;
+                        //gameobjects[0].transform.position = positionToSet.ToUnityVector();
+                        if (GameObject.Find(gameObjects[0].name))
+                        {
+                            gameObject = gameObjects[0];
+                        }
+                        else
+                        {
+                            gameObject = gameObjects[1];
+                        }
+                         gameObject.transform.position = positionToSet.ToUnityVector();
                     }
 
                 }

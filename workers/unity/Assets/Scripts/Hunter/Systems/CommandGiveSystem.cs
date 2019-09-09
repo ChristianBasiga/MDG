@@ -63,6 +63,12 @@ namespace MDG.Hunter.Systems
             }
         }
 
+
+        // Per client, only one command giver, so truthfully, no reason to be a job.
+        // Unless change command giver to noe take in MouseInput component, but what command giver has selected.
+
+        //  
+
         //IJobParallelForTransform jobParallelForTransforms;
         public struct CommandQueryJob : IJobForEach<CommandGiver, SpatialEntityId, MouseInputComponent>
         {
@@ -122,7 +128,8 @@ namespace MDG.Hunter.Systems
                     }
                     else
                     {
-
+                        // Only add attack, if clicked on entity with enemy component.
+                        // How I do this needs to change.
                         // Dest for these actually locaton of unit but for this frame that is same.
                         // then during execution of command get position of target id.
                         switch (rightClickedMeta)

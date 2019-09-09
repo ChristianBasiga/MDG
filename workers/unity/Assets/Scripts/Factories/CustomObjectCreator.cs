@@ -27,8 +27,6 @@ namespace MDG
     {
         // Storing here prob fine actually.
         public Dictionary<EntityId, List<GameObject>> EntityToGameObjects { private set; get; }
-        public static Mesh mesh;
-        public static Material material;
         // Get from pool down line.
         private Dictionary<GameEntityTypes, Dictionary<bool, GameObject>> keyToPrefabs;
         private readonly IEntityGameObjectCreator _default;
@@ -53,11 +51,11 @@ namespace MDG
             new Coordinates(width - (width * 0.1f), 100, length * 0.6),
             new Coordinates((-width) + (width * 0.1f), 100, -length * 0.6),
         };
-        public List<Coordinates> initialUnitCoordinates = new List<Coordinates>
+        public List<Vector3f> initialUnitCoordinates = new List<Vector3f>
         {
-            new Coordinates( width + (width * 0.1f), 20, 0),
-            new Coordinates( width + (width * 0.1f), 20, (length * 0.6f)),
-            new Coordinates( width + (width * 0.1f), 20, -(length * 0.6f)),
+            new Vector3f( width + (width * 0.1f), 20, 0),
+            new Vector3f( width + (width * 0.1f), 20, (length * 0.6f)),
+            new Vector3f( width + (width * 0.1f), 20, -(length * 0.6f)),
         };
 
         //Look into being able to add multiple custom creators and see if can do that instead.   
@@ -103,22 +101,20 @@ namespace MDG
                             // Maybe snapshot type of count, that would be ideal actually.
                             _world.EntityManager.AddComponent(hunterEntity, ComponentType.ReadWrite<MouseInputComponent>());
                             _world.EntityManager.AddComponent(hunterEntity, ComponentType.ReadWrite<CommandGiver>());
+                            _world.EntityManager.AddComponent(hunterEntity, ComponentType.ReadWrite<Selection>());
                             // For this to work, I need to trigger event.
                             // and need to send event to worker 
 
                             // Decide best way to sort this out, prob via installer.
                             int multiplier = startingPointsUsed == 1 ? 1 : -1;
 
-                            Debug.LogError($"mesh:{mesh.name} material: {material.name}");
 
                             for (int i = 0; i < initialUnitCoordinates.Count; ++i)
                             {
 
-                                Vector3 updated = initialUnitCoordinates[i].ToUnityVector();// + startingPoints[startingPointsUsed].ToUnityVector());
-                                Coordinates startingCoords = new Coordinates(updated.x, updated.y, updated.z);
-                                Entity unitSpawner = _world.EntityManager.CreateEntity(typeof(UnitSpawner.Component));
-
-                                _world.EntityManager.SetComponentData(unitSpawner, new UnitSpawner.Component
+                                Vector3f startingCoords = initialUnitCoordinates[i];// + startingPoints[startingPointsUsed].ToUnityVector());
+                                Entity unitSpawner = _world.EntityManager.CreateEntity(typeof(Hunter.Components.UnitSpawner));
+                                _world.EntityManager.SetComponentData(unitSpawner, new Hunter.Components.UnitSpawner
                                 {
                                     AmountToSpawn = 1,
                                     Position = startingCoords
@@ -152,11 +148,13 @@ namespace MDG
                 Vector3 startingPoint = startingPoints[startingPointsUsed].ToUnityVector();
                 created.transform.position = startingPoint;
 
+                GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
+                created.tag = "MainCamera";
+
 
             }
             else if (metaData.EntityType.Equals("Unit"))
             {
-                Debug.LogError("here");
                 Entity unitEntity;
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 if (worker.TryGetEntity(entity.SpatialOSEntityId, out unitEntity))
@@ -164,7 +162,6 @@ namespace MDG
                     // Custom creator essentially just acting as entity creation call back.
                     _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadWrite<Clickable>());
                     _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadWrite<UnitComponent>());
-                    _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadWrite<Unity.Transforms.Translation>());
                     if (hasAuthority)
                     {
                         pathToEntity = $"{pathToEntity}/Authoritative";
@@ -178,6 +175,8 @@ namespace MDG
                 }
                 pathToEntity = $"{pathToEntity}/Unit";
                 GameObject gameObject = CreateEntityObject(entity, linker, pathToEntity, null, null);
+                gameObject.tag = "Unit";
+                gameObject.name = $"{gameObject.name} {(hasAuthority? "authoritative" : "")}";
             }
             else
             {
@@ -198,8 +197,8 @@ namespace MDG
                     gameObject.SetActive(false);
                 }
             }
-            EntitySyncSystem syncSystem = _world.GetExistingSystem<EntitySyncSystem>();
-            syncSystem.DestroyEntity(entityId);
+           // EntitySyncSystem syncSystem = _world.GetExistingSystem<EntitySyncSystem>();
+           // syncSystem.DestroyEntity(entityId);
         }
 
         GameObject CreateEntityObject(SpatialOSEntity entity, EntityGameObjectLinker linker, string pathToEntity, Transform parent = null, System.Type[] ecsComponents = null)

@@ -19,8 +19,6 @@ namespace MDG
     {
         public const string WorkerType = "UnityClient";
         public CustomGameObjectCreator customGameObjectCreator { get; private set; }
-        public Mesh mesh;
-        public Material material;
 
         private async void Start()
         {
@@ -63,8 +61,6 @@ namespace MDG
         {
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
             customGameObjectCreator = new CustomGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
-            CustomGameObjectCreator.mesh = mesh;
-            CustomGameObjectCreator.material = material;
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customGameObjectCreator);
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
@@ -73,10 +69,13 @@ namespace MDG
             Worker.World.GetOrCreateSystem<StatUpdateSystem>();
             Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
             Worker.World.GetOrCreateSystem<MoveSystem>();
+
+            // Todo: Move these to helper class to pass in hunter client systems.
             Worker.World.GetOrCreateSystem<MouseInputSystem>();
             Worker.World.GetOrCreateSystem<CommandGiveSystem>();
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
             Worker.World.GetOrCreateSystem<EntitySyncSystem>();
+            Worker.World.GetOrCreateSystem<SelectionSystem>();
             //WHY WONT YOU RENDER.
             /*
             Worker.World.GetOrCreateSystem<Unity.Rendering.RenderMeshSystemV2>();

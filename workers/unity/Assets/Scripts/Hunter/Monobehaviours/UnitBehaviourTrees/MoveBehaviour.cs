@@ -13,11 +13,11 @@ namespace MDG.Hunter.Monobehaviours
     //Later all these deps will be injected, for now this is fine.
     public class MoveBehaviour : UnitBehaviour
     {
+        // Remove navmesg agent and implment own later, now I cannot fucking waste time on more ground work / reinventing wheel.
         NavMeshAgent agent;
         NavMeshObstacle obstacle;
         Vector3 targetDestination;
         UnitMovementWriter UnitMovementWriter;
-        [Require] PositionWriter positionWriter;
         //Later on initialize depending on target Id.
         protected float minDistance = 0.001f;
         Vector3[] corners;
@@ -27,7 +27,7 @@ namespace MDG.Hunter.Monobehaviours
         public override void Initialize(EntityId id, CommandListener commandData)
         {
             targetDestination = commandData.TargetPosition;
-            targetDestination.y = transform.position.y;
+           // targetDestination.y = transform.position.y;
             base.Initialize(id, commandData);
         }
 
@@ -79,7 +79,8 @@ namespace MDG.Hunter.Monobehaviours
         public void MoveToLocation()
         {
             Vector3 directionVector = targetDestination - transform.position;
-            agent.Move(directionVector * Time.deltaTime);
+            //agent.Move(directionVector * Time.deltaTime);
+            transform.position += directionVector * Time.deltaTime;
             UnitMovementWriter.UpdatePosition(transform.position);
         }
     }

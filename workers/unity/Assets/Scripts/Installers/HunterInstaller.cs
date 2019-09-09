@@ -16,6 +16,7 @@ namespace MDG.Installers {
         
         public override void InstallBindings()
         {
+            /*
             Container.Bind<CameraController>().FromNewComponentOnNewGameObject().AsSingle();
               Container.Bind<Camera>().FromInstance(GetSceneCamera()).WhenInjectedInto<CameraController>();
             Container.Bind<CameraController.Settings>().AsSingle().WithArguments(
@@ -24,7 +25,7 @@ namespace MDG.Installers {
                 10.0f,
                 100.0f
             ).WhenInjectedInto<CameraController>().Lazy();
-
+            */
             //Install bindings for unit creation.
            // Container.Bind<Dictionary<UnitTypes, RenderMesh>>().FromInstance(GetMeshesForUnits()).AsSingle().WhenInjectedInto<UnitCreationRequestSystem>();
 
