@@ -8,12 +8,15 @@ using Unity.Mathematics;
 
 namespace MDG.Hunter.Components
 {
-    //Maybe command giver component is more so the mouse stuff as well.
+    // Command Giver only added as component
+    // when gives a command.
+    // It should include the command given.
+    // then it will apply to all clickables that are clicked by this command giver.
+    // much cleaner than now, so actual creation of commands will be done prior to iterating through clickables.
+    [RemoveAtEndOfTick]
     public struct CommandGiver : IComponentData
     {
-        //Should be EntityId instead, not hard typed to only be interactable Selected, not best but best way to reference is thorugh id.
-        public EntityId SelectedListener;
-        public bool HasSelected;
+        public CommandMetadata commandMetadata;
     }
 
     // Should it be client only component?

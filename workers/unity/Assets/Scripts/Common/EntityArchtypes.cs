@@ -48,9 +48,8 @@ namespace MDG.Common
                  typeof(Metadata)
              );*/
 
-            return new System.Type[2]
+            return new System.Type[1]
             {
-                typeof(MouseInputComponent),
                 typeof(CommandGiver)
             };
         }
