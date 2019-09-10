@@ -24,10 +24,7 @@ namespace MDG.Hunter.Monobehaviours {
             if (linkedEntityComponent.Worker.TryGetEntity(linkedEntityComponent.EntityId, out Entity entity)) {
 
                 float3 convertedStart = Camera.main.ScreenToWorldPoint(payload.startPosition);
-                Debug.LogError($" before conversion start: {payload.startPosition} after conversion start: {convertedStart}");
                 float3 convertedEnd = Camera.main.ScreenToWorldPoint(payload.endPosition);
-                Debug.LogError($" before conversion end: {payload.endPosition} after conversion start: {convertedEnd}");
-
                 float3 convertedScale = Camera.main.ScreenToWorldPoint(payload.scale);
                 linkedEntityComponent.World.EntityManager.AddComponentData(entity, new Selection { StartPosition = convertedStart, Scale = convertedScale, EndPosition = convertedEnd});
             }

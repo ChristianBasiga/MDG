@@ -99,9 +99,7 @@ namespace MDG
                         if (worker.TryGetEntity(entity.SpatialOSEntityId, out hunterEntity))
                         {
                             // Maybe snapshot type of count, that would be ideal actually.
-                            _world.EntityManager.AddComponent(hunterEntity, ComponentType.ReadWrite<MouseInputComponent>());
                             _world.EntityManager.AddComponent(hunterEntity, ComponentType.ReadWrite<CommandGiver>());
-                            _world.EntityManager.AddComponent(hunterEntity, ComponentType.ReadWrite<Selection>());
                             // For this to work, I need to trigger event.
                             // and need to send event to worker 
 

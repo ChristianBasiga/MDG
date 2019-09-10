@@ -5,4 +5,5 @@ component EntityTransform{
     id = 803;
     improbable.Vector3f position = 1;
     improbable.Vector3f rotation = 2;
+    improbable.Vector3f scale = 3;
 }

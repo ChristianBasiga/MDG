@@ -71,7 +71,6 @@ namespace MDG
             Worker.World.GetOrCreateSystem<MoveSystem>();
 
             // Todo: Move these to helper class to pass in hunter client systems.
-            Worker.World.GetOrCreateSystem<MouseInputSystem>();
             Worker.World.GetOrCreateSystem<CommandGiveSystem>();
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
             Worker.World.GetOrCreateSystem<EntitySyncSystem>();

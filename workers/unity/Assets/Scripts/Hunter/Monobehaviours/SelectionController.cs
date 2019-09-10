@@ -21,12 +21,6 @@ namespace MDG.Hunter.Monobehaviours
         public event SelectionEventHandler OnSelectionEnd;
         [SerializeField]
         private Vector3 startSelection;
-        // Add require to selection component.
-        // Start is called before the first frame update
-        void Start()
-        {
-
-        }
 
         Vector3 GetSelectionScale()
         {
