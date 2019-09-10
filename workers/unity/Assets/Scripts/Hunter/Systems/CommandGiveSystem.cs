@@ -12,6 +12,7 @@ using MdgSchema.Common;
 using UnityEngine;
 using Unity.Mathematics;
 using MdgSchema.Units;
+using Improbable.Gdk.Subscriptions;
 
 namespace MDG.Hunter.Systems
 {
@@ -19,35 +20,10 @@ namespace MDG.Hunter.Systems
     [DisableAutoCreation]
     [UpdateAfter(typeof(SelectionSystem))]
     [UpdateInGroup(typeof(EntitySelectionGroup))]
-    public class CommandGiveSystem : JobComponentSystem
+    public class CommandGiveSystem : ComponentSystem
     {
 
-        // Set by controller
-        public EntityId HunterId { set; get; }
-        EndSimulationEntityCommandBufferSystem simulationEntityCommandBufferSystem;
-        //Meta data should be only thing I add.
-        public struct CommandPending
-        {
-            //public ICommand Command;
-            public UnityEngine.Vector3 Dest;
-            public EntityId TargetId;
-            public CommandType CommandMetaData;
-            public EntityId CommandListenerId;
-        }
 
-        private NativeArray<CommandPending> commandsPending;
-        private JobHandle commandGiveJobHandle;
-        public struct ClickablePayload
-        {
-            public EntityId clickableId;
-            public GameEntityTypes gameEntityType;
-        }
-
-        private bool assignedJobHandle = false;
-        JobHandle jobHandle;
-        NativeArray<CommandPending> pendingCommands;
-        public delegate void PendingCommandEventHandler(CommandPending commandPending);
-        public event PendingCommandEventHandler OnCommandPending;
         // Checks what command the right click signified,
         // This would be applying the command to each Unit.
         // what I really need to do first is process it.
@@ -55,17 +31,16 @@ namespace MDG.Hunter.Systems
         {
             public float3 botLeft;
             public float3 topRight;
-            public NativeArray<bool> foundSelection;
+
             public NativeArray<CommandMetadata> commandMetadata;
 
             public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Clickable clickable, [ReadOnly] ref GameMetadata.Component gameMetadata, [ReadOnly] ref EntityTransform.Component entityTransform)
             {
-                if (foundSelection[0]) return;
+                if (commandMetadata[0].CommandType != CommandType.None) return;
 
                 if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.y
                     && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.y)
                 {
-                    foundSelection[0] = true;
                     CommandMetadata command = new CommandMetadata { TargetId = spatialEntityId.EntityId, TargetPosition = entityTransform.Position.ToUnityVector() };
                     switch (gameMetadata.Type)
                     {
@@ -81,34 +56,10 @@ namespace MDG.Hunter.Systems
                             command.CommandType = CommandType.Attack;
                             break;
                     }
+                    commandMetadata[0] = command;
                 }
             }
         }
-
-        /*
-        public struct CommandGiveJob : IJobForEach<CommandListener, SpatialEntityId>
-        {
-            [ReadOnly]
-            public NativeArray<CommandPending> commandsPending;
-            public int commandsPendingCount;
-            public void Execute(ref CommandListener c0, [ReadOnly] ref SpatialEntityId c1)
-            {
-                for (int i = 0; i < commandsPendingCount; ++i)
-                {
-                    CommandPending commandPending = commandsPending[i];
-                    if (commandPending.CommandMetaData != CommandType.None)
-                    {
-                        if (commandPending.CommandListenerId.Equals(c1.EntityId))
-                        {
-                            c0.CommandType = commandPending.CommandMetaData;
-                            c0.TargetId = commandPending.TargetId;
-                            c0.TargetPosition = commandPending.Dest;
-                            break;
-                        }
-                    }
-                }
-            }
-        }*/
 
         public struct CommandGiveJob : IJobForEachWithEntity<Clickable, MdgSchema.Units.Unit.Component, CommandListener>
         {
@@ -119,6 +70,10 @@ namespace MDG.Hunter.Systems
             {
                 if (clicked.Clicked && clicked.ClickedEntityId.Equals(hunterId))
                 {
+                    //Clean up and stop all command compnents on unit before adding a new one.
+                    entityCommandBuffer.RemoveComponent(index, entity, typeof(MoveCommand));
+                    entityCommandBuffer.RemoveComponent(index, entity, typeof(AttackCommand));
+                    entityCommandBuffer.RemoveComponent(index, entity, typeof(CollectCommand));
                     switch (commandGiven.CommandType)
                     {
                         case CommandType.Move:
@@ -137,49 +92,47 @@ namespace MDG.Hunter.Systems
         protected override void OnCreate()
         {
             base.OnCreate();
-            simulationEntityCommandBufferSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
         }
 
-        protected override JobHandle OnUpdate(JobHandle inputDeps)
+        protected override void OnUpdate()
         {
-            if (!Input.GetMouseButtonDown(1))
+            GameObject hunter = GameObject.FindGameObjectWithTag("MainCamera");
+            LinkedEntityComponent linkedEntityComponent = hunter.GetComponent<LinkedEntityComponent>();
+            if (linkedEntityComponent == null || !Input.GetMouseButtonDown(1))
             {
-                return inputDeps;
+                return;
             }
 
+
+            EntityId hunterId = linkedEntityComponent.EntityId;
             float3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
             // Creates bounding box for right click big enough to sense the click.
             float3 botLeft = mousePos + new float3(-10, -10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
             float3 topRight = mousePos + new float3(+10, +10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
-            NativeArray<bool> foundSelection = new NativeArray<bool>(1, Allocator.TempJob);
             NativeArray<CommandMetadata> commandGiven = new NativeArray<CommandMetadata>(1, Allocator.TempJob);
-            foundSelection[0] = false;
+            commandGiven[0] = new CommandMetadata { CommandType = CommandType.None };
             CommandProcessJob commandProcessJob = new CommandProcessJob
             {
-                foundSelection = foundSelection,
                 commandMetadata = commandGiven,
                 botLeft = botLeft,
                 topRight = topRight
             };
-            inputDeps = commandProcessJob.Schedule(this, inputDeps);
-            inputDeps.Complete();
+            commandProcessJob.ScheduleSingle(this).Complete();
             CommandMetadata commandMetadata = commandGiven[0];
-            commandGiven.Dispose();
             // If right click did not overlap with any clickable, then it is a move command.
-            if (!foundSelection[0])
+            if (commandMetadata.CommandType == CommandType.None)
             {
                 commandMetadata = new CommandMetadata { TargetPosition = mousePos, CommandType = CommandType.Move };
             }
-            // Now command give job will add the correct command to each clickable that has been selected by entity.
             CommandGiveJob commandGiveJob = new CommandGiveJob
             {
                 commandGiven = commandMetadata,
-                entityCommandBuffer = simulationEntityCommandBufferSystem.CreateCommandBuffer().ToConcurrent(),
-                hunterId = HunterId
+                entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
+                hunterId = hunterId
             };
-            inputDeps = commandGiveJob.Schedule(this, inputDeps);
-            inputDeps.Complete();
-            return inputDeps;
+            commandGiveJob.Schedule(this).Complete();
+            commandGiven.Dispose();
         }
     }
 }

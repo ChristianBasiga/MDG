@@ -36,7 +36,7 @@ namespace MDG.ClientSide.UserInterface
 
         private void OnGUI()
         {
-            if (selectionGridRect != Rect.zero) {
+            if (selectionGridRect != Rect.zero && selectionGridRect.width != 0 && selectionGridRect.height != 0) {
                 GUI.Box(selectionGridRect, selectionGridSkin);
             }
         }

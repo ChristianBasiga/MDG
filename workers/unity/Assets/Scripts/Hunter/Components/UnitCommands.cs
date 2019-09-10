@@ -10,11 +10,13 @@ namespace MDG.Hunter.Components
         public float3 destination;
     }
 
+    // Will get positon of target each time to follow.
     public struct AttackCommand : IComponentData
     {
         public EntityId target;
     }
 
+    // resource location won't change, so won't be checking position each frame
     public struct CollectCommand : IComponentData
     {
         public EntityId resourceId;

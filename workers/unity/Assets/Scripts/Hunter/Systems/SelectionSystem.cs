@@ -123,11 +123,10 @@ namespace MDG.Hunter.Systems {
         {
             // Complete previous selection setting if didn't complete last frame.
             // this may the case if selected many units.
-            selectedJobHandle.Complete();
+          /*  selectedJobHandle.Complete();
             if (idToSelectionBounds.IsCreated)
             {
-                idToSelectionBounds.Dispose();
-            }
+            }*/
             int selectorCount = selectorGroup.CalculateEntityCount();
             if (selectorCount == 0) return inputDeps;
             
@@ -154,7 +153,8 @@ namespace MDG.Hunter.Systems {
             };
 
             selectedJobHandle = setSelectedEntities.Schedule(this, selectedBoundsJob);
-
+            selectedJobHandle.Complete();
+            idToSelectionBounds.Dispose();
             return selectedJobHandle;
         }
     }
