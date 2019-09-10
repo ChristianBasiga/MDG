@@ -11,14 +11,13 @@ public class UnitMovementSynchronization : MonoBehaviour
 {
 
     [Require] EntityTransformReader positionReader;
-    NavMeshAgent agent;
     private void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
+        positionReader.OnPositionUpdate += PositionReader_OnPositionUpdate;
     }
-        // Need to happena after a frame, cause spawning position requires this update.
-    private void Update()
+
+    private void PositionReader_OnPositionUpdate(Vector3f obj)
     {
-        transform.position = positionReader.Data.Position.ToUnityVector();
+        transform.position = obj.ToUnityVector();
     }
 }

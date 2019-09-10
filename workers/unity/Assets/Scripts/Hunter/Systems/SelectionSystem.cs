@@ -4,6 +4,7 @@ using MDG.Common.Components;
 using MDG.Hunter.Components;
 using MdgSchema.Common;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -85,10 +86,12 @@ namespace MDG.Hunter.Systems {
             [ReadOnly]
             public NativeHashMap<EntityId, SelectionBounds> idToSelectionBounds;
             [DeallocateOnJobCompletion]
+            [NativeDisableContainerSafetyRestriction]
             public NativeArray<EntityId> selected;
 
             public int index;
 
+            // Instead of single, do double buffering, have a selected to read from, and one to writ eto?
             public void Execute([ReadOnly] ref SpatialEntityId id, [ReadOnly] ref EntityTransform.Component entityTransform, ref Clickable clickable)
             {
                 NativeArray<EntityId> selectorIds = idToSelectionBounds.GetKeyArray(Allocator.Temp);
@@ -123,38 +126,35 @@ namespace MDG.Hunter.Systems {
         {
             // Complete previous selection setting if didn't complete last frame.
             // this may the case if selected many units.
-          /*  selectedJobHandle.Complete();
+            selectedJobHandle.Complete();
             if (idToSelectionBounds.IsCreated)
             {
-            }*/
+                idToSelectionBounds.Dispose();
+            }
             int selectorCount = selectorGroup.CalculateEntityCount();
-            if (selectorCount == 0) return inputDeps;
-            
+            if (selectorCount == 0)
+            {
+                return inputDeps;
+
+            }
             // If selector count isn't 0, then new selection has been made this frame, reset Clickables.
             ResetSelectedEntities resetSelectedEntitiesJob = new ResetSelectedEntities();
             resetSelectedEntitiesJob.Schedule(this).Complete();
-            
             idToSelectionBounds = new NativeHashMap<EntityId, SelectionBounds>(selectorCount, Allocator.TempJob);
-
             GetSelectedBounds getSelectedBounds = new GetSelectedBounds
             {
                 idToSelectionBounds = idToSelectionBounds.AsParallelWriter()
             };
-
             JobHandle selectedBoundsJob = getSelectedBounds.Schedule(this);
             selectedBoundsJob.Complete();
 
-            NativeArray<EntityId> selectedFlags = new NativeArray<EntityId>(selectorCount, Allocator.TempJob);
             SetSelectedEntities setSelectedEntities = new SetSelectedEntities
             {
                 idToSelectionBounds = idToSelectionBounds,
-                selected = selectedFlags,
+                selected = new NativeArray<EntityId>(selectorCount, Allocator.TempJob),
                 index = 0
             };
-
             selectedJobHandle = setSelectedEntities.Schedule(this, selectedBoundsJob);
-            selectedJobHandle.Complete();
-            idToSelectionBounds.Dispose();
             return selectedJobHandle;
         }
     }

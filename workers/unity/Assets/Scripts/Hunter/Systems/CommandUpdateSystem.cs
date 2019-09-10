@@ -15,6 +15,7 @@ using MDG.Logging;
 using MdgSchema.Common;
 using Improbable;
 using Improbable.Gdk.PlayerLifecycle;
+using Unity.Mathematics;
 
 namespace MDG.Hunter.Systems
 {
@@ -36,71 +37,26 @@ namespace MDG.Hunter.Systems
         private EntityQuery enemyQuery;
         private EntityQuery friendlyQuery;
         public JobHandle CommandExecuteJobHandle { get; private set; }
-        //Component Type
-        //Perhaps should rename to meta data or payload.
-        public delegate void CommandUpdateEventHandler(EntityId commandListener, System.Type type, CommandListener commandPayload);
-        //Each unit should be abel to get GameObject attached to via SpatialEntityId
-        public static event CommandUpdateEventHandler OnCommandExecute;
-        public static event CommandUpdateEventHandler OnCommandTerminated;
-        public struct CommandExecutionJob : IJobForEach<CommandListener, SpatialEntityId>
-        {
-            //re add changed filer later after move collision code to own system.
-            public void Execute( ref CommandListener commandListener, [ReadOnly] ref SpatialEntityId spatialEntityId)
-            {
-               
-                if (commandListener.CommandType == CommandType.None) return;
 
-                // I could make this more scalable through reflection like I did with encounters in DF mod
-                // create mapping of Command Type to type, reduce overhead of getting type.
-                switch (commandListener.CommandType)
+        public struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component>
+        {
+            public EntityCommandBuffer.Concurrent entityCommandBuffer;
+            public float deltaTime;
+            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref MoveCommand moveCommand, [ReadOnly] ref EntityTransform.Component entityTransform)
+            {
+                float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
+                float distance = math.distance(moveCommand.destination, pos);
+                const float minDistance = 1.0f;
+                if (distance < minDistance)
                 {
-                    case CommandType.Collect:
-                        OnCommandExecute?.Invoke(spatialEntityId.EntityId, typeof(CollectBehaviour), commandListener);
-                        break;
-                    case CommandType.Move:
-                        OnCommandExecute?.Invoke(spatialEntityId.EntityId, typeof(MoveBehaviour), commandListener);
-                        break;
-                    case CommandType.Attack:
-                        OnCommandExecute?.Invoke(spatialEntityId.EntityId, typeof(AttackBehaviour), commandListener);
-                        break;
+                    entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(MoveCommand));
                 }
-                commandListener.CommandType = CommandType.None;
-            }
-        }
-
-
-        public struct CommandInterruptionJob : IJobForEach<EnemyComponent, SpatialEntityId>
-        {
-            [ReadOnly]
-            Entity entityInterrupting;
-            public void Execute(ref EnemyComponent c0, ref SpatialEntityId c1)
-            {
-                throw new System.NotImplementedException();
-            }
-        }
-
-        //Gets subset of unit collisions of just enemies.
-        public struct GetCollidedEnemies : IJobForEachWithEntity<SpatialEntityId, EnemyComponent>
-        {
-            [ReadOnly]
-            public NativeArray<Entity> collidedAllUnits;
-            public NativeArray<Entity> collidedEnemies;
-            public void Execute(Entity entity, int index, ref SpatialEntityId c0, ref EnemyComponent c1)
-            {
-                //... Reading through collidedAllUnits should be fine, but might not be.
-                // I could turn this to ComponentSystem and make my life easier, I could still do jobs in component system
-            }
-        }
-
-        public struct HandleCollisionJob : IJobParallelFor
-        {
-            [ReadOnly]
-            public NativeArray<Entity> entities;
-            [ReadOnly]
-            public EntityCommandBuffer.Concurrent commandBuffer;
-            public void Execute(int index)
-            {
-                Entity entity = entities[index];
+                else
+                {
+                    Vector3f destinationVector = new Vector3f(moveCommand.destination.x, moveCommand.destination.y, moveCommand.destination.z);
+                    // Todo: apply units speed, from also including stat component in the filer.
+                    entityTransform.Position = entityTransform.Position + (destinationVector - entityTransform.Position) * deltaTime;
+                }
             }
         }
 
@@ -116,10 +72,14 @@ namespace MDG.Hunter.Systems
 
         protected override void OnUpdate()
         {
+            MoveCommandJob moveCommandJob = new MoveCommandJob
+            {
+                deltaTime = Time.deltaTime,
+                // Need to be able to get post update commands in client world in job component system.
+                entityCommandBuffer = PostUpdateCommands.ToConcurrent()
+            };
+            moveCommandJob.Schedule(this).Complete();
 
-            CommandExecutionJob commandExecutionJob = new CommandExecutionJob();
-            CommandExecuteJobHandle = commandExecutionJob.Schedule(this);
-            CommandExecuteJobHandle.Complete();
             //Receives events for collision.
             /*
             var eventPayloads = componentUpdateSystem.GetEventsReceived<EntityCollider.OnCollision.Event>();
