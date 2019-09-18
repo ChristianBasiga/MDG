@@ -131,9 +131,7 @@ namespace MDG.Hunter.Systems.UnitCreation
                     entityIdToPosition.Remove(id.EntityId);
                     if (creator.EntityToGameObjects.TryGetValue(id.EntityId, out List<GameObject> gameObjects))
                     {
-                        // Could put this back to r
                         GameObject gameObject;
-                        //gameobjects[0].transform.position = positionToSet.ToUnityVector();
                         if (GameObject.Find(gameObjects[0].name))
                         {
                             gameObject = gameObjects[0];

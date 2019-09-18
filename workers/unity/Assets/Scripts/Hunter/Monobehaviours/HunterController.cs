@@ -1,6 +1,7 @@
 ﻿using Improbable.Gdk.Subscriptions;
 using MDG.Hunter.Components;
 using MDG.Hunter.Systems;
+using MdgSchema.Common;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
@@ -19,6 +20,7 @@ namespace MDG.Hunter.Monobehaviours {
             SelectionController selectionController = GetComponent<SelectionController>();
             selectionController.OnSelectionEnd += UpdateSelectionComponent;
         }
+
         void UpdateSelectionComponent(SelectionController.SelectionPayload payload)
         {
             if (linkedEntityComponent.Worker.TryGetEntity(linkedEntityComponent.EntityId, out Entity entity)) {

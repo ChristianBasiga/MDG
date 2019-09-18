@@ -97,7 +97,6 @@ namespace MDG.Hunter.Systems {
                 NativeArray<EntityId> selectorIds = idToSelectionBounds.GetKeyArray(Allocator.Temp);
                 for (int i = 0; i < selectorIds.Length; ++i)
                 {
-                    
                     if (idToSelectionBounds.TryGetValue(selectorIds[i], out SelectionBounds selectionBounds))
                     {
                         if (selectionBounds.onlySelectOne && selected.Contains(selectorIds[i]))
@@ -124,13 +123,6 @@ namespace MDG.Hunter.Systems {
 
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
-            // Complete previous selection setting if didn't complete last frame.
-            // this may the case if selected many units.
-            selectedJobHandle.Complete();
-            if (idToSelectionBounds.IsCreated)
-            {
-                idToSelectionBounds.Dispose();
-            }
             int selectorCount = selectorGroup.CalculateEntityCount();
             if (selectorCount == 0)
             {
@@ -155,6 +147,8 @@ namespace MDG.Hunter.Systems {
                 index = 0
             };
             selectedJobHandle = setSelectedEntities.Schedule(this, selectedBoundsJob);
+            selectedJobHandle.Complete();
+            idToSelectionBounds.Dispose();
             return selectedJobHandle;
         }
     }

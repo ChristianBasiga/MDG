@@ -50,6 +50,9 @@ namespace MDG
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>(); 
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
+            // But then it's in a different world? Hmm this also onl reall makes sense in invader context.
+           // Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
+
             //Worker.World.GetOrCreateSystem<CollisionDetectionSystem>();
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
             //UnitCreationHelper.AddServerSystems(Worker.World);

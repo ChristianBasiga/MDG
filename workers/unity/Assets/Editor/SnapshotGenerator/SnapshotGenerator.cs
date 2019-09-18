@@ -26,10 +26,23 @@ namespace MDG.Editor
         {
             var snapshot = new Snapshot();
 
+            AddResourceManager(snapshot);
             AddPlayerSpawner(snapshot);
             // AddLobby(snapshot);
             //AddUnitSpawner(snapshot);
             return snapshot;
+        }
+
+        private static void AddResourceManager(Snapshot snapshot)
+        {
+            snapshot.AddEntity(MDG.Common.Templates.GetResourceManagerTemplate());
+        }
+        // Will load resources on client connect, but can't be part of snapshot due to list of occupants.
+        // Maybe create component like Occupyiable? lol. I could.
+        // Cause resources are inheritently part of snapshot and should be.
+        private static void AddResources(Snapshot snapshot)
+        {
+            snapshot.AddEntity(MDG.Common.Templates.GetResourceTemplate());
         }
 
         // Should also add GameManager

@@ -75,7 +75,6 @@ namespace MDG
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
             Worker.World.GetOrCreateSystem<EntitySyncSystem>();
             Worker.World.GetOrCreateSystem<SelectionSystem>();
-            //WHY WONT YOU RENDER.
             /*
             Worker.World.GetOrCreateSystem<Unity.Rendering.RenderMeshSystemV2>();
             Worker.World.GetOrCreateSystem<Unity.Rendering.RenderBoundsUpdateSystem>();

@@ -21,5 +21,8 @@ namespace MDG.Hunter.Components
     {
         public EntityId resourceId;
         public float3 destination;
+        public bool IsAtResource;
+        public bool IsCollecting;
+        public bool GoingToResource;
     }
 }
