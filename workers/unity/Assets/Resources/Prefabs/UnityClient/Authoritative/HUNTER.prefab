@@ -47,6 +47,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5ba2a4d61d35fc45b2146807f4c551b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  worldWidth: 1000
+  worldHeight: 1000
 --- !u!20 &6595395144218299492
 Camera:
   m_ObjectHideFlags: 0
@@ -71,10 +73,10 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 1500
   field of view: 60
   orthographic: 1
-  orthographic size: 261.94296
+  orthographic size: 80
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2

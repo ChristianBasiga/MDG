@@ -45,7 +45,7 @@ type ReleaseResponse{
 
 // Should be done in resoruce manage not resource itself.
 component ResourceManager{
-    id = 501;
+    id = 527;
     // Perhaps this will also handle respawning of resources.
     command CollectResponse collect(CollectRequest);
     command ReleaseResponse release(ReleaseResponse);

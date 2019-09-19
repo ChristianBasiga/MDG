@@ -28,7 +28,13 @@ namespace MDG
         // Update is called once per frame
         void Update()
         {
-            CameraRotation();
+            // Only do camera rotation if out of screen view.
+            // I mean I'm wasitnig time doing this, when I can get a much better done asset.
+            // Of all things to reinvent, this ain't it.
+            if (Input.mousePosition.x < Screen.width && Input.mousePosition.x > 0 && Input.mousePosition.y < Screen.height && Input.mousePosition.y > 0)
+            {
+                CameraRotation();
+            }
         }
 
 
@@ -41,6 +47,7 @@ namespace MDG
 
         void CameraRotation()
         {
+
             //The angles of rotation.
             float mouseX = Input.GetAxis(mouseXInput) * mouseSensitivty * Time.deltaTime;
             float mouseY = Input.GetAxis(mouseYInput) * mouseSensitivty * Time.deltaTime;

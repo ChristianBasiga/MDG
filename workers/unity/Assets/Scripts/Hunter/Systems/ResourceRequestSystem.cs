@@ -15,6 +15,8 @@ namespace MDG.Hunter.Systems
     /// For sending any requests that have to do with resource manager and updating resources on server side.
     /// </summary>
     /// Todo: Rename this file.
+    /// 
+    [DisableAutoCreation]
     public class ResourceRequestSystem : ComponentSystem
     {
         // Would have to have events for each request

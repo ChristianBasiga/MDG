@@ -10,7 +10,7 @@ enum ResourceType{
 // Hot Data: occupants, occupied, also redundant, as occupied can be checked by simply checking length of occupants.
 
 component Resource{
-    id = 500;
+    id = 526;
     int32 maximum_occupancy = 1;
     ResourceType resource_type = 3;
 }

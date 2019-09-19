@@ -39,14 +39,13 @@ namespace MDG {
         void PlayerMovement()
         {
 
-            float horizInput = Input.GetAxis(horizInputName) * speed;
-            float vertInput = Input.GetAxis(vertInputName) * speed;
-
+            float horizInput = Input.GetAxis(horizInputName);
+            float vertInput = Input.GetAxis(vertInputName);
             Vector3 forwardMovement = transform.forward * vertInput;
             Vector3 rightMovement = transform.right * horizInput;
-
+            transform.position += (forwardMovement + rightMovement * speed * Time.deltaTime);
             //Applies transform.transalte & scales it by delta time.
-            controller.SimpleMove(forwardMovement + rightMovement);
+            //controller.SimpleMove(forwardMovement + rightMovement * speed);
 
             if (horizInput != 0 || vertInput != 0)
             {
@@ -81,7 +80,6 @@ namespace MDG {
 
                 //Move doesn't applie time delta time like simple move does.
                 controller.Move(Vector3.up * jumpForce * jumpSpeed * Time.deltaTime);
-
                 timeInAir += Time.deltaTime;
                 yield return null;
 
@@ -94,7 +92,7 @@ namespace MDG {
 
         private void OnPlayerMoveHandler()
         {
-            OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
+            //OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
         }
     }
 
