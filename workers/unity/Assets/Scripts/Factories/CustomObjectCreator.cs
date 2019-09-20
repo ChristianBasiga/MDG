@@ -145,11 +145,9 @@ namespace MDG
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 Vector3 startingPoint = startingPoints[startingPointsUsed].ToUnityVector();
                 created.transform.position = startingPoint;
+                created.transform.rotation = Quaternion.identity;
 
                 GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
-                created.tag = "MainCamera";
-
-
             }
             else if (metaData.EntityType.Equals("Unit"))
             {

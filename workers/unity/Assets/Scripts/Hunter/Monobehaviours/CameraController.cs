@@ -31,6 +31,7 @@ namespace MDG.Hunter.Monobehaviours
         [SerializeField] private float worldWidth;
         [SerializeField] private float worldHeight;
         new Camera camera;
+        Camera inputCamera;
         //This way caninject new camera settings as needed.
         [Inject]
         public void Initialize(Settings cameraSettings)
@@ -45,7 +46,8 @@ namespace MDG.Hunter.Monobehaviours
        
         private void Start()
         {
-            camera = GetComponent<Camera>();
+          //  camera = transform.GetChild(1).GetComponent<Camera>();
+            camera = transform.GetChild(0).GetComponent<Camera>();
             if (cameraSettings == null)
             {
                 cameraSettings = new Settings(new Vector2(Screen.width * 0.2f, Screen.height * 0.2f),
@@ -84,6 +86,7 @@ namespace MDG.Hunter.Monobehaviours
             newCameraPosition.x = Mathf.Clamp(newCameraPosition.x, -cameraSettings.panningBounds.x, cameraSettings.panningBounds.x);
             newCameraPosition.z = Mathf.Clamp(newCameraPosition.z, -cameraSettings.panningBounds.y, cameraSettings.panningBounds.y);
             transform.position = newCameraPosition;
+
         }
     }
 }

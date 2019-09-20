@@ -61,20 +61,12 @@ namespace MDG.Editor
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
             var template = new EntityTemplate();
-            Debug.Log(Position.ComponentId);
-            // Figure out why this is fucked up.
-            Debug.Log(Metadata.ComponentId);
-            Debug.Log(Persistence.ComponentId);
-            Debug.Log(PlayerCreator.ComponentId);
-            Debug.Log(EntityAcl.ComponentId);
             template.AddComponent(new Position.Snapshot(), serverAttribute);
-           // template.AddComponent(new Metadata.Snapshot { EntityType = "PlayerCreator" }, serverAttribute);
-       /*     template.AddComponent(new Persistence.Snapshot(), serverAttribute);
+            template.AddComponent(new Metadata.Snapshot { EntityType = "PlayerCreator" }, serverAttribute);
+            template.AddComponent(new Persistence.Snapshot(), serverAttribute);
             template.AddComponent(new PlayerCreator.Snapshot(), serverAttribute);
-            */
             template.SetReadAccess(UnityClientConnector.WorkerType, UnityGameLogicConnector.WorkerType, MobileClientWorkerConnector.WorkerType);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
-
             snapshot.AddEntity(template);
         }
     }
