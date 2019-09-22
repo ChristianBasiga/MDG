@@ -201,7 +201,7 @@ namespace MDG.Hunter.Systems
             moveCommandJob.Schedule(this).Complete();
 
             // Move to own function or even its own system and make a system group.
-
+            /*
             int capacity = EntityManager.CreateEntityQuery(typeof(CollectCommand)).CalculateEntityCount();
             NativeList<CollectPayload> pendingCollects = new NativeList<CollectPayload>(capacity, Allocator.Persistent);
 
@@ -236,7 +236,8 @@ namespace MDG.Hunter.Systems
             // Or rather not huge enough to worry about that. That is not bottle neck.
             // but maybe make it a hash table for performance later if need be.
             this.pendingCollects.AddRange(pendingCollects.ToArray());
-            pendingCollects.Dispose();
+            */
+           // pendingCollects.Dispose();
         }
     }
 }

@@ -96,18 +96,20 @@ namespace MDG.Hunter.Systems
 
         protected override void OnUpdate()
         {
-            GameObject hunter = GameObject.FindGameObjectWithTag("MainCamera");
+            GameObject hunter = GameObject.FindGameObjectWithTag("Invader");
+            if (hunter == null) return;
             LinkedEntityComponent linkedEntityComponent = hunter.GetComponent<LinkedEntityComponent>();
             if (linkedEntityComponent == null || !Input.GetMouseButtonDown(1))
             {
                 return;
             }
 
-
+            Camera inputCamera = hunter.transform.GetChild(0).GetComponent<Camera>();
             EntityId hunterId = linkedEntityComponent.EntityId;
-            float3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-            // Creates bounding box for right click big enough to sense the click.
+            float3 mousePos = inputCamera.ScreenToWorldPoint(Input.mousePosition, Camera.MonoOrStereoscopicEye.Mono);
+            Debug.Log(Input.mousePosition);
+            Debug.Log(mousePos);
+            // Maybe it's at this point I want to appl
             float3 botLeft = mousePos + new float3(-10, -10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
             float3 topRight = mousePos + new float3(+10, +10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
             NativeArray<CommandMetadata> commandGiven = new NativeArray<CommandMetadata>(1, Allocator.TempJob);
@@ -133,6 +135,7 @@ namespace MDG.Hunter.Systems
             };
             commandGiveJob.Schedule(this).Complete();
             commandGiven.Dispose();
+            //inputCamera.depth = 0;
         }
     }
 }

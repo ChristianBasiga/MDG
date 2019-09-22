@@ -14,7 +14,7 @@ namespace MDG.Hunter.Systems {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(EntitySelectionGroup))]
     [UpdateBefore(typeof(CommandGiveSystem))]
-    public class SelectionSystem : JobComponentSystem
+    public class SelectionSystem : ComponentSystem
     {
         JobHandle selectedJobHandle;
         EntityQuery selectorGroup;
@@ -34,15 +34,19 @@ namespace MDG.Hunter.Systems {
             selectorGroup = GetEntityQuery(typeof(Selection));
             
         }
+
         public struct GetSelectedBounds : IJobForEach<SpatialEntityId, Selection>
         {
             [WriteOnly]
             public NativeHashMap<EntityId, SelectionBounds>.ParallelWriter idToSelectionBounds;
             public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Selection selection)
             {
+                // Gotta apply rotation here.
                 float3 botLeft = new float3(math.min(selection.StartPosition.x, selection.EndPosition.x), math.min(selection.StartPosition.z, selection.EndPosition.z), 0);
                 float3 topRight = new float3(math.max(selection.StartPosition.x, selection.EndPosition.x), math.max(selection.StartPosition.z, selection.EndPosition.z), 0);
 
+                
+                
                 // Down line move this to set selections part.
                 // reason is min size depends on entity checking selection for.
                 float selectionAreaMinSize = 10;
@@ -121,13 +125,12 @@ namespace MDG.Hunter.Systems {
             }
         }
 
-        protected override JobHandle OnUpdate(JobHandle inputDeps)
+        protected override void OnUpdate()
         {
             int selectorCount = selectorGroup.CalculateEntityCount();
             if (selectorCount == 0)
             {
-                return inputDeps;
-
+                return;
             }
             // If selector count isn't 0, then new selection has been made this frame, reset Clickables.
             ResetSelectedEntities resetSelectedEntitiesJob = new ResetSelectedEntities();
@@ -149,7 +152,11 @@ namespace MDG.Hunter.Systems {
             selectedJobHandle = setSelectedEntities.Schedule(this, selectedBoundsJob);
             selectedJobHandle.Complete();
             idToSelectionBounds.Dispose();
-            return selectedJobHandle;
+            RemoveSelections removeSelections = new RemoveSelections
+            {
+                commandBuffer = PostUpdateCommands.ToConcurrent()
+            };
+            removeSelections.Schedule(this).Complete();
         }
     }
 }
