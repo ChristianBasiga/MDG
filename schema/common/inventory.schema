@@ -1,5 +1,10 @@
 package mdg_schema.common.inventory;
 
+enum InventoryRequestErrorTypes{
+    INVENTORY_FULL = 1;
+    INVALID_ITEM = 2;
+    INVALID_POSITION = 3;
+}
 type Item {
     int32 id = 1;
     // Information like durability, and wther it stacks will be stored in sets of 4 bits in this variable.
@@ -20,6 +25,7 @@ type InventoryRemoveItemRequest {
 type InventoryServiceResponse {
     bool success = 1;
     option<string> error = 2;
+    option<InventoryRequestErrorTypes> error_type = 3;
 }
 
 component Inventory {
