@@ -8,7 +8,7 @@ namespace MDG.ScriptableObjects
     [CreateAssetMenu]
     public class InventoryItem : ScriptableObject
     {
-        public Mesh Mesh;
+        public Sprite ArtWork;
         public int ItemId;
         public string Title;
 

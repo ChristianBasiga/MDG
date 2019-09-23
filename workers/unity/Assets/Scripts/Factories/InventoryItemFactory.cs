@@ -8,6 +8,8 @@ namespace MDG.Factories
     // Monobehaviour just for tseting rn.
     public class InventoryItemFactory : IInitializable
     {
+        public readonly static int ResourceItemId = 1;
+
         private Dictionary<int, InventoryItem> itemsCanRender;
         public InventoryItem GetInventoryItem(int inventoryId)
         {

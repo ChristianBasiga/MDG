@@ -30,15 +30,12 @@ namespace MDG_Testing
                 ItemId = 1,
                 Count = 1
             };
-
             SpatialEntityId spatialEntityId = new SpatialEntityId { EntityId = new EntityId(1) };
             Entity entity = m_Manager.CreateEntity(
                 typeof(SpatialEntityId),
                 typeof(PendingInventoryAddition),
                 typeof(InventorySchema.Inventory.Component)
             );
-
-
             m_Manager.SetComponentData(entity, spatialEntityId);
             m_Manager.SetComponentData(entity, pendingInventoryAddition);
             World.CreateSystem<InventoryRequestSystem>().Update();
@@ -53,7 +50,6 @@ namespace MDG_Testing
             {
                 InventoryIndex = 1
             };
-
             SpatialEntityId spatialEntityId = new SpatialEntityId { EntityId = new EntityId(1) };
             Entity entity = m_Manager.CreateEntity(
                 typeof(SpatialEntityId),
@@ -79,6 +75,42 @@ namespace MDG_Testing
             };
             InventoryItem added = inventoryItemFactory.GetInventoryItem(adding.ItemId);
             Assert.AreEqual(adding, added);
+        }
+        #endregion
+
+        #region Server Tests
+        [Test]
+        public void ItemRemovedFromInventory()
+        {
+
+            /*
+            SpatialEntityId spatialEntityId = new SpatialEntityId { EntityId = new EntityId(1) };
+            Entity entity = m_Manager.CreateEntity(
+                typeof(SpatialEntityId),
+                typeof(InventorySchema.Inventory.Component)
+            );
+            m_Manager.SetComponentData(entity, spatialEntityId);
+            m_Manager.AddSharedComponentData(entity, InventorySchema.Inventory.ComponentAuthority.Authoritative);
+
+            // Main issue is worker does not exist.
+            // To automate this testing, I would need to make mocks of these.
+            // no time now, or rather I'll test this in isolation manually rather than unit testing.
+
+            
+            World.CreateSystem<WorkerSystem>();
+            CommandSystem commandSystem = World.CreateSystem<CommandSystem>();
+            commandSystem.Enabled = true;
+            commandSystem.Update();
+            // Real question. How do I mock fucking requests yo. I suppose not the request I want to mock but the act of removal.
+            World.CreateSystem<InventoryRequestHandlerSystem>().Update();
+            commandSystem.SendCommand(new InventorySchema.Inventory.RemoveItemFromInventory.Request
+            {
+                Payload = new InventorySchema.InventoryRemoveItemRequest
+                {
+                    InventoryOwner = spatialEntityId.EntityId,
+                    ItemPosition = 0
+                }
+            });*/
         }
         #endregion
     }
