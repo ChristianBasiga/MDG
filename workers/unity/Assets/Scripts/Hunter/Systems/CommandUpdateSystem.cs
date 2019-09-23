@@ -160,7 +160,8 @@ namespace MDG.Hunter.Systems
                     // That will be temp component to remove next frame.
                     // Then diff system will be running jobs to add to actual inventory.
                     // a frame off for adding to inventory not huge deal and keeps it clean.
-                    PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition { InventoryItemId = receivedResponse.ResourceId });
+                    // Will change this lter anyway, not resource Id, cause only care abou type of item.
+                   // PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition { ItemId = receivedResponse.ResourceId });
                 }
                 // I mean this HAS to be true for us to get this response.
                 if (pendingCollects.Count > 0)
