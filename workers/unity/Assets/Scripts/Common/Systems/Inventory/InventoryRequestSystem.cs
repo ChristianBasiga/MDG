@@ -44,7 +44,7 @@ namespace MDG.Common.Systems.Inventory
         protected override void OnCreate()
         {
             base.OnCreate();
-            commandSystem = World.GetOrCreateSystem<CommandSystem>();
+            commandSystem = World.GetExistingSystem<CommandSystem>();
             pendingRequests = new Dictionary<long, RequestRetry>();
             requestsToRetry = new Queue<RequestRetry>();
             inventoryAddGroup = GetEntityQuery(

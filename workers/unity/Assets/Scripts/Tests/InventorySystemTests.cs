@@ -21,7 +21,7 @@ namespace MDG_Testing
     public class InventorySystemTests : ECSTestsFixture
     {
 
-        #region Client  InventoryRequestSystem Tests
+        #region Client Tests
         [Test]
         public void PendingAddInventoryRemoveAfterRequest()
         {

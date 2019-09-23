@@ -8,7 +8,8 @@
         "Improbable.Gdk.Generated",
         "Improbable.Gdk.TestUtils.EditmodeTests",
         "Improbable.Gdk.TestUtils",
-        "Zenject"
+        "Zenject",
+        "Unity.Collections"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
