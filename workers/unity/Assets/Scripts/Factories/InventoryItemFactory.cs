@@ -1,23 +1,15 @@
-﻿using System.Collections;
+﻿using MDG.ScriptableObjects;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-namespace MDG.Factory
+using Zenject;
+namespace MDG.Factories
 {
-    //For now here, later on should move to own file maybe renderable namespace.
-    //Inventory Item holds information for rendering.
-    // mesh will be populated via mesh factory.
-    public class RenderableItem
+    // Monobehaviour just for tseting rn.
+    public class InventoryItemFactory : IInitializable
     {
-        // 
-    }
-
-    public class InventoryItemFactory
-    {
-
-        private static Dictionary<int, InventoryItem> itemsCanRender;
-
-        public static InventoryItem GetInventoryItem(int inventoryId)
+        private Dictionary<int, InventoryItem> itemsCanRender;
+        public InventoryItem GetInventoryItem(int inventoryId)
         {
             if (itemsCanRender.TryGetValue(inventoryId, out InventoryItem inventoryItem))
             {
@@ -26,6 +18,17 @@ namespace MDG.Factory
             else
             {
                 throw new System.Exception($"Item with id {inventoryId} does not exist");
+            }
+        }
+
+        public void Initialize()
+        {
+            itemsCanRender = new Dictionary<int, InventoryItem>();
+            InventoryItem[] items = Resources.LoadAll<InventoryItem>("ScriptableObjects/InventoryItems/");
+
+            foreach (InventoryItem inventoryItem in items)
+            {
+                itemsCanRender.Add(inventoryItem.ItemId, inventoryItem);
             }
         }
     }

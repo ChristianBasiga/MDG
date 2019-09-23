@@ -4,8 +4,10 @@ using Unity.Entities;
 using Unity.Collections;
 using MDG.Common.Components;
 using InventorySchema = MdgSchema.Common.Inventory;
+
 namespace MDG.Common.Systems.Inventory
 {
+    [DisableAutoCreation]
     public class InventoryRequestSystem : ComponentSystem
     {
         public enum RequestType
@@ -42,15 +44,17 @@ namespace MDG.Common.Systems.Inventory
         protected override void OnCreate()
         {
             base.OnCreate();
-            commandSystem = World.GetExistingSystem<CommandSystem>();
+            commandSystem = World.GetOrCreateSystem<CommandSystem>();
             pendingRequests = new Dictionary<long, RequestRetry>();
             requestsToRetry = new Queue<RequestRetry>();
             inventoryAddGroup = GetEntityQuery(
                 ComponentType.ReadOnly<SpatialEntityId>(),
-                ComponentType.ReadOnly<PendingInventoryAddition>());
+                ComponentType.ReadOnly<PendingInventoryAddition>(),
+                ComponentType.ReadOnly<InventorySchema.Inventory.Component>());
             inventoryRemoveGroup = GetEntityQuery(
                 ComponentType.ReadOnly<SpatialEntityId>(),
-                ComponentType.ReadOnly<PendingInventoryRemoval>());
+                ComponentType.ReadOnly<PendingInventoryRemoval>(),
+                ComponentType.ReadOnly<InventorySchema.Inventory.Component>());
         }
         protected override void OnUpdate()
         {
@@ -62,7 +66,7 @@ namespace MDG.Common.Systems.Inventory
             catch (System.Exception error)
             {
                 // Replace use of this with logger.
-                UnityEngine.Debug.LogError(error);
+                UnityEngine.Debug.Log(error);
             }
         }
 
@@ -73,8 +77,10 @@ namespace MDG.Common.Systems.Inventory
             // hmm to an extent. Cause command system has no job support.
 
             // Send Add Requests.
-            Entities.With(inventoryAddGroup).ForEach((ref SpatialEntityId spatialEntityId, ref PendingInventoryAddition pendingInventoryAddition) =>
+            Entities.With(inventoryAddGroup).ForEach((Entity entity, ref SpatialEntityId spatialEntityId, ref PendingInventoryAddition pendingInventoryAddition) =>
             {
+                PostUpdateCommands.RemoveComponent<PendingInventoryAddition>(entity);
+
                 RequestHeader requestHeader = new RequestHeader
                 {
                     InventoryOwner = spatialEntityId.EntityId,
@@ -82,6 +88,7 @@ namespace MDG.Common.Systems.Inventory
                     RequestType = RequestType.Add,
                     Count = pendingInventoryAddition.Count
                 };
+                
                 long requestId = commandSystem.SendCommand<InventorySchema.Inventory.AddItemToInventory.Request>(new InventorySchema.Inventory.AddItemToInventory.Request
                 {
                     Payload = new InventorySchema.InventoryAddItemRequest
@@ -99,11 +106,14 @@ namespace MDG.Common.Systems.Inventory
                     RequestHeader = requestHeader,
                     TimesRetried = 0
                 });
+                
             });
 
             // Send remove requests.
-            Entities.With(inventoryRemoveGroup).ForEach((ref SpatialEntityId spatialEntityId, ref PendingInventoryRemoval pendingInventoryRemoval) =>
+            Entities.With(inventoryRemoveGroup).ForEach((Entity entity, ref SpatialEntityId spatialEntityId, ref PendingInventoryRemoval pendingInventoryRemoval) =>
             {
+                PostUpdateCommands.RemoveComponent<PendingInventoryRemoval>(entity);
+
                 // Should it be inventory index or or item id?
                 // When does removal happen? Transferring to carrier. Carrer to player. Death.
                 // all of which isn't specific in what is being sent. Maybe Invader has ability to choose
@@ -115,6 +125,7 @@ namespace MDG.Common.Systems.Inventory
                     Key = pendingInventoryRemoval.InventoryIndex,
                     RequestType = RequestType.Remove
                 };
+                
                 long requestId = commandSystem.SendCommand<InventorySchema.Inventory.RemoveItemFromInventory.Request>(new InventorySchema.Inventory.RemoveItemFromInventory.Request
                 {
                     Payload = new InventorySchema.InventoryRemoveItemRequest

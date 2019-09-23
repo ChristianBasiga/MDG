@@ -7,7 +7,8 @@ namespace MDG.Common.Components
     // incase many pendings that may execute over multiple frames.
    
     // Added to every entity that needs addition to Inventory.
-    [RemoveAtEndOfTick]
+   // [RemoveAtEndOfTick]
+   // FOr easier testing manually removing after request has been sent and for more control.
     public struct PendingInventoryAddition : IComponentData
     {
         public int ItemId;
@@ -15,7 +16,7 @@ namespace MDG.Common.Components
     }
 
     // Added to every entity that needs Inventory Item Removal.
-    [RemoveAtEndOfTick]
+  //  [RemoveAtEndOfTick]
     public struct PendingInventoryRemoval : IComponentData
     {
         public int InventoryIndex;
