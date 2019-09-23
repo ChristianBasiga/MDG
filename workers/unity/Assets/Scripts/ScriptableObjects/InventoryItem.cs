@@ -2,17 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InventoryItem : MonoBehaviour
+// Factory should have all of these scriptable objects.
+namespace MDG.ScriptableObjects
 {
-    // Start is called before the first frame update
-    void Start()
+    [CreateAssetMenu]
+    public class InventoryItem : ScriptableObject
     {
-        
-    }
+        public Mesh Mesh;
+        public int ItemId;
+        public string Title;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        public override bool Equals(object other)
+        {
+            InventoryItem otherItem = other as InventoryItem;
+
+            return ItemId.Equals(otherItem.ItemId) && Title.Equals(otherItem.Title);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }
