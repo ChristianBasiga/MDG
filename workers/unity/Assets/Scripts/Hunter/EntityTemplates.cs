@@ -8,6 +8,8 @@ using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
 using MdgSchema.Units;
+using InventorySchema = MdgSchema.Common.Inventory;
+
 namespace MDG.Hunter.Unit
 {
     public class Templates
@@ -42,6 +44,11 @@ namespace MDG.Hunter.Unit
             template.AddComponent(new GameMetadata.Snapshot { Type = GameEntityTypes.Unit }, serverAttribute);
             template.AddComponent(new EntityTransform.Snapshot { Scale = new Vector3f(10,10,10)}, clientAttribute);
             template.AddComponent(new Stats.Snapshot{ Health = 5}, clientAttribute);
+            template.AddComponent(new InventorySchema.Inventory.Snapshot {
+                Inventory = new Dictionary<int, InventorySchema.Item>(),
+                InventorySize = 1
+                
+            }, serverAttribute);
             // Actuall this is collider on entity, so position will always be unit position
             // prob shouldn't track this here.
             template.AddComponent(new EntityCollider.Snapshot {

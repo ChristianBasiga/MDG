@@ -117,6 +117,7 @@ namespace MDG
                                     AmountToSpawn = 1,
                                     Position = startingCoords
                                 });
+                                break;
                                 /*
                                 var ent = World.Active.EntityManager.CreateEntity(typeof(RenderMesh), typeof(Unity.Transforms.LocalToWorld), typeof(Unity.Transforms.Scale),
                                 typeof(Unity.Transforms.Translation), typeof(Unity.Rendering.RenderBounds), typeof(Improbable.

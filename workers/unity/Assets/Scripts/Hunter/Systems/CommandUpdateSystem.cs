@@ -24,7 +24,6 @@ namespace MDG.Hunter.Systems
     ///  But I suppose the process and acting accorindgly could become a behaviour tree.
     /// </summary>
     [DisableAutoCreation]
-    [AlwaysUpdateSystem]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class CommandUpdateSystem : ComponentSystem
     {
@@ -137,8 +136,8 @@ namespace MDG.Hunter.Systems
             collectResponses = new NativeList<CollectResponse>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
-            resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
-            resourceRequestSystem.OnCollect += HandleCollectResponse;
+            //resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
+            //resourceRequestSystem.OnCollect += HandleCollectResponse;
             commandSystem = World.GetExistingSystem<CommandSystem>();
             unitCollisionMappings = new Dictionary<EntityId, List<EntityId>>();
             enemyQuery = GetEntityQuery(ComponentType.ReadOnly<EnemyComponent>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
@@ -160,7 +159,8 @@ namespace MDG.Hunter.Systems
                     // That will be temp component to remove next frame.
                     // Then diff system will be running jobs to add to actual inventory.
                     // a frame off for adding to inventory not huge deal and keeps it clean.
-                    PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition { InventoryItemId = receivedResponse.ResourceId });
+                    // Will change this lter anyway, not resource Id, cause only care abou type of item.
+                   // PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition { ItemId = receivedResponse.ResourceId });
                 }
                 // I mean this HAS to be true for us to get this response.
                 if (pendingCollects.Count > 0)

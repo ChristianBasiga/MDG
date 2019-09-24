@@ -10,7 +10,6 @@ namespace MDG.Hunter.Systems
     {
         protected override void OnUpdate()
         {
-            throw new System.NotImplementedException();
         }
     }
 }

@@ -26,7 +26,7 @@ namespace MDG.Editor
         {
             var snapshot = new Snapshot();
 
-            AddResourceManager(snapshot);
+            //AddResourceManager(snapshot);
             AddPlayerSpawner(snapshot);
             // AddLobby(snapshot);
             //AddUnitSpawner(snapshot);
