@@ -58,19 +58,26 @@ namespace MDG.Common.Systems.Inventory {
 
             Dictionary<EntityId, List<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>> addItemRequests = new Dictionary<EntityId, List<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>>();
             Dictionary<EntityId, List<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>> removeItemRequests = new Dictionary<EntityId, List<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>>();
-
-
             var addRequests = commandSystem.GetRequests<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>(new EntityId(4));
             UnityEngine.Debug.LogError(addRequests.Count);
             for (int i = 0; i < addRequests.Count; ++i)
             {
                 Debug.LogError("received request");
+
                 ref readonly var request = ref addRequests[i];
                 if (!addItemRequests.ContainsKey(request.Payload.InventoryOwner))
                 {
                     addItemRequests[request.Payload.InventoryOwner] = new List<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>();
                 }
                 addItemRequests[request.Payload.InventoryOwner].Add(request);
+                commandSystem.SendResponse<InventorySchema.Inventory.AddItemToInventory.Response>(new InventorySchema.Inventory.AddItemToInventory.Response
+                {
+                    RequestId = request.RequestId,
+                    Payload = new InventorySchema.InventoryServiceResponse
+                    {
+                        Success = true
+                    }
+                });
             }
 
             var removeRequests = commandSystem.GetRequests<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>();
@@ -91,7 +98,7 @@ namespace MDG.Common.Systems.Inventory {
 
                 Queue<int> freeSlots = new Queue<int>();
 
-                for(int i = 0; i < inventoryComponent.InventorySize; ++i)
+                for (int i = 0; i < inventoryComponent.InventorySize; ++i)
                 {
                     if (!inventory.ContainsKey(i))
                     {

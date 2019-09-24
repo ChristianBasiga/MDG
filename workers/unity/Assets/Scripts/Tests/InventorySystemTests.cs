@@ -77,7 +77,6 @@ namespace MDG_Testing
             Assert.AreEqual(adding, added);
         }
         #endregion
-
         #region Server Tests
         [Test]
         public void ItemRemovedFromInventory()

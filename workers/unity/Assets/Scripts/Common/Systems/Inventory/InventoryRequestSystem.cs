@@ -89,7 +89,6 @@ namespace MDG.Common.Systems.Inventory
                     RequestType = RequestType.Add,
                     Count = pendingInventoryAddition.Count
                 };
-
                 UnityEngine.Debug.LogError("Sending add inventory request");
                 long requestId = commandSystem.SendCommand<InventorySchema.Inventory.AddItemToInventory.Request>(new InventorySchema.Inventory.AddItemToInventory.Request
                 {

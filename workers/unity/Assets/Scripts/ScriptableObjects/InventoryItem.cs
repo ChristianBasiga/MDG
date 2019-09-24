@@ -11,11 +11,9 @@ namespace MDG.ScriptableObjects
         public Sprite ArtWork;
         public int ItemId;
         public string Title;
-
         public override bool Equals(object other)
         {
             InventoryItem otherItem = other as InventoryItem;
-
             return ItemId.Equals(otherItem.ItemId) && Title.Equals(otherItem.Title);
         }
 

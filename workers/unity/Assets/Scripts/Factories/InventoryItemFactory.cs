@@ -9,7 +9,6 @@ namespace MDG.Factories
     public class InventoryItemFactory : IInitializable
     {
         public readonly static int ResourceItemId = 1;
-
         private Dictionary<int, InventoryItem> itemsCanRender;
         public InventoryItem GetInventoryItem(int inventoryId)
         {
