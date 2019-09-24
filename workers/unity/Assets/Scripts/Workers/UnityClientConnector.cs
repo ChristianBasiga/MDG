@@ -11,6 +11,7 @@ using UnityEngine;
 using Unity.Rendering;
 using Improbable;
 using Unity.Entities;
+using MDG.Common.Systems.Inventory;
 
 namespace MDG
 {
@@ -66,15 +67,16 @@ namespace MDG
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
             UnitCreationHelper.AddClientSystems(Worker.World);
             // This should actually be in server side, but later.
-            Worker.World.GetOrCreateSystem<StatUpdateSystem>();
+          //  Worker.World.GetOrCreateSystem<StatUpdateSystem>();
             Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
-            Worker.World.GetOrCreateSystem<MoveSystem>();
+          //  Worker.World.GetOrCreateSystem<MoveSystem>();
 
+            Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
             // Todo: Move these to helper class to pass in hunter client systems.
-            Worker.World.GetOrCreateSystem<CommandGiveSystem>();
-            Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
+          //  Worker.World.GetOrCreateSystem<CommandGiveSystem>();
+          //  Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
             Worker.World.GetOrCreateSystem<EntitySyncSystem>();
-            Worker.World.GetOrCreateSystem<SelectionSystem>();
+          //  Worker.World.GetOrCreateSystem<SelectionSystem>();
             /*
             Worker.World.GetOrCreateSystem<Unity.Rendering.RenderMeshSystemV2>();
             Worker.World.GetOrCreateSystem<Unity.Rendering.RenderBoundsUpdateSystem>();

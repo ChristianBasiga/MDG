@@ -8,6 +8,7 @@ using InventorySchema = MdgSchema.Common.Inventory;
 namespace MDG.Common.Systems.Inventory
 {
     [DisableAutoCreation]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class InventoryRequestSystem : ComponentSystem
     {
         public enum RequestType
@@ -88,9 +89,11 @@ namespace MDG.Common.Systems.Inventory
                     RequestType = RequestType.Add,
                     Count = pendingInventoryAddition.Count
                 };
-                
+
+                UnityEngine.Debug.LogError("Sending add inventory request");
                 long requestId = commandSystem.SendCommand<InventorySchema.Inventory.AddItemToInventory.Request>(new InventorySchema.Inventory.AddItemToInventory.Request
                 {
+                    TargetEntityId = new EntityId(4),
                     Payload = new InventorySchema.InventoryAddItemRequest
                     {
                         Count = requestHeader.Count.Value,
@@ -128,6 +131,7 @@ namespace MDG.Common.Systems.Inventory
                 
                 long requestId = commandSystem.SendCommand<InventorySchema.Inventory.RemoveItemFromInventory.Request>(new InventorySchema.Inventory.RemoveItemFromInventory.Request
                 {
+                    TargetEntityId = new EntityId(4),
                     Payload = new InventorySchema.InventoryRemoveItemRequest
                     {
                         InventoryOwner = requestHeader.InventoryOwner,
@@ -191,6 +195,7 @@ namespace MDG.Common.Systems.Inventory
                 ref readonly var response = ref responses[i];
                 if (pendingRequests.TryGetValue(response.RequestId, out RequestRetry requestRetry))
                 {
+                    UnityEngine.Debug.LogError("Recieved response " + response.ResponsePayload.Value);
                     pendingRequests.Remove(response.RequestId);
 
                     switch (response.StatusCode)

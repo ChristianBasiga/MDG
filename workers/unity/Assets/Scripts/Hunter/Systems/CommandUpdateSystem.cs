@@ -24,7 +24,6 @@ namespace MDG.Hunter.Systems
     ///  But I suppose the process and acting accorindgly could become a behaviour tree.
     /// </summary>
     [DisableAutoCreation]
-    [AlwaysUpdateSystem]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class CommandUpdateSystem : ComponentSystem
     {
@@ -137,8 +136,8 @@ namespace MDG.Hunter.Systems
             collectResponses = new NativeList<CollectResponse>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
-            resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
-            resourceRequestSystem.OnCollect += HandleCollectResponse;
+            //resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
+            //resourceRequestSystem.OnCollect += HandleCollectResponse;
             commandSystem = World.GetExistingSystem<CommandSystem>();
             unitCollisionMappings = new Dictionary<EntityId, List<EntityId>>();
             enemyQuery = GetEntityQuery(ComponentType.ReadOnly<EnemyComponent>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());

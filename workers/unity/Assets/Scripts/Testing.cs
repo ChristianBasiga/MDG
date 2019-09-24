@@ -25,6 +25,7 @@ public class Testing : MonoBehaviour
 
             if (workerSystem.TryGetEntity(linkedEntityComponent.EntityId, out Entity entity))
             {
+                Debug.LogError("here");
                 workerSystem.EntityManager.AddComponentData(entity, new PendingInventoryAddition
                 {
                     Count = 1,

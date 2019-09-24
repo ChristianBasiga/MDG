@@ -9,6 +9,7 @@ using Improbable.Gdk.Core;
 namespace MDG.Common.Systems.Inventory {
 
     [DisableAutoCreation]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class InventoryRequestHandlerSystem : ComponentSystem
     {
         NativeQueue<InventorySchema.InventoryServiceResponse> queuedResponses;
@@ -59,23 +60,17 @@ namespace MDG.Common.Systems.Inventory {
             Dictionary<EntityId, List<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>> removeItemRequests = new Dictionary<EntityId, List<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>>();
 
 
-            var addRequests = commandSystem.GetRequests<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>();
+            var addRequests = commandSystem.GetRequests<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>(new EntityId(4));
+            UnityEngine.Debug.LogError(addRequests.Count);
             for (int i = 0; i < addRequests.Count; ++i)
-            { 
+            {
+                Debug.LogError("received request");
                 ref readonly var request = ref addRequests[i];
                 if (!addItemRequests.ContainsKey(request.Payload.InventoryOwner))
                 {
                     addItemRequests[request.Payload.InventoryOwner] = new List<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>();
                 }
                 addItemRequests[request.Payload.InventoryOwner].Add(request);
-                commandSystem.SendResponse<InventorySchema.Inventory.AddItemToInventory.Response>(new InventorySchema.Inventory.AddItemToInventory.Response
-                {
-                    RequestId = request.RequestId,
-                    Payload = new InventorySchema.InventoryServiceResponse
-                    {
-                        Success = true
-                    }
-                });
             }
 
             var removeRequests = commandSystem.GetRequests<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>();
@@ -87,25 +82,21 @@ namespace MDG.Common.Systems.Inventory {
                     removeItemRequests[request.Payload.InventoryOwner] = new List<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>();
                 }
                 removeItemRequests[request.Payload.InventoryOwner].Add(request);
-
-                commandSystem.SendResponse<InventorySchema.Inventory.AddItemToInventory.Response>(new InventorySchema.Inventory.AddItemToInventory.Response
-                {
-                    RequestId = request.RequestId,
-                    Payload = new InventorySchema.InventoryServiceResponse
-                    {
-                        Success = true
-                    }
-                });
             }
 
-
+            if (addItemRequests.Count == 0 && removeItemRequests.Count == 0) return;
             Entities.With(inventoryGroup).ForEach((ref SpatialEntityId spatialEntityId, ref InventorySchema.Inventory.Component inventoryComponent) =>
             {
                 Dictionary<int, InventorySchema.Item> inventory = inventoryComponent.Inventory;
+
                 Queue<int> freeSlots = new Queue<int>();
-                foreach (var key in inventory.Keys)
+
+                for(int i = 0; i < inventoryComponent.InventorySize; ++i)
                 {
-                    freeSlots.Enqueue(key);
+                    if (!inventory.ContainsKey(i))
+                    {
+                        freeSlots.Enqueue(i);
+                    }
                 }
                 // Do removals first.
                 // Then do additions, so that false full inventory won't happen.

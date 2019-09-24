@@ -8,7 +8,7 @@ using MdgSchema.Player;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
-
+using InventorySchema = MdgSchema.Common.Inventory;
 namespace MDG.Player
 {
     public class Templates
@@ -33,6 +33,10 @@ namespace MDG.Player
                 //Factory instead incase of other roles down the line.
                 template = creationArgs.playerType == PlayerType.HUNTER ? AddHunterComponents(template) : AddHunterComponents(template);
             }
+            template.AddComponent(new InventorySchema.Inventory.Snapshot
+            {
+                Inventory = new Dictionary<int, InventorySchema.Item>()
+            }, serverAttribute);
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
             template.AddComponent(new PlayerTransform.Snapshot(), clientAttribute);
