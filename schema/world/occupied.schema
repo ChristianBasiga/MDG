@@ -1,5 +1,6 @@
-package mdg_schema.game;
+package mdg_schema.game.resource;
 component Occupied{
     id = 503;
     list<EntityId> occupants = 1;
+    int32 health = 2;
 }

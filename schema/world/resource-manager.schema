@@ -18,7 +18,7 @@ type CollectRequest{
 // can check if depleted, then remove component.
 type CollectResponse{
     int32 times_until_depleted = 1;
-    EntityId depleter_id = 2;
+    option<EntityId> depleter_id = 2;
     // Need this for adding to inventory.
     // Need to flesh that out but this def needed in payload.
     EntityId resource_id = 3;
@@ -32,12 +32,14 @@ type OccupyRequest{
 type OccupyResponse{
     // Maybe response with list of all occupants on resource.
     list<EntityId> occupants = 1;
-    EntityId resource_id = 2;
-    bool fully_occupied = 3;
+    bool occupied = 2;
+    EntityId resource_id = 3;
+    bool fully_occupied = 4;
 }
 
 type ReleaseRequest{
-
+    EntityId occupant = 1;
+    EntityId resource_id = 2;
 }
 type ReleaseResponse{
 
@@ -48,6 +50,6 @@ component ResourceManager{
     id = 501;
     // Perhaps this will also handle respawning of resources.
     command CollectResponse collect(CollectRequest);
-    command ReleaseResponse release(ReleaseResponse);
+    command ReleaseResponse release(ReleaseRequest);
     command OccupyResponse occupy(OccupyRequest);
 }

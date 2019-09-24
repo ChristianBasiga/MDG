@@ -8,13 +8,12 @@ using Improbable.Gdk.Core;
 using Improbable.Worker.CInterop;
 using Improbable.Gdk.Core.Commands;
 using System.Linq;
+using MDG.Common.Components;
 
 namespace MDG.Hunter.Systems
 {
-    /// <summary>
-    /// For sending any requests that have to do with resource manager and updating resources on server side.
-    /// </summary>
-    /// Todo: Rename this file.
+    [DisableAutoCreation]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class ResourceRequestSystem : ComponentSystem
     {
         // Would have to have events for each request
@@ -32,6 +31,7 @@ namespace MDG.Hunter.Systems
         }
 
         private CommandSystem commandSystem;
+        private WorkerSystem workerSystem;
         private List<EntityId> resourceManagerIds;
         private long resourceManagerRequestId;
         private Queue<ResourceRequestHeader> pendingRequests;
@@ -47,6 +47,7 @@ namespace MDG.Hunter.Systems
             base.OnCreate();
             reqIdsToPayload = new Dictionary<ResourceRequestType, Dictionary<long, ResourceRequestHeader>>();
             pendingRequests = new Queue<ResourceRequestHeader>();
+            workerSystem = World.GetExistingSystem<WorkerSystem>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
             resourceManagerIds = new List<EntityId>();
         }
@@ -101,13 +102,18 @@ namespace MDG.Hunter.Systems
 
                 switch (resourceRequestHeader.ResourceRequestType)
                 {
-                    // For the most part all of the payloads are damn near identitical.
-                    // I mean more scalable this way if decide want more in payload so fine like this for now.
-                    // Main this is their responses are different.
-                    // I might have to run my own system for parralelizing that process
-                    // actually no, there should be order. Release, Occupy, Collect.
-                    // this way Occupying requests get access to resource as soon as freed
-                    // instead of frame later, which isn't big deal, but makes sense.
+                    case ResourceRequestType.RELEASE:
+                        ReleaseRequest releasePayload = new ReleaseRequest
+                        {
+                            Occupant = resourceRequestHeader.OccupantId,
+                            ResourceId = resourceRequestHeader.ResourceId
+                        };
+                        requestId = commandSystem.SendCommand(new ResourceManager.Release.Request
+                        {
+                            TargetEntityId = resourceManagerEntityId,
+                            Payload = releasePayload
+                        });
+                        break;
                     case ResourceRequestType.COLLECT:
                         CollectRequest collectPayload = new CollectRequest
                         {
@@ -152,45 +158,85 @@ namespace MDG.Hunter.Systems
                 }
             }
             #endregion
+            // Todo: Set up system for repated reqeusts like I did for inventory but perhaps more general?
             #region Process all responses
             // Only if we've sent any requests that haven't yet been resolved.
             if (reqIdsToPayload.Count > 0)
             {
-                if (reqIdsToPayload.TryGetValue(ResourceRequestType.COLLECT, out Dictionary<long, ResourceRequestHeader> reqIds))
+                Dictionary<long, ResourceRequestHeader> reqIds;
+                if (reqIdsToPayload.TryGetValue(ResourceRequestType.COLLECT, out reqIds))
                 {
                     if (reqIds.Count > 0)
                     {
-                        var requests = commandSystem.GetResponses<ResourceManager.Collect.ReceivedResponse>();
-                        for( int i = 0; i < requests.Count; ++i)
+                        var responses = commandSystem.GetResponses<ResourceManager.Collect.ReceivedResponse>();
+                        for( int i = 0; i < responses.Count; ++i)
                         {
-                            ref readonly var request = ref requests[i];
+                            ref readonly var response = ref responses[i];
 
                             //There's going to be alot of repetition with checking for status codes here.
                             // Hmm. Fuck it for now. POC this, then improve later, I waste time pre-optimizing too much over little things.
-                            switch (request.StatusCode)
+                            switch (response.StatusCode)
                             {
                                 case StatusCode.Success:
-                                    // So here's what should happen. Query response and see if time left is 0.
-                                    // if so. Then add it to inventory of Unit. Now
-                                    // I could have a dictionary of depleted resources in this frame.
-                                    // a native dictionary.
-                                    // Then run a job in parallel reading from dictionary to either add to inventory or ignore
-                                    // and simply remove CollectCommand component from entity.
-                                    // But it shouldn't be in this system. 
-                                    // Maybe an event, non spatial one that CommandUpdate can subscribe to. 
-                                    // then PostUpdateCommands resolve in main thread but can be called from non main thread.
-                                    // payload of event must basically be the response.
-                                    // I can't do anything with payload alone. Maybe maintain a native list of payloads.
-
-                                    // Trigger event that collected.
-                                    if (request.ResponsePayload.HasValue) {
-                                        OnCollect?.Invoke(request.ResponsePayload.Value);
+                                    if (response.ResponsePayload.HasValue && workerSystem.TryGetEntity(response.RequestPayload.CollectorId, out Unity.Entities.Entity entity)) {
+                                        PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition
+                                        {
+                                            ItemId = 1,
+                                            Count = 1
+                                        });
                                      }
+                                    break;
+                                }
+                        }
+                    }
+                }
+                if (reqIdsToPayload.TryGetValue(ResourceRequestType.OCCUPY, out reqIds))
+                {
+                    if (reqIds.Count > 0)
+                    {
+                        var responses = commandSystem.GetResponses<ResourceManager.Occupy.ReceivedResponse>();
+                        for (int i = 0; i < responses.Count; ++i)
+                        {
+                            ref readonly var response = ref responses[i];
+
+                            //There's going to be alot of repetition with checking for status codes here.
+                            // Hmm. Fuck it for now. POC this, then improve later, I waste time pre-optimizing too much over little things.
+                            switch (response.StatusCode)
+                            {
+                                case StatusCode.Success:
+                                    
+                                    // Occupy request acknowledged process response.
+                                    if (response.ResponsePayload.Value.FullyOccupied)
+                                    {
+                                        UnityEngine.Debug.LogError($"Resource {response.RequestPayload.ToOccupy} is fully occupied");
+                                    }
+                                    else if (response.ResponsePayload.Value.Occupied)
+                                    {
+                                        // Then send signal to update UI.
+                                    }
                                     break;
                             }
                         }
                     }
                 }
+                if (reqIdsToPayload.TryGetValue(ResourceRequestType.RELEASE, out reqIds))
+                {
+                    if (reqIds.Count > 0)
+                    {
+                        var responses = commandSystem.GetResponses<ResourceManager.Release.ReceivedResponse>();
+                        for (int i = 0; i < responses.Count; ++i)
+                        {
+                            ref readonly var response = ref responses[i];
+
+                            switch (response.StatusCode)
+                            {
+                                case StatusCode.Success:
+                                    // Update UI.
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
             }
             #endregion
         }
