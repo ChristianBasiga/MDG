@@ -1,14 +1,19 @@
 package mdg_schema.common;
+
+// Gotta think about how handle specific Units
+// specific resources & specific buildings.
 enum GameEntityTypes{
     Hunted = 1;
     Hunter = 3;
     Unit = 4;
     Invalid = 5;
     Resource = 6;
-    //Other additions will be added as needed.
+    Building = 7;
 }
 
 component GameMetadata{
     id = 801;
     GameEntityTypes type = 1;
+    // Type id refers to specific kind of Unit, Resource, Building etc.
+    int32 type_id = 2;
 }

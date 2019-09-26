@@ -7,11 +7,11 @@ using Improbable;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
-using MdgSchema.Units;
 using InventorySchema = MdgSchema.Common.Inventory;
-
+using UnitsSchema = MdgSchema.Units;
 namespace MDG.Hunter.Unit
 {
+    // So all templates must have dictionary
     public class Templates
     {
         public static EntityTemplate GetUnitSpawnerTemplate()
@@ -31,7 +31,8 @@ namespace MDG.Hunter.Unit
 
         }
 
-        public static EntityTemplate GetUnitEntityTemplate(string workerId)
+        // Then typeId gets parsed to unit type.
+        public static EntityTemplate GetUnitEntityTemplate(string workerId, int typeId = 0)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
             var serverAttribute = UnityGameLogicConnector.WorkerType;
@@ -55,6 +56,11 @@ namespace MDG.Hunter.Unit
                 Radius = 5.0f,
                 ColliderType = ColliderType.SPHERE
             }, serverAttribute);
+
+            template.AddComponent(new UnitsSchema.Unit.Snapshot {
+                Type = (UnitsSchema.UnitTypes)typeId
+            }, clientAttribute);
+
             template.AddComponent(new Position.Snapshot(), serverAttribute);
             template.SetReadAccess(clientAttribute, UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);
@@ -67,7 +73,7 @@ namespace MDG.Hunter.Unit
 
             template.AddComponent(new MdgSchema.Units.Unit.Snapshot
             {
-                Type = UnitTypes.COLLECTOR
+                Type = UnitsSchema.UnitTypes.COLLECTOR
             }, clientAttribute);
             //Add Collect specific components here such as inventory and health.
             return template;
