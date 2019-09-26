@@ -73,6 +73,7 @@ namespace MDG
 
         public void OnEntityCreated(SpatialOSEntity entity, EntityGameObjectLinker linker)
         {
+            Debug.LogError("Get to here??");
 
             if (!entity.HasComponent<Metadata.Component>()) return;
             Metadata.Component metaData = entity.GetComponent<Metadata.Component>();
@@ -176,6 +177,14 @@ namespace MDG
                 GameObject gameObject = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 gameObject.tag = "Unit";
                 gameObject.name = $"{gameObject.name} {(hasAuthority? "authoritative" : "")}";
+            }
+            else if (metaData.EntityType.Equals("Resource"))
+            {
+                // Todo: Query resource component to determine which resource prefab.
+                pathToEntity = $"{pathToEntity}/Resource";
+                //GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
+                GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
+                created.tag = "Resource";
             }
             else
             {

@@ -35,7 +35,7 @@ namespace MDG.Hunter.Systems
         private List<EntityId> resourceManagerIds;
         private long resourceManagerRequestId;
         private Queue<ResourceRequestHeader> pendingRequests;
-        private Dictionary<ResourceRequestType, Dictionary<long,ResourceRequestHeader>> reqIdsToPayload;
+        private Dictionary<ResourceRequestType, Dictionary<long, ResourceRequestHeader>> reqIdsToPayload;
         private readonly EntityQuery resourceManagerGroup = new EntityQuery
         {
             Constraint = new ComponentConstraint(ResourceManager.ComponentId),
@@ -81,7 +81,7 @@ namespace MDG.Hunter.Systems
             }
         }
 
-     
+
         public void SendRequest(ResourceRequestHeader resourceRequestHeader)
         {
             pendingRequests.Enqueue(resourceRequestHeader);
@@ -97,9 +97,9 @@ namespace MDG.Hunter.Systems
             {
                 ResourceRequestHeader resourceRequestHeader = pendingRequests.Dequeue();
                 long requestId = -1;
-                EntityId resourceManagerEntityId = resourceManagerIds[UnityEngine.Random.Range(0, resourceManagerIds.Count)];
+                //EntityId resourceManagerEntityId = resourceManagerIds[UnityEngine.Random.Range(0, resourceManagerIds.Count)];
                 // For each pending request choose random resource manager worker instance.
-
+                EntityId resourceManagerEntityId = new EntityId(8);
                 switch (resourceRequestHeader.ResourceRequestType)
                 {
                     case ResourceRequestType.RELEASE:
@@ -139,7 +139,7 @@ namespace MDG.Hunter.Systems
                             Payload = occupyPayload
                         });
                         break;
-                      // Will do release later, should confirm that what ahve so far actually works.
+                        // Will do release later, should confirm that what ahve so far actually works.
                 }
                 if (requestId != -1)
                 {
@@ -169,7 +169,7 @@ namespace MDG.Hunter.Systems
                     if (reqIds.Count > 0)
                     {
                         var responses = commandSystem.GetResponses<ResourceManager.Collect.ReceivedResponse>();
-                        for( int i = 0; i < responses.Count; ++i)
+                        for (int i = 0; i < responses.Count; ++i)
                         {
                             ref readonly var response = ref responses[i];
 
@@ -178,15 +178,16 @@ namespace MDG.Hunter.Systems
                             switch (response.StatusCode)
                             {
                                 case StatusCode.Success:
-                                    if (response.ResponsePayload.HasValue && workerSystem.TryGetEntity(response.RequestPayload.CollectorId, out Unity.Entities.Entity entity)) {
+                                    if (response.ResponsePayload.HasValue && workerSystem.TryGetEntity(response.RequestPayload.CollectorId, out Unity.Entities.Entity entity))
+                                    {
                                         PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition
                                         {
                                             ItemId = 1,
                                             Count = 1
                                         });
-                                     }
+                                    }
                                     break;
-                                }
+                            }
                         }
                     }
                 }
@@ -204,7 +205,7 @@ namespace MDG.Hunter.Systems
                             switch (response.StatusCode)
                             {
                                 case StatusCode.Success:
-                                    
+
                                     // Occupy request acknowledged process response.
                                     if (response.ResponsePayload.Value.FullyOccupied)
                                     {
@@ -237,9 +238,11 @@ namespace MDG.Hunter.Systems
                                     break;
                             }
                         }
+                    }
+                }
+                #endregion
             }
-            #endregion
-        }
 
+        }
     }
 }

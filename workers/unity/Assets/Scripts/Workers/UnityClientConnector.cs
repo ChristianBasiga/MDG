@@ -68,14 +68,14 @@ namespace MDG
             UnitCreationHelper.AddClientSystems(Worker.World);
             // This should actually be in server side, but later.
           //  Worker.World.GetOrCreateSystem<StatUpdateSystem>();
-            Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
-          //  Worker.World.GetOrCreateSystem<MoveSystem>();
-
+           /// Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
+            //  Worker.World.GetOrCreateSystem<MoveSystem>();
+            Worker.World.GetOrCreateSystem<ResourceRequestSystem>();
             Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
             // Todo: Move these to helper class to pass in hunter client systems.
           //  Worker.World.GetOrCreateSystem<CommandGiveSystem>();
           //  Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
-            Worker.World.GetOrCreateSystem<EntitySyncSystem>();
+           // Worker.World.GetOrCreateSystem<EntitySyncSystem>();
           //  Worker.World.GetOrCreateSystem<SelectionSystem>();
             /*
             Worker.World.GetOrCreateSystem<Unity.Rendering.RenderMeshSystemV2>();

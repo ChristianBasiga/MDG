@@ -181,6 +181,10 @@ namespace MDG.Common.Systems
                             DepleterId = request.Payload.CollectorId,
                             ResourceId = request.Payload.ResourceId
                         };
+                        
+                        // Along with deleting Occupied Component, I also need to add RespawnPending Component.
+                        // spawns same spot with exact same static information, so really could just activate / deactivate game object.
+                        // but that will be once SpawnSystem is set.
                     }
                     else
                     {

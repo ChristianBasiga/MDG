@@ -136,57 +136,13 @@ namespace MDG.Hunter.Systems
             collectResponses = new NativeList<CollectResponse>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
-            //resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
-            //resourceRequestSystem.OnCollect += HandleCollectResponse;
             commandSystem = World.GetExistingSystem<CommandSystem>();
             unitCollisionMappings = new Dictionary<EntityId, List<EntityId>>();
             enemyQuery = GetEntityQuery(ComponentType.ReadOnly<EnemyComponent>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
             friendlyQuery = GetEntityQuery(ComponentType.ReadOnly<CommandListener>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
         }
 
-        // Could do PostUpdate here, instead of jobifying.
-        // it is essentially in separate thread regardless just doesn't have burst benefits.
-        // If it becomes problem I'll translate it to that for now. Just update directly.
-        private void HandleCollectResponse(CollectResponse receivedResponse)
-        {
-            // Then it is depleted.
-            if (receivedResponse.TimesUntilDepleted == 0)
-            {
-                if (workerSystem.TryGetEntity(receivedResponse.DepleterId, out Entity entity))
-                {
-                    PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
-                    // So what this needs to do is set pending inventory addition component.
-                    // That will be temp component to remove next frame.
-                    // Then diff system will be running jobs to add to actual inventory.
-                    // a frame off for adding to inventory not huge deal and keeps it clean.
-                    // Will change this lter anyway, not resource Id, cause only care abou type of item.
-                   // PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition { ItemId = receivedResponse.ResourceId });
-                }
-                // I mean this HAS to be true for us to get this response.
-                if (pendingCollects.Count > 0)
-                {
-                    foreach (CollectPayload collectPayload in pendingCollects)
-                    {
-                        // If not the depleter, then just interrupt their stuff without adding to inventory.
-                        if (!collectPayload.requestingOccupant.Equals(receivedResponse.DepleterId))
-                        {
-                            if (workerSystem.TryGetEntity(collectPayload.requestingOccupant, out Entity interruptedEntity))
-                            {
-
-                                //Test this.
-                                PostUpdateCommands.RemoveComponent<CollectCommand>(interruptedEntity);
-                            }
-                        }
-                    }
-                }
-                // Along with this need to remove all CollectCommands that have this depleted resource as id.
-                // That has to be a job. List is stll needed.
-            }
-            
-            // So then here adds to native list.
-            collectResponses.Add(receivedResponse);
-        }
-
+    
 
         protected override void OnUpdate()
         {
@@ -228,13 +184,6 @@ namespace MDG.Hunter.Systems
                 resourceRequestSystem.SendRequest(payload);
             }
 
-            // So maybe I could reuse this. Pending Collects have all info needed.
-            // and makes sense. Just cause sent request doesn't mean not still pending.
-            // it is pending till gets response, so should store it.
-
-            // List is fine, it's not HUGE list in single frame ever I don't thnk.
-            // Or rather not huge enough to worry about that. That is not bottle neck.
-            // but maybe make it a hash table for performance later if need be.
             this.pendingCollects.AddRange(pendingCollects.ToArray());
             pendingCollects.Dispose();
         }

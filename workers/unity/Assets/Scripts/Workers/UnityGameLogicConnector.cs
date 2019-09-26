@@ -54,9 +54,11 @@ namespace MDG
             // But then it's in a different world? Hmm this also onl reall makes sense in invader context.
             // Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
             Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
+            Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
+
             //Worker.World.GetOrCreateSystem<CollisionDetectionSystem>();
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
-            //UnitCreationHelper.AddServerSystems(Worker.World);
+            UnitCreationHelper.AddServerSystems(Worker.World);
             //UnitCreationHelper.AddClientSystems(Worker.World);
             //Create helper on entity for server and client systems
             //for current systems INit, just client.
