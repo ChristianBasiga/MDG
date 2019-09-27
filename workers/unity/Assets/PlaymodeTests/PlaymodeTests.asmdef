@@ -1,0 +1,21 @@
+{
+    "name": "PlaymodeTests",
+    "references": [
+        "GUID:edb3612c44ad0d24988d387581fd5fbe",
+        "GUID:d8b37626807d99446aa07b743a8724ab",
+        "GUID:38b6a488ea20e4a35a00e50b07444806",
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:8e2f79f713f5a47dcb69903037d4bc0e"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
