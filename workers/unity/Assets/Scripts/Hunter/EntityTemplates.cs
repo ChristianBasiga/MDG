@@ -46,8 +46,7 @@ namespace MDG.Hunter.Unit
             template.AddComponent(new Stats.Snapshot{ Health = 5}, clientAttribute);
             template.AddComponent(new InventorySchema.Inventory.Snapshot {
                 Inventory = new Dictionary<int, InventorySchema.Item>(),
-                InventorySize = 1
-                
+                InventorySize = 6
             }, serverAttribute);
             // Actuall this is collider on entity, so position will always be unit position
             // prob shouldn't track this here.

@@ -36,21 +36,17 @@ namespace MDG.Hunter.Monobehaviours
 
         private void UpdateUnitInventoryRender(Dictionary<int, InventorySchema.Item> inventory)
         {
-            Debug.Log("updating every frame??");
             for (int i = 0; i < itemCells.Length; ++i)
             {
-                Debug.LogError("here" + itemCells[i].name);
                 // Update slot.
                 if (inventory.TryGetValue(i, out var item))
                 {
-                    Debug.Log("here???");
                     InventoryItem inventoryItem = itemFactory.GetInventoryItem(item.Id);
                     itemCells[i].UpdateSlot(inventoryItem);
                 }
                 // Make slot empty.
                 else
                 {
-                    Debug.LogError("or here");
                     //If not in dictionary, then make it a blank slot. I might actually need item slot class then.
                     itemCells[i].ClearSlot();
                 }

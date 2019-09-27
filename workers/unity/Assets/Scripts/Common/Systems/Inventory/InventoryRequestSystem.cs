@@ -89,7 +89,6 @@ namespace MDG.Common.Systems.Inventory
                     RequestType = RequestType.Add,
                     Count = pendingInventoryAddition.Count
                 };
-                UnityEngine.Debug.LogError("Sending add inventory request");
                 long requestId = commandSystem.SendCommand<InventorySchema.Inventory.AddItemToInventory.Request>(new InventorySchema.Inventory.AddItemToInventory.Request
                 {
                     TargetEntityId = new EntityId(4),
@@ -194,7 +193,6 @@ namespace MDG.Common.Systems.Inventory
                 ref readonly var response = ref responses[i];
                 if (pendingRequests.TryGetValue(response.RequestId, out RequestRetry requestRetry))
                 {
-                    UnityEngine.Debug.LogError("Recieved response " + response.ResponsePayload.Value);
                     pendingRequests.Remove(response.RequestId);
 
                     switch (response.StatusCode)

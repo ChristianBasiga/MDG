@@ -146,7 +146,7 @@ namespace MDG
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 Vector3 startingPoint = startingPoints[startingPointsUsed].ToUnityVector();
                 created.transform.position = startingPoint;
-
+                created.name = "Hunter_Spawned";
                 GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
                 created.tag = "MainCamera";
 

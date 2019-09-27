@@ -106,7 +106,6 @@ namespace MDG.Hunter.Systems.UnitCreation
                             case StatusCode.Success:
                                 entityIdToPosition[response.EntityId.Value] = positionForUnit;
                                 creationRequestToPosition.Remove(response.RequestId);
-                                Debug.LogError($"created unit {response.Message}");
                                 break;
                             default:
                                 Debug.LogError($"failed to create unit {response.Message}");

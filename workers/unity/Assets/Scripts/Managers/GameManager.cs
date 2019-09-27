@@ -50,12 +50,19 @@ namespace MDG.ClientSide
             playerSelected = type;
             if (connector)
             {
-
-                    var playerCreationSystem = connector.Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
-                playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
+                try
                 {
-                    playerType = type
-                }), OnCreatePlayerResponse);
+                    var playerCreationSystem = connector.Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
+                    playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
+                    {
+                        playerType = type
+                    }), OnCreatePlayerResponse);
+                }
+                catch(System.Exception err)
+                {
+                    Debug.Log("Here???" + err);
+
+                }
             }
             else
             {
