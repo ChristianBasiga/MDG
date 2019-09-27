@@ -76,12 +76,7 @@ namespace MDG
           //  Worker.World.GetOrCreateSystem<CommandGiveSystem>();
           //  Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
             Worker.World.GetOrCreateSystem<EntitySyncSystem>();
-          //  Worker.World.GetOrCreateSystem<SelectionSystem>();
-            /*
-            Worker.World.GetOrCreateSystem<Unity.Rendering.RenderMeshSystemV2>();
-            Worker.World.GetOrCreateSystem<Unity.Rendering.RenderBoundsUpdateSystem>();
-            Worker.World.GetOrCreateSystem<Unity.Rendering.LodRequirementsUpdateSystem>();
-            Worker.World.GetOrCreateSystem<Unity.Rendering.LightSystem>();*/
+     
         }
 
         

@@ -194,8 +194,11 @@ namespace MDG
                 foreach (GameObject gameObject in linkedGameObjects)
                 {
                     gameObject.SetActive(false);
+                    
                 }
+
             }
+            EntityToGameObjects.Remove(entityId);
            // EntitySyncSystem syncSystem = _world.GetExistingSystem<EntitySyncSystem>();
            // syncSystem.DestroyEntity(entityId);
         }

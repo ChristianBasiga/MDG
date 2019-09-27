@@ -49,7 +49,7 @@ namespace MDG.Player
 
         private static EntityTemplate AddHunterComponents(EntityTemplate template)
         {
-            template.AddComponent(new GameMetadata.Snapshot(GameEntityTypes.Hunter), UnityGameLogicConnector.WorkerType);
+            template.AddComponent(new GameMetadata.Snapshot(GameEntityTypes.Hunter, 0), UnityGameLogicConnector.WorkerType);
             return template;
         }
 

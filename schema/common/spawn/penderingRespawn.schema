@@ -1,0 +1,11 @@
+package mdg_schema.common.spawn;
+import "improbable/vector3.schema";
+
+
+// Added to entities that are set to respawn?
+// that makes most sense.
+component PendingRespawn {
+    id = 805;
+    float time_till_respawn = 1;
+    improbable.Vector3f position_to_respawn = 2;
+}
