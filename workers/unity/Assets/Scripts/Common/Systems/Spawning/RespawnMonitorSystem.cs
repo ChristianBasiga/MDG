@@ -12,6 +12,8 @@ using Improbable;
 
 namespace MDG.Common.Systems.Spawn
 {
+    [DisableAutoCreation]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class RespawnMonitorSystem : ComponentSystem
     {
         public struct RespawnPayload

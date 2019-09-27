@@ -7,6 +7,9 @@ using SpawnSchema = MdgSchema.Common.Spawn;
 using CommonSchema = MdgSchema.Common;
 namespace MDG.Common.Systems.Spawn
 {
+
+    [DisableAutoCreation]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class SpawnRequestSystem : ComponentSystem
     {
         CommandSystem commandSystem;
@@ -52,6 +55,8 @@ namespace MDG.Common.Systems.Spawn
                 long requestId = -1;
                 switch (payload.TypeToSpawn)
                 {
+                    // Could format this to be more test friendly. Also could just make module test / scripting tests.
+                    // until figure out best way to unit test systems like these.
                     case CommonSchema.GameEntityTypes.Unit:
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
