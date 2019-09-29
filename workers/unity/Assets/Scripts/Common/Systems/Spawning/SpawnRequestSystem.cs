@@ -5,6 +5,10 @@ using Improbable.Worker.CInterop;
 using Unity.Entities;
 using SpawnSchema = MdgSchema.Common.Spawn;
 using CommonSchema = MdgSchema.Common;
+using Improbable.Gdk.PlayerLifecycle;
+using MdgSchema.Common;
+using System;
+
 namespace MDG.Common.Systems.Spawn
 {
 
@@ -13,21 +17,44 @@ namespace MDG.Common.Systems.Spawn
     public class SpawnRequestSystem : ComponentSystem
     {
         CommandSystem commandSystem;
+        // Specialized system for linking player life cycle and heart beat tracking.
+        SendCreatePlayerRequestSystem sendCreatePlayerRequestSystem;
         WorkerSystem workerSystem;
         Dictionary<long, SpawnRequestHeader> requestIdToPayload;
+        Queue<SpawnRequestPayload> spawnRequests;
+        public delegate void SpawnFulfilledCallback(EntityId spawned);
 
-        public struct SpawnRequestHeader
+        public class SpawnRequestPayload
+        {
+            public SpawnSchema.SpawnRequest payload;
+            public Action<EntityId> callback;
+        }
+
+        public class SpawnRequestHeader
         {
             public long requestId;
-            public SpawnSchema.SpawnRequest payload;
+            public SpawnRequestPayload requestInfo;
         }
 
         protected override void OnCreate()
         {
             base.OnCreate();
+            spawnRequests = new Queue<SpawnRequestPayload>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
+            sendCreatePlayerRequestSystem = workerSystem.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
+
             requestIdToPayload = new Dictionary<long, SpawnRequestHeader>();
+        }
+
+        public void RequestSpawn(SpawnSchema.SpawnRequest spawnRequest, Action<EntityId> spawnFulfilledCallback = null)
+        {
+            var payload = new SpawnRequestPayload
+            {
+                payload = spawnRequest,
+                callback = spawnFulfilledCallback
+            };
+            spawnRequests.Enqueue(payload);
         }
 
         protected override void OnUpdate()
@@ -46,37 +73,55 @@ namespace MDG.Common.Systems.Spawn
         private void ProcessRequests()
         {
             // replace 25 with actual worker later.
-            var requests = commandSystem.GetRequests<SpawnSchema.SpawnManager.SpawnGameEntity.ReceivedRequest>(new EntityId(25));
-            for (int i = 0; i < requests.Count; ++i)
+            while (spawnRequests.Count > 0)
             {
-                ref readonly var request = ref requests[i];
-
-                SpawnSchema.SpawnRequest payload = request.Payload;
+                var request = spawnRequests.Dequeue();
                 long requestId = -1;
-                switch (payload.TypeToSpawn)
+                switch (request.payload.TypeToSpawn)
                 {
                     // Could format this to be more test friendly. Also could just make module test / scripting tests.
                     // until figure out best way to unit test systems like these.
                     case CommonSchema.GameEntityTypes.Unit:
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
-                                MDG.Hunter.Unit.Templates.GetUnitEntityTemplate(workerSystem.WorkerType, payload.TypeId)
+                                MDG.Hunter.Unit.Templates.GetUnitEntityTemplate(workerSystem.WorkerId, request.payload.TypeId)
                               ));
                         break;
-                    // Todo: Add other cases, ie: building. Defender
-                    // Defender is new Hunted, gotta make time to rename all this.
+
                     case CommonSchema.GameEntityTypes.Hunted:
-                        // This one will be similiar call that I made in GameManager, which I also need to update.
+                    case CommonSchema.GameEntityTypes.Hunter:
+                        DTO.PlayerConfig playerConfig = new DTO.PlayerConfig
+                        {
+                            playerType = request.payload.TypeToSpawn
+                        };
+                        sendCreatePlayerRequestSystem.RequestPlayerCreation(DTO.Converters.SerializeArguments(playerConfig),
+                            (PlayerCreator.CreatePlayer.ReceivedResponse response) =>
+                            {
+                                request.callback.Invoke(response.ResponsePayload.Value.CreatedEntityId);
+                            }
+                            );
                         break;
                 }
                 if (requestId != -1)
                 {
                     requestIdToPayload[requestId] = new SpawnRequestHeader
                     {
-                        requestId = request.RequestId,
-                        payload = payload
+                        requestId = requestId,
+                        requestInfo = request
                     };
                 }
+            }
+        }
+        //Move this and the creation requests to manager and just have this call it from manager.
+        private void OnCreatePlayerResponse(PlayerCreator.CreatePlayer.ReceivedResponse response)
+        {
+            if (response.StatusCode != Improbable.Worker.CInterop.StatusCode.Success)
+            {
+                UnityEngine.Debug.LogWarning($"Error: {response.Message}");
+            }
+            else
+            {
+                UnityEngine.Debug.Log("Made player");
             }
         }
 
@@ -92,17 +137,22 @@ namespace MDG.Common.Systems.Spawn
                 ref readonly var response = ref creationResponses[i];
                 if (requestIdToPayload.TryGetValue(response.RequestId, out SpawnRequestHeader spawnRequestHeader))
                 {
+
                     switch (response.StatusCode)
                     {
 
                         // Remove from request mappings and send response back.
                         case StatusCode.Success:
-                            requestIdToPayload.Remove(response.RequestId);
-                            commandSystem.SendResponse(new SpawnSchema.SpawnManager.SpawnGameEntity.Response
+
+                            if (workerSystem.TryGetEntity(response.EntityId.Value, out Unity.Entities.Entity entity))
                             {
-                                RequestId = spawnRequestHeader.requestId,
-                                Payload = new SpawnSchema.SpawnResponse(response.EntityId.Value)
-                            });
+                                EntityManager.SetComponentData(entity, new EntityTransform.Component
+                                {
+                                    Position = spawnRequestHeader.requestInfo.payload.Position
+                                });
+                            }
+                            spawnRequestHeader.requestInfo.callback?.Invoke(response.EntityId.Value);
+                            requestIdToPayload.Remove(response.RequestId);
                             break;
                         case StatusCode.Timeout:
                             // If time out try again on this side, again need to set up generic way of doing these retries.

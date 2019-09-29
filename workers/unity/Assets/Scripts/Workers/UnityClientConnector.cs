@@ -12,6 +12,7 @@ using Unity.Rendering;
 using Improbable;
 using Unity.Entities;
 using MDG.Common.Systems.Inventory;
+using MDG.Common.Systems.Spawn;
 
 namespace MDG
 {
@@ -60,23 +61,26 @@ namespace MDG
 
         protected override void HandleWorkerConnectionEstablished()
         {
-            GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-            customGameObjectCreator = new CustomGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
-            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customGameObjectCreator);
+            
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
-            UnitCreationHelper.AddClientSystems(Worker.World);
+            Worker.World.GetOrCreateSystem<SpawnRequestSystem>();
+            Worker.World.GetOrCreateSystem<RespawnMonitorSystem>();
+
+            // UnitCreationHelper.AddClientSystems(Worker.World);
             // This should actually be in server side, but later.
-          //  Worker.World.GetOrCreateSystem<StatUpdateSystem>();
-            Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
-          //  Worker.World.GetOrCreateSystem<MoveSystem>();
+            //  Worker.World.GetOrCreateSystem<StatUpdateSystem>();
+            //  Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
+            //  Worker.World.GetOrCreateSystem<MoveSystem>();
 
             Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
             // Todo: Move these to helper class to pass in hunter client systems.
-          //  Worker.World.GetOrCreateSystem<CommandGiveSystem>();
-          //  Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
-            Worker.World.GetOrCreateSystem<EntitySyncSystem>();
-     
+            //  Worker.World.GetOrCreateSystem<CommandGiveSystem>();
+            //  Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
+            //  Worker.World.GetOrCreateSystem<EntitySyncSystem>();
+            GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
+            customGameObjectCreator = new CustomGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
+            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customGameObjectCreator);
         }
 
         
