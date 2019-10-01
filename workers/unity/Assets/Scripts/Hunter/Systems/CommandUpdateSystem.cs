@@ -40,7 +40,6 @@ namespace MDG.Hunter.Systems
         private JobHandle collectJobHandle;
         private List<CollectPayload> pendingCollects;
         private CommandSystem commandSystem;
-        private ResourceRequestSystem resourceRequestSystem;
         private ComponentUpdateSystem componentUpdateSystem;
         private WorkerSystem workerSystem;
         private Dictionary<EntityId, List<EntityId>> unitCollisionMappings;
@@ -86,7 +85,7 @@ namespace MDG.Hunter.Systems
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public float deltaTime;
             [WriteOnly]
-            public NativeList<CollectPayload> collectPayloads;
+            public NativeQueue<CollectPayload>.ParallelWriter collectPayloads;
             public void Execute(Entity entity, int jobIndex, ref SpatialEntityId spatialEntityId, ref CollectCommand collectCommand, ref EntityTransform.Component entityTransform)
             {
                 float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
@@ -110,7 +109,7 @@ namespace MDG.Hunter.Systems
                     // For trigger animation.
                     collectCommand.IsCollecting = true;
                     // Otherwise we can begin collecting.
-                    collectPayloads.Add(new CollectPayload { requestingOccupant = spatialEntityId.EntityId, resourceId = collectCommand.resourceId });
+                    collectPayloads.Enqueue(new CollectPayload { requestingOccupant = spatialEntityId.EntityId, resourceId = collectCommand.resourceId });
                 }
             }
         }
@@ -155,12 +154,6 @@ namespace MDG.Hunter.Systems
                 if (workerSystem.TryGetEntity(receivedResponse.DepleterId, out Entity entity))
                 {
                     PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
-                    // So what this needs to do is set pending inventory addition component.
-                    // That will be temp component to remove next frame.
-                    // Then diff system will be running jobs to add to actual inventory.
-                    // a frame off for adding to inventory not huge deal and keeps it clean.
-                    // Will change this lter anyway, not resource Id, cause only care abou type of item.
-                   // PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition { ItemId = receivedResponse.ResourceId });
                 }
                 // I mean this HAS to be true for us to get this response.
                 if (pendingCollects.Count > 0)
@@ -202,40 +195,25 @@ namespace MDG.Hunter.Systems
 
             // Move to own function or even its own system and make a system group.
 
-            int capacity = EntityManager.CreateEntityQuery(typeof(CollectCommand)).CalculateEntityCount();
-            NativeList<CollectPayload> pendingCollects = new NativeList<CollectPayload>(capacity, Allocator.Persistent);
+            NativeQueue<CollectPayload> pendingCollects = new NativeQueue<CollectPayload>(Allocator.TempJob);
 
             // Travel to resource jobs.
             MoveToResourceJob moveToResourceJob = new MoveToResourceJob
             {
                 deltaTime = deltaTime,
-                collectPayloads = pendingCollects
+                collectPayloads = pendingCollects.AsParallelWriter()
             };
             // For each pending collect, send Collect request.
-            collectJobHandle = moveToResourceJob.Schedule(this);
+            moveToResourceJob.Schedule(this).Complete();
 
             // Could be a job I run every few frames since won't change or simply on create of this system.
 
             //So instead of collect payload, maybe resourcerequestheader?
-            foreach (CollectPayload collectPayload in pendingCollects)
+            while (pendingCollects.Count > 0)
             {
-                ResourceRequestSystem.ResourceRequestHeader payload = new ResourceRequestSystem.ResourceRequestHeader
-                {
-                    OccupantId = collectPayload.requestingOccupant,
-                    ResourceId = collectPayload.resourceId,
-                    ResourceRequestType = ResourceRequestType.COLLECT
-                };
-                resourceRequestSystem.SendRequest(payload);
+                var collectPayload = pendingCollects.Dequeue();
             }
 
-            // So maybe I could reuse this. Pending Collects have all info needed.
-            // and makes sense. Just cause sent request doesn't mean not still pending.
-            // it is pending till gets response, so should store it.
-
-            // List is fine, it's not HUGE list in single frame ever I don't thnk.
-            // Or rather not huge enough to worry about that. That is not bottle neck.
-            // but maybe make it a hash table for performance later if need be.
-            this.pendingCollects.AddRange(pendingCollects.ToArray());
             pendingCollects.Dispose();
         }
     }

@@ -55,7 +55,7 @@ namespace MDG.Hunter.Monobehaviours
                         {
                             Vector3 newDestination = workerSystem.EntityManager.GetComponentData<Position.Component>(targetEntity).Coords.ToUnityVector();
                             // Start movement again.
-                            base.Initialize(linkedEntityComponent.EntityId, new CommandListener { TargetPosition = newDestination });
+                            //base.Initialize(linkedEntityComponent.EntityId, new CommandListener { TargetPosition = newDestination });
                         }
                     }
                     else// if (damageRequestIds.Count == 0)

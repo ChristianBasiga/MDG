@@ -22,11 +22,4 @@ namespace MDG.Hunter.Commands
         void Execute(GameObject gameObject);
     }
 
-    //This will be part of Unit Archtype / template with command Type None.
-    public struct CommandMetadata : IComponentData
-    {
-        public CommandType CommandType;
-        public EntityId TargetId;
-        public Vector3 TargetPosition;
-    }
 }

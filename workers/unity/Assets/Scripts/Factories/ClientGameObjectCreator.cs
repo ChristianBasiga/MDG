@@ -16,6 +16,8 @@ using Unity.Transforms;
 using Unity.Rendering;
 using MDG.Common.Systems;
 using SpawnSystems = MDG.Common.Systems.Spawn;
+using InvaderSystems =  MDG.Hunter.Systems;
+
 
 namespace MDG
 {
@@ -24,7 +26,7 @@ namespace MDG
     /// an entity needs. Perhaps ladder can be moved to different.
     /// </summary>
     // Use zenject to install stuff here.
-    public class CustomGameObjectCreator : IEntityGameObjectCreator
+    public class ClientGameObjectCreator : IEntityGameObjectCreator
     {
         // Storing here prob fine actually.
         public Dictionary<EntityId, List<GameObject>> EntityToGameObjects { private set; get; }
@@ -48,6 +50,7 @@ namespace MDG
 
         
         // These must be injected.
+        // Storing here si fine for now, def need to update values.
         private static List<Coordinates> startingPoints = new List<Coordinates>
         {
             new Coordinates(width - (width * 0.1f), 100, length * 0.6),
@@ -64,7 +67,7 @@ namespace MDG
         //I can still do factory plan this way.
 
         //Make worker type an enum to parse.
-        public CustomGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType)
+        public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType)
         {
             this._default = _default;
             this._world = world;
@@ -82,8 +85,6 @@ namespace MDG
             string pathToEntity = $"Prefabs/{_workerType}";
             var hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
 
-            //Second spawned fails somewhereg
-            //Create constants page for this later on as well.
             if (metaData.EntityType.Equals("Player"))
             {
                 if (!entity.HasComponent<GameMetadata.Component>())
@@ -92,11 +93,7 @@ namespace MDG
                     return;
                 }
                 GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
-                //if (gameMetaData.Type == GameEntityTypes.Hunted || gameMetaData.Type == GameEntityTypes.Hunter)
-                //{
                 GameEntityTypes type = gameMetaData.Type;
-                // Okay, forgot bout authority. Either make spawn request on client side it's just not happening for player stuff
-                // or rather like I diagrammed gotta be more distinct on it.
                 if (hasAuthority)
                 {
                     WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
@@ -105,12 +102,8 @@ namespace MDG
                         Entity hunterEntity;
                         if (worker.TryGetEntity(entity.SpatialOSEntityId, out hunterEntity))
                         {
-                            // Maybe snapshot type of count, that would be ideal actually.
-                            _world.EntityManager.AddComponent(hunterEntity, ComponentType.ReadWrite<CommandGiver>());
-                            // For this to work, I need to trigger event.
-                            // and need to send event to worker 
+                            //Add Authoritative Invader Components.
 
-                            // Decide best way to sort this out, prob via installer.
                             int multiplier = startingPointsUsed == 1 ? 1 : -1;
 
 
@@ -122,12 +115,19 @@ namespace MDG
                                     Position = initialUnitCoordinates[i]
                                 });
                             }
-
-                            // So for new spawns, it needs to get ALL positions of existing entities and spawn them in my active world.
-                            // for this they need to be stored in central place. Game Logic.
                         }
-
+                        /* systems not being added during here. Hmm.
+                        spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.SelectionSystem>();
+                        spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.CommandGiveSystem>();
+                        spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.CommandUpdateSystem>();
+                        */
                     }
+                    else
+                    {
+                        // Add Defender specific systems.
+                    }
+                   
+
                     pathToEntity = $"{pathToEntity}/Authoritative";
                 }
                 else if (gameMetaData.Type == GameEntityTypes.Hunter)
@@ -136,7 +136,6 @@ namespace MDG
                 }
 
                 pathToEntity = $"{pathToEntity}/{type.ToString()}";
-                //GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
                 if (GameObject.FindGameObjectWithTag("MainCamera"))
                 {
                     GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
@@ -159,7 +158,6 @@ namespace MDG
                     {
                         pathToEntity = $"{pathToEntity}/Authoritative";
                         _world.EntityManager.AddComponentData(unitEntity, new CommandListener { CommandType = CommandType.None });
-                        _world.EntityManager.AddComponentData(unitEntity, new CommandMetadata { CommandType = CommandType.None });
                     }
                     else
                     {

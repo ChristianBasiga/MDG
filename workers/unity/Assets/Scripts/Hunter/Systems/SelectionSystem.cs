@@ -129,6 +129,7 @@ namespace MDG.Hunter.Systems {
                 return inputDeps;
 
             }
+
             // If selector count isn't 0, then new selection has been made this frame, reset Clickables.
             ResetSelectedEntities resetSelectedEntitiesJob = new ResetSelectedEntities();
             resetSelectedEntitiesJob.Schedule(this).Complete();

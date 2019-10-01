@@ -8,7 +8,7 @@ using Improbable.Worker.CInterop;
 using UnityEngine;
 using MdgSchema.Player;
 using MdgSchema.Lobby;
-using MDG.Hunter.Systems.UnitCreation;
+
 using MDG.Hunter.Systems;
 using MDG.Common.Systems;
 using MDG.Common.Systems.Inventory;
@@ -52,16 +52,9 @@ namespace MDG
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>(); 
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
-            // But then it's in a different world? Hmm this also onl reall makes sense in invader context.
-            // Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
             Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
-
             //Worker.World.GetOrCreateSystem<CollisionDetectionSystem>();
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
-            //UnitCreationHelper.AddServerSystems(Worker.World);
-            UnitCreationHelper.AddClientSystems(Worker.World);
-            //Create helper on entity for server and client systems
-            //for current systems INit, just client.
         }
 
     }

@@ -6,7 +6,7 @@ using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
 using MDG.Hunter.Systems;
 using MDG.Common.Systems;
-using MDG.Hunter.Systems.UnitCreation;
+
 using MdgSchema.Spawners;
 using Improbable.Worker.CInterop.Query;
 using Improbable.Gdk.Core.Commands;
@@ -79,8 +79,6 @@ namespace MDG.ClientSide
                 }
                 catch(System.Exception err)
                 {
-                    Debug.Log("Here???" + err);
-
                 }
             }
             else

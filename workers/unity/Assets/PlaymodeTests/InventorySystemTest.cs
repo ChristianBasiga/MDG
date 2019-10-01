@@ -9,8 +9,6 @@ using Improbable.Gdk.Subscriptions;
 using Improbable.Gdk.Core;
 using Unity.Entities;
 using MDG.Common.Components;
-// Looking at this, maybe I should have module, then inside each module is set of monobehaviours,systems, and components.
-using InventoryMonobehaviours = MDG.Common.MonoBehaviours.Inventory;
 using InventorySystems = MDG.Common.Systems.Inventory;
 using InventoryComponents = MDG.Common.Components;
 using InventorySchema = MdgSchema.Common.Inventory;

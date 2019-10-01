@@ -97,7 +97,7 @@ namespace PlaymodeTests
             yield return new WaitUntil(() => { return unitEntityId.IsValid(); });
             yield return new WaitForEndOfFrame();
 
-            List<GameObject> unitObject = clientWorker.GetComponent<UnityClientConnector>().customGameObjectCreator.GetLinkedGameObjectById(unitEntityId);
+            List<GameObject> unitObject = clientWorker.GetComponent<UnityClientConnector>().clientGameObjectCreator.GetLinkedGameObjectById(unitEntityId);
             EntityManager entityManager = workerSystem.EntityManager;
             Assert.IsNotNull(unitObject, $"Linked GameObject not created for Unit with entity id {unitEntityId}");
             Assert.True(unitObject[0].name.Contains("authoritative"), "Non authoritative unit created for authoritative client");
@@ -143,7 +143,7 @@ namespace PlaymodeTests
                 yield return new WaitForSeconds(5.2f);
                 yield return new WaitForEndOfFrame();
                 int amountOfUnitsInSceneBeforeRespawn = GameObject.FindGameObjectsWithTag("Unit").Length;
-                List<GameObject> removedLinkedObject = clientWorker.GetComponent<UnityClientConnector>().customGameObjectCreator.GetLinkedGameObjectById(linkedUnit.EntityId);
+                List<GameObject> removedLinkedObject = clientWorker.GetComponent<UnityClientConnector>().clientGameObjectCreator.GetLinkedGameObjectById(linkedUnit.EntityId);
                 Assert.Null(removedLinkedObject, "Failed to delete object");
                 int amountOfUnitsAfterRespawn = GameObject.FindGameObjectsWithTag("Unit").Length;
                 Assert.AreEqual(initialAmountOfUnitsInScene, amountOfUnitsAfterRespawn, "Object not respawned");
