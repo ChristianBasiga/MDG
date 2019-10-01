@@ -15,6 +15,7 @@ using MdgSchema.Common;
 using Unity.Transforms;
 using Unity.Rendering;
 using MDG.Common.Systems;
+using SpawnSystems = MDG.Common.Systems.Spawn;
 
 namespace MDG
 {
@@ -41,6 +42,7 @@ namespace MDG
         private static int startingPointsUsed = 0;
 
         private ComponentUpdateSystem ComponentUpdateSystem;
+        SpawnSystems.SpawnRequestSystem spawnReqSystem;
 
         //Starting points will be 10% off whatever bounds are.
 
@@ -69,11 +71,11 @@ namespace MDG
             this._workerType = workerType;
             EntityToGameObjects = new Dictionary<EntityId, List<GameObject>>();
             ComponentUpdateSystem = _world.GetExistingSystem<ComponentUpdateSystem>();
+            spawnReqSystem = _world.GetExistingSystem<SpawnSystems.SpawnRequestSystem>();
         }
 
         public void OnEntityCreated(SpatialOSEntity entity, EntityGameObjectLinker linker)
         {
-
             if (!entity.HasComponent<Metadata.Component>()) return;
             Metadata.Component metaData = entity.GetComponent<Metadata.Component>();
 
@@ -84,16 +86,21 @@ namespace MDG
             //Create constants page for this later on as well.
             if (metaData.EntityType.Equals("Player"))
             {
+                if (!entity.HasComponent<GameMetadata.Component>())
+                {
+                   
+                    return;
+                }
                 GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
-
                 //if (gameMetaData.Type == GameEntityTypes.Hunted || gameMetaData.Type == GameEntityTypes.Hunter)
                 //{
-                PlayerType type = entity.GetComponent<PlayerMetaData.Component>().PlayerType;
-
+                GameEntityTypes type = gameMetaData.Type;
+                // Okay, forgot bout authority. Either make spawn request on client side it's just not happening for player stuff
+                // or rather like I diagrammed gotta be more distinct on it.
                 if (hasAuthority)
                 {
                     WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
-                    if (type == PlayerType.HUNTER)
+                    if (type == GameEntityTypes.Hunter)
                     {
                         Entity hunterEntity;
                         if (worker.TryGetEntity(entity.SpatialOSEntityId, out hunterEntity))
@@ -109,24 +116,11 @@ namespace MDG
 
                             for (int i = 0; i < initialUnitCoordinates.Count; ++i)
                             {
-
-                                Vector3f startingCoords = initialUnitCoordinates[i];// + startingPoints[startingPointsUsed].ToUnityVector());
-                                Entity unitSpawner = _world.EntityManager.CreateEntity(typeof(Hunter.Components.UnitSpawner));
-                                _world.EntityManager.SetComponentData(unitSpawner, new Hunter.Components.UnitSpawner
+                                spawnReqSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                                 {
-                                    AmountToSpawn = 1,
-                                    Position = startingCoords
+                                    TypeToSpawn = GameEntityTypes.Unit,
+                                    Position = initialUnitCoordinates[i]
                                 });
-                                break;
-                                /*
-                                var ent = World.Active.EntityManager.CreateEntity(typeof(RenderMesh), typeof(Unity.Transforms.LocalToWorld), typeof(Unity.Transforms.Scale),
-                                typeof(Unity.Transforms.Translation), typeof(Unity.Rendering.RenderBounds), typeof(Improbable.
-                                ));
-                                Debug.LogError(World.Active.Name);
-
-                                World.Active.EntityManager.SetSharedComponentData(ent, new RenderMesh { mesh = mesh, material = material });
-                                World.Active.EntityManager.SetComponentData(ent, new Improbable.Position.Component { Coords = startingCoords });
-                                World.Active.EntityManager.SetComponentData(ent, new Unity.Transforms.Scale { Value = 50.0f });*/
                             }
 
                             // So for new spawns, it needs to get ALL positions of existing entities and spawn them in my active world.
@@ -143,14 +137,15 @@ namespace MDG
 
                 pathToEntity = $"{pathToEntity}/{type.ToString()}";
                 //GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
+                if (GameObject.FindGameObjectWithTag("MainCamera"))
+                {
+                    GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
+                }
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 Vector3 startingPoint = startingPoints[startingPointsUsed].ToUnityVector();
                 created.transform.position = startingPoint;
                 created.name = "Hunter_Spawned";
-                GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
                 created.tag = "MainCamera";
-
-
             }
             else if (metaData.EntityType.Equals("Unit"))
             {
@@ -160,7 +155,6 @@ namespace MDG
                 {
                     // Custom creator essentially just acting as entity creation call back.
                     _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadWrite<Clickable>());
-                    _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadWrite<UnitComponent>());
                     if (hasAuthority)
                     {
                         pathToEntity = $"{pathToEntity}/Authoritative";
@@ -194,13 +188,9 @@ namespace MDG
                 foreach (GameObject gameObject in linkedGameObjects)
                 {
                     gameObject.SetActive(false);
-                    
                 }
-
             }
             EntityToGameObjects.Remove(entityId);
-           // EntitySyncSystem syncSystem = _world.GetExistingSystem<EntitySyncSystem>();
-           // syncSystem.DestroyEntity(entityId);
         }
 
         GameObject CreateEntityObject(SpatialOSEntity entity, EntityGameObjectLinker linker, string pathToEntity, Transform parent = null, System.Type[] ecsComponents = null)
@@ -237,7 +227,6 @@ namespace MDG
             List<GameObject> gameObjects;
             if (!EntityToGameObjects.TryGetValue(entityId, out gameObjects))
             {
-                Debug.LogError("Not got");
             }
             return gameObjects;
         }

@@ -18,6 +18,7 @@ namespace MDG.Common.Systems.Spawn
     {
         public struct RespawnPayload
         {
+            public EntityId entityIdToDespawn;
             public CommonSchema.GameEntityTypes typeToSpawn;
             public int typeId;
             public Vector3f position;
@@ -52,27 +53,31 @@ namespace MDG.Common.Systems.Spawn
             queuedRespawns.Dispose();
         }
 
+        // Respawn should be on entity, but maybe process should be same? Hmm.
+        // I got too obsessed with job. When in reality, it should be deleted prior, or rather, hmm. dead state, not deleted.
         public struct TickPendingRespawnJob : IJobForEachWithEntity<SpatialEntityId, SpawnSchema.PendingRespawn.Component, CommonSchema.GameMetadata.Component>
         {
             public NativeQueue<RespawnPayload>.ParallelWriter queuedRespawns;
-            public EntityCommandBuffer.Concurrent commandBuffer;
+            public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public float deltaTime;
             public void Execute(Unity.Entities.Entity entity, int index, [ReadOnly] ref SpatialEntityId spatialEntityId, 
                 ref SpawnSchema.PendingRespawn.Component pendingRespawn, ref CommonSchema.GameMetadata.Component gameMetaData)
             {
                 if (pendingRespawn.TimeTillRespawn > 0)
                 {
-                    pendingRespawn.TimeTillRespawn -= deltaTime;
+                    UnityEngine.Debug.Log(pendingRespawn.TimeTillRespawn);
+                    pendingRespawn.TimeTillRespawn = pendingRespawn.TimeTillRespawn - deltaTime;
                 }
                 else
                 {
                     queuedRespawns.Enqueue(new RespawnPayload
                     {
+                        entityIdToDespawn = spatialEntityId.EntityId,
                         typeToSpawn = gameMetaData.Type,
                         position = pendingRespawn.PositionToRespawn,
                         typeId = gameMetaData.TypeId
                     });
-                    commandBuffer.DestroyEntity(index, entity);
+                    entityCommandBuffer.RemoveComponent<SpawnSchema.PendingRespawn.Component>(index, entity);
                 }
             }
         }
@@ -98,8 +103,8 @@ namespace MDG.Common.Systems.Spawn
 
             TickPendingRespawnJob tickPendingRespawnJob = new TickPendingRespawnJob
             {
-                commandBuffer = PostUpdateCommands.ToConcurrent(),
                 queuedRespawns = queuedRespawns.AsParallelWriter(),
+                entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
                 deltaTime = UnityEngine.Time.deltaTime
             };
 
@@ -114,26 +119,19 @@ namespace MDG.Common.Systems.Spawn
             }
         }
 
+        // I guess a monitor on each client? that feels fucked.
+
         private void SendSpawnRequest()
         {
             if (queuedRespawns.TryDequeue(out RespawnPayload payload))
             {
-                // Could query them for now, just 25 for testing.
-                long requestId = commandSystem.SendCommand(new SpawnSchema.SpawnManager.SpawnGameEntity.Request
+                var deleteEntityRequest = new WorldCommands.DeleteEntity.Request(payload.entityIdToDespawn);
+                commandSystem.SendCommand(deleteEntityRequest);
+                spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                 {
-                    TargetEntityId = new EntityId(25),
-                    Payload = new SpawnSchema.SpawnRequest
-                    {
-                        Position = payload.position,
-                        // Need to fix imports for this part to work.
-                        TypeToSpawn = payload.typeToSpawn,
-                        // Respawn COULD be smarter and group send those that are closer to each other in respawn times
-                        // but that's an xtra more efficient approach.
-                        // with that I would need to store count as well.
-                        Count = 1
-                    },
+                    TypeToSpawn = payload.typeToSpawn,
+                    Position = payload.position
                 });
-                pendingRespawnRequests[requestId] = payload;
             }
         }
 

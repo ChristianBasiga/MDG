@@ -60,6 +60,8 @@ namespace PlaymodeTests
                 InventorySchema.Inventory.Component initialInventory = entityManager.GetComponentData<InventorySchema.Inventory.Component>(entity);
                 Assert.True(initialInventory.Inventory.Count == 0, "Not starting with empty inventory");
                 InventorySchema.Item itemAdding = new InventorySchema.Item { Id = InventoryItemFactory.ResourceItemId };
+
+                // Just replacing this with sending requests.
                 entityManager.AddComponentData(entity, new InventoryComponents.PendingInventoryAddition
                 {
                     Count = 1,

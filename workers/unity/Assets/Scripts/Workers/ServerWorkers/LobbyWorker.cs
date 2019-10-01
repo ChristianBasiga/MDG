@@ -7,7 +7,7 @@ using Improbable.Gdk.Subscriptions;
 
 namespace MDG.Lobby
 {
-
+    /*
     //For tetsing just put here.
     public class Room
     {
@@ -83,5 +83,5 @@ namespace MDG.Lobby
             };
        }
 
-    }
+    }*/
 }

@@ -14,6 +14,10 @@ using Unity.Collections;
 using Unity.Entities;
 using Improbable.Gdk.Subscriptions;
 using Zenject;
+using SpawnSchema = MdgSchema.Common.Spawn;
+
+using MdgSchema.Common;
+
 namespace MDG.ClientSide
 {
     public class GameManager : MonoBehaviour
@@ -28,7 +32,7 @@ namespace MDG.ClientSide
 
         [SerializeField]
         private UserInterface.UIManager uiManager;
-        PlayerType playerSelected;
+        GameEntityTypes playerSelected;
         
         public void Init(int levelLength, int levelWidth)
         {
@@ -44,7 +48,7 @@ namespace MDG.ClientSide
         }
 
         // Ideally launcher opens this and select player already, but for nw this is fine.
-        void CreatePlayer(PlayerType type)
+        void CreatePlayer(GameEntityTypes type)
         {
             UnityClientConnector connector = GetComponent<UnityClientConnector>();
             playerSelected = type;
@@ -52,10 +56,25 @@ namespace MDG.ClientSide
             {
                 try
                 {
+                    /*
+                    CommandSystem commandSystem = connector.Worker.World.GetOrCreateSystem<CommandSystem>();
+
+                    commandSystem.SendCommand(new SpawnSchema.SpawnManager.SpawnGameEntity.Request
+                    {
+
+                        TargetEntityId = new EntityId(2),
+                        
+                        Payload = new SpawnSchema.SpawnRequest
+                        {
+                            TypeToSpawn = MdgSchema.Common.GameEntityTypes.Hunter,
+                        }
+                    });
+
+                    */
                     var playerCreationSystem = connector.Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
                     playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
                     {
-                        playerType = type
+                        playerType = type,
                     }), OnCreatePlayerResponse);
                 }
                 catch(System.Exception err)

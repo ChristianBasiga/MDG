@@ -38,9 +38,6 @@ namespace MDG.Hunter.Unit
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
             EntityTemplate template = new EntityTemplate();
-            PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
-            //Create system which acts upon this.
-            TransformSynchronizationHelper.AddTransformSynchronizationComponents(template, clientAttribute);
             template.AddComponent(new Metadata.Snapshot { EntityType = "Unit" }, serverAttribute);
             template.AddComponent(new GameMetadata.Snapshot { Type = GameEntityTypes.Unit }, serverAttribute);
             template.AddComponent(new EntityTransform.Snapshot { Scale = new Vector3f(10,10,10)}, clientAttribute);
@@ -59,7 +56,7 @@ namespace MDG.Hunter.Unit
             template.AddComponent(new UnitsSchema.Unit.Snapshot {
                 Type = (UnitsSchema.UnitTypes)typeId
             }, clientAttribute);
-
+            PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             template.AddComponent(new Position.Snapshot(), serverAttribute);
             template.SetReadAccess(clientAttribute, UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);
@@ -70,10 +67,6 @@ namespace MDG.Hunter.Unit
             EntityTemplate template = GetUnitEntityTemplate(workerType);
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerType);
 
-            template.AddComponent(new MdgSchema.Units.Unit.Snapshot
-            {
-                Type = UnitsSchema.UnitTypes.COLLECTOR
-            }, clientAttribute);
             //Add Collect specific components here such as inventory and health.
             return template;
         }

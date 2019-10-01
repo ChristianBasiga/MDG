@@ -28,17 +28,23 @@ namespace MDG.Player
             {
                 DTO.PlayerConfig creationArgs = DTO.Converters.DeserializeArguments<DTO.PlayerConfig>(playerCreationArguments);
                 //The creation args would come from room clear request / start game request.
-                template.AddComponent(new PlayerMetaData.Snapshot("username",creationArgs.playerType), clientAttribute);
-
+                // GOtta rethink where I'll store usernames and such.
+                template.AddComponent(new PlayerMetaData.Snapshot("username"), clientAttribute);
+                template.AddComponent(new GameMetadata.Snapshot
+                {
+                    Type = creationArgs.playerType
+                }, serverAttribute);
                 //Factory instead incase of other roles down the line.
-                template = creationArgs.playerType == PlayerType.HUNTER ? AddHunterComponents(template) : AddHunterComponents(template);
+                template = creationArgs.playerType == GameEntityTypes.Hunter ? AddHunterComponents(template) : AddHunterComponents(template);
+                template.AddComponent(new InventorySchema.Inventory.Snapshot
+                {
+                    Inventory = new Dictionary<int, InventorySchema.Item>(),
+                    InventorySize = (uint)(creationArgs.playerType == GameEntityTypes.Hunter ? 5 : 10)
+                }, serverAttribute);
             }
-            template.AddComponent(new InventorySchema.Inventory.Snapshot
-            {
-                Inventory = new Dictionary<int, InventorySchema.Item>()
-            }, serverAttribute);
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
+            // No need for player transform, enttiy transform, etc. is enough now.
             template.AddComponent(new PlayerTransform.Snapshot(), clientAttribute);
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             TransformSynchronizationHelper.AddTransformSynchronizationComponents(template, clientAttribute);
@@ -49,7 +55,6 @@ namespace MDG.Player
 
         private static EntityTemplate AddHunterComponents(EntityTemplate template)
         {
-            template.AddComponent(new GameMetadata.Snapshot(GameEntityTypes.Hunter, 0), UnityGameLogicConnector.WorkerType);
             return template;
         }
 
