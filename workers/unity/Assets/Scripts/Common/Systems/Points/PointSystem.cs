@@ -12,7 +12,8 @@ namespace MDG.Common.Systems
     /// I'll add all components needed to meet use cases and just add as needed though tests, but no other systems acting upon them.
     /// </summary>
     [DisableAutoCreation]
-    [UpdateInGroup(typeof(SpatialOSUpdateGroup)]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
+    // Ideally, I switch this to a job component system.
     public class PointSystem : ComponentSystem
     {
         NativeHashMap<EntityId, int> pointsAllocations;
@@ -83,6 +84,7 @@ namespace MDG.Common.Systems
                 typeof(NewlyAddedSpatialOSEntity),
                 typeof(PointSchema.PointMetadata.Component)
                 );
+            // This builder is really the ONLY thing that's stopping me.
             pointGroup = Entities.WithNone(typeof(NewlyAddedSpatialOSEntity)).WithAll(ComponentType.ReadWrite<PointSchema.Point.Component>());
         }
 
