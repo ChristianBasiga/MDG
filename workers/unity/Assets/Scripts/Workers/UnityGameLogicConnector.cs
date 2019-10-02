@@ -13,6 +13,8 @@ using MDG.Hunter.Systems;
 using MDG.Common.Systems;
 using MDG.Common.Systems.Inventory;
 using MDG.Common.Systems.Spawn;
+using MDG.Common.Systems.Point;
+
 
 namespace MDG
 {
@@ -53,6 +55,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<MetricSendSystem>(); 
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
             Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
+            Worker.World.GetOrCreateSystem<PointSystem>();
             //Worker.World.GetOrCreateSystem<CollisionDetectionSystem>();
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
         }

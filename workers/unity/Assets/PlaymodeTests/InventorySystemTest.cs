@@ -23,9 +23,9 @@ namespace PlaymodeTests
     {
         LinkedEntityComponent linkedEntityComponent;
         WorkerSystem workerSystem;
-    // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
-    // `yield return null;` to skip a frame.
-    [UnityTest, Order(1)]
+        // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
+        // `yield return null;` to skip a frame.
+        [UnityTest, Order(1)]
         public IEnumerator SceneValidation()
         {
             // This should be it's own test altogether, but may change how spawned anyway, fine for now. this is mainly a module test anyway not full.
@@ -34,7 +34,7 @@ namespace PlaymodeTests
             GameObject uiManger = GameObject.Find("UIManager");
             Assert.True(uiManger != null);
             yield return new WaitForSeconds(2.0f);
-            uiManger.GetComponent<UIManager>().SelectRole("HUNTER");
+            uiManger.GetComponent<UIManager>().SelectRole("Hunter");
             yield return new WaitForSeconds(2.0f);
             Assert.True(GameObject.Find("Hunter_Spawned"), "Hunter not spawned");
             yield return new WaitForSeconds(2.0f);
@@ -46,10 +46,6 @@ namespace PlaymodeTests
         [UnityTest, Order(2)]
         public IEnumerator InventoryAddTest()
         {
-
-            // These 3 lines are repeated, look into builder or think of way to avoid this.
-            yield return null;
-            
 
             if (workerSystem.TryGetEntity(linkedEntityComponent.EntityId, out Entity entity))
             {
@@ -65,14 +61,15 @@ namespace PlaymodeTests
                     Count = 1,
                     ItemId = itemAdding.Id
                 });
-                yield return null;
+                yield return new WaitForEndOfFrame();
                 workerSystem.World.GetOrCreateSystem<InventorySystems.InventoryRequestSystem>();
-                yield return null;
+                yield return new WaitForEndOfFrame();
+
                 // Request system should have removed it.
                 Assert.IsTrue(!entityManager.HasComponent<InventoryComponents.PendingInventoryAddition>(entity), "Pending Inventory addition not removed");
-                yield return new WaitForSeconds(2.0f);
+                yield return new WaitForEndOfFrame();
                 InventorySchema.Inventory.Component updatedInventory = entityManager.GetComponentData<InventorySchema.Inventory.Component>(entity);
-
+                Debug.Log(updatedInventory.Inventory.Count);
                 // Confirm that the correct item has been added to inventory.
                 Assert.True(updatedInventory.Inventory.Count == 1, "Inventory not updated with new item");
                 Assert.True(updatedInventory.Inventory.ContainsValue(itemAdding), "Inventory not updated with correct item");

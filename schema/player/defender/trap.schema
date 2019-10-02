@@ -1,0 +1,13 @@
+package mdg_schema.player.defender;
+
+// Disarmed should be a temporary component actually.
+component TrapStatus{
+    id = 204;
+    bool status = 1;
+}
+
+// Add more to it. Simply for filling up all point uses cases for now.
+component Trap{
+    id = 203;
+    int32 trap_id = 1;
+}

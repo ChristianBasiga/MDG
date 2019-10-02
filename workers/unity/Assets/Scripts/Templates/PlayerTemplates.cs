@@ -9,13 +9,12 @@ using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
 using InventorySchema = MdgSchema.Common.Inventory;
+using PointSchema = MdgSchema.Common.Point;
+
 namespace MDG.Player
 {
     public class Templates
     {
-        // If can't reproduce it like this, look at entity creation again.
-        //But worst case I simply add the lobby components to respective player if authoritiave client
-        //so that they may send commands.
         public static EntityTemplate CreatePlayerEntityTemplate(string workerId, byte[] playerCreationArguments)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
@@ -23,25 +22,18 @@ namespace MDG.Player
 
             //Deserializate playerCreationArguments.
             var template = new EntityTemplate();
-
             if (playerCreationArguments.Length > 0)
             {
                 DTO.PlayerConfig creationArgs = DTO.Converters.DeserializeArguments<DTO.PlayerConfig>(playerCreationArguments);
-                //The creation args would come from room clear request / start game request.
                 // GOtta rethink where I'll store usernames and such.
                 template.AddComponent(new PlayerMetaData.Snapshot("username"), clientAttribute);
                 template.AddComponent(new GameMetadata.Snapshot
                 {
                     Type = creationArgs.playerType
                 }, serverAttribute);
-                //Factory instead incase of other roles down the line.
                 template = creationArgs.playerType == GameEntityTypes.Hunter ? AddHunterComponents(template) : AddHunterComponents(template);
-                template.AddComponent(new InventorySchema.Inventory.Snapshot
-                {
-                    Inventory = new Dictionary<int, InventorySchema.Item>(),
-                    InventorySize = (uint)(creationArgs.playerType == GameEntityTypes.Hunter ? 5 : 10)
-                }, serverAttribute);
             }
+           
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
             // No need for player transform, enttiy transform, etc. is enough now.
@@ -55,11 +47,49 @@ namespace MDG.Player
 
         private static EntityTemplate AddHunterComponents(EntityTemplate template)
         {
+            var serverAttribute = UnityGameLogicConnector.WorkerType;
+
+            template.AddComponent(new PointSchema.PointMetadata.Snapshot
+            {
+                IdleGainRate = 1,
+                StartingPoints = 1000
+            }, serverAttribute);
+
+            template.AddComponent(new PointSchema.Point.Snapshot
+            {
+                Value = 1000
+            }, serverAttribute);
+
+            template.AddComponent(new InventorySchema.Inventory.Snapshot
+            {
+                Inventory = new Dictionary<int, InventorySchema.Item>(),
+                InventorySize = 5
+            }, serverAttribute);
+
             return template;
         }
 
-        private static EntityTemplate AddHuntedComponents(EntityTemplate template)
+        private static EntityTemplate AddDefenderComponents(EntityTemplate template)
         {
+            var serverAttribute = UnityGameLogicConnector.WorkerType;
+
+            template.AddComponent(new PointSchema.PointMetadata.Snapshot
+            {
+                IdleGainRate = 10,
+                StartingPoints = 1500
+            }, serverAttribute);
+
+            template.AddComponent(new PointSchema.Point.Snapshot
+            {
+                Value = 1500
+            }, serverAttribute);
+
+            template.AddComponent(new InventorySchema.Inventory.Snapshot
+            {
+                Inventory = new Dictionary<int, InventorySchema.Item>(),
+                InventorySize = 10
+            }, serverAttribute);
+
             return template;
         }
              

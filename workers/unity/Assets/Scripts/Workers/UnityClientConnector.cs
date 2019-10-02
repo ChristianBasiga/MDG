@@ -12,6 +12,7 @@ using Improbable;
 using Unity.Entities;
 using MDG.Common.Systems.Inventory;
 using MDG.Common.Systems.Spawn;
+using MDG.Common.Systems.Point;
 
 namespace MDG
 {
@@ -66,6 +67,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<SpawnRequestSystem>();
             Worker.World.GetOrCreateSystem<RespawnMonitorSystem>();
             Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
+            Worker.World.GetOrCreateSystem<PointRequestSystem>();
             //Invader systems.
             Worker.World.GetOrCreateSystem<SelectionSystem>();
             Worker.World.GetOrCreateSystem<CommandGiveSystem>();
