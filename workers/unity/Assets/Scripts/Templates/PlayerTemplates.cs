@@ -9,6 +9,8 @@ using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
 using InventorySchema = MdgSchema.Common.Inventory;
+using PointSchema = MdgSchema.Common.Point;
+
 namespace MDG.Player
 {
     public class Templates
@@ -24,6 +26,8 @@ namespace MDG.Player
             //Deserializate playerCreationArguments.
             var template = new EntityTemplate();
 
+
+            // Tod, let's not have these repeated checks. Instead store snapshots.
             if (playerCreationArguments.Length > 0)
             {
                 DTO.PlayerConfig creationArgs = DTO.Converters.DeserializeArguments<DTO.PlayerConfig>(playerCreationArguments);
@@ -41,7 +45,20 @@ namespace MDG.Player
                     Inventory = new Dictionary<int, InventorySchema.Item>(),
                     InventorySize = (uint)(creationArgs.playerType == GameEntityTypes.Hunter ? 5 : 10)
                 }, serverAttribute);
+
+                template.AddComponent(new PointSchema.PointMetadata.Snapshot
+                {
+                    IdleGainRate = creationArgs.playerType == GameEntityTypes.Hunter ? 1 : 10,
+                    StartingPoints = creationArgs.playerType == GameEntityTypes.Hunter ? 1000 : 1500
+                }, serverAttribute);
+                template.AddComponent(new PointSchema.Point.Snapshot
+                {
+                    Value = creationArgs.playerType == GameEntityTypes.Hunter ? 1000 : 1500
+                },serverAttribute);
             }
+
+          
+           
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
             // No need for player transform, enttiy transform, etc. is enough now.
