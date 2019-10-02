@@ -167,7 +167,8 @@ namespace PlaymodeTests
         [UnityTest, Order(63)]
         public IEnumerator PointsUpdateUITest()
         {
-
+            // Do later.
+            yield return null;
         }
     }
 }
