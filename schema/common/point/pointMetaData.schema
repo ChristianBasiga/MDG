@@ -1,0 +1,10 @@
+package mdg_schema.common.point;
+
+
+
+component PointMetadata{
+    id = 808;
+    int32 starting_points = 1;
+    int32 idle_gain_rate = 2;
+}
+

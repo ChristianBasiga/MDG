@@ -9,6 +9,7 @@ using Improbable.Worker.CInterop;
 using Improbable.Gdk.Core.Commands;
 using System.Linq;
 using MDG.Common.Components;
+using System;
 
 namespace MDG.Hunter.Systems
 {
@@ -28,11 +29,26 @@ namespace MDG.Hunter.Systems
             public EntityId OccupantId;
             public EntityId ResourceId;
             public ResourceRequestType ResourceRequestType;
+            public Action<ResourceRequestReponse> callback;
         }
+
+
+        // Yeah, no this is terrible. God damnit.
+        // Best way is perhaps this.
+        public struct ResourceRequestReponse
+        {
+            public bool Success;
+            public string Message;
+            public EntityId EffectedResource;
+            public CollectResponse? CollectResponse;
+            public OccupyResponse? OccupyResponse;
+            public ReleaseResponse? ReleaseResponse;
+        }
+
+
 
         private CommandSystem commandSystem;
         private WorkerSystem workerSystem;
-        private List<EntityId> resourceManagerIds;
         private long resourceManagerRequestId;
         private Queue<ResourceRequestHeader> pendingRequests;
         private Dictionary<ResourceRequestType, Dictionary<long, ResourceRequestHeader>> reqIdsToPayload;
@@ -49,57 +65,26 @@ namespace MDG.Hunter.Systems
             pendingRequests = new Queue<ResourceRequestHeader>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
-            resourceManagerIds = new List<EntityId>();
         }
 
-        // For lazy loading them
-        private void GetResourceManagerWorkers()
-        {
-            resourceManagerRequestId = commandSystem.SendCommand(new WorldCommands.EntityQuery.Request
-            {
-                EntityQuery = resourceManagerGroup
-            });
-        }
-
-        private void SetResourceManagerWorkers()
-        {
-            // This system is run on each client, so impossible to get responses more than jsut this requstId
-            // so no need to check.
-            var receivedResponses = commandSystem.GetResponse<WorldCommands.EntityQuery.ReceivedResponse>(resourceManagerRequestId);
-            for (int i = 0; i < receivedResponses.Count; ++i)
-            {
-                ref readonly var response = ref receivedResponses[i];
-                switch (response.StatusCode)
-                {
-                    case StatusCode.Success:
-                        resourceManagerIds.AddRange(response.Result.Keys);
-                        break;
-                    default:
-                        UnityEngine.Debug.LogError($"Failed to get resource manager workers {response.Message}");
-                        break;
-                }
-            }
-        }
-
-
+        // Maybe break this in parts to have dedicated responses for each.
+        // Add callback, makes it easier for testing. Callbacks may be separated for each kind of request.
+        // that would make it better.
         public void SendRequest(ResourceRequestHeader resourceRequestHeader)
         {
             pendingRequests.Enqueue(resourceRequestHeader);
         }
 
-
         protected override void OnUpdate()
         {
-
-
             #region SendPending Requests to respective worker
             while (pendingRequests.Count > 0)
             {
                 ResourceRequestHeader resourceRequestHeader = pendingRequests.Dequeue();
                 long requestId = -1;
+               
                 //EntityId resourceManagerEntityId = resourceManagerIds[UnityEngine.Random.Range(0, resourceManagerIds.Count)];
                 // For each pending request choose random resource manager worker instance.
-                EntityId resourceManagerEntityId = new EntityId(8);
                 switch (resourceRequestHeader.ResourceRequestType)
                 {
                     case ResourceRequestType.RELEASE:
@@ -108,9 +93,9 @@ namespace MDG.Hunter.Systems
                             Occupant = resourceRequestHeader.OccupantId,
                             ResourceId = resourceRequestHeader.ResourceId
                         };
-                        requestId = commandSystem.SendCommand(new ResourceManager.Release.Request
+                        requestId = commandSystem.SendCommand(new Resource.Release.Request
                         {
-                            TargetEntityId = resourceManagerEntityId,
+                            TargetEntityId = resourceRequestHeader.ResourceId,
                             Payload = releasePayload
                         });
                         break;
@@ -121,9 +106,9 @@ namespace MDG.Hunter.Systems
                             ResourceId = resourceRequestHeader.ResourceId
                         };
                         // Send request to a resource manager worker.
-                        requestId = commandSystem.SendCommand<ResourceManager.Collect.Request>(new ResourceManager.Collect.Request
+                        requestId = commandSystem.SendCommand<Resource.Collect.Request>(new Resource.Collect.Request
                         {
-                            TargetEntityId = resourceManagerEntityId,
+                            TargetEntityId = resourceRequestHeader.ResourceId,
                             Payload = collectPayload
                         });
                         break;
@@ -133,9 +118,10 @@ namespace MDG.Hunter.Systems
                             Occupying = resourceRequestHeader.OccupantId,
                             ToOccupy = resourceRequestHeader.ResourceId,
                         };
-                        requestId = commandSystem.SendCommand(new ResourceManager.Occupy.Request
+
+                        requestId = commandSystem.SendCommand(new Resource.Occupy.Request
                         {
-                            TargetEntityId = resourceManagerEntityId,
+                            TargetEntityId = resourceRequestHeader.ResourceId,
                             Payload = occupyPayload
                         });
                         break;
@@ -146,15 +132,11 @@ namespace MDG.Hunter.Systems
                     // Storing both as if response we get returns with failed status code
                     // we can then resend request with same header to try again
                     // if it was time out for example. Less dupe code with contain key but tryGet is faster.
-                    if (reqIdsToPayload.TryGetValue(resourceRequestHeader.ResourceRequestType, out Dictionary<long, ResourceRequestHeader> reqIds))
-                    {
-                        reqIds[requestId] = resourceRequestHeader;
-                    }
-                    else
+                    if (!reqIdsToPayload.TryGetValue(resourceRequestHeader.ResourceRequestType, out _))
                     {
                         reqIdsToPayload[resourceRequestHeader.ResourceRequestType] = new Dictionary<long, ResourceRequestHeader>();
-                        reqIdsToPayload[resourceRequestHeader.ResourceRequestType][requestId] = resourceRequestHeader;
                     }
+                    reqIdsToPayload[resourceRequestHeader.ResourceRequestType][requestId] = resourceRequestHeader;
                 }
             }
             #endregion
@@ -163,30 +145,40 @@ namespace MDG.Hunter.Systems
             // Only if we've sent any requests that haven't yet been resolved.
             if (reqIdsToPayload.Count > 0)
             {
+                // No bueno, I should do this based on type instead.
                 Dictionary<long, ResourceRequestHeader> reqIds;
                 if (reqIdsToPayload.TryGetValue(ResourceRequestType.COLLECT, out reqIds))
                 {
                     if (reqIds.Count > 0)
                     {
-                        var responses = commandSystem.GetResponses<ResourceManager.Collect.ReceivedResponse>();
+                        var responses = commandSystem.GetResponses<Resource.Collect.ReceivedResponse>();
                         for (int i = 0; i < responses.Count; ++i)
                         {
                             ref readonly var response = ref responses[i];
-
-                            //There's going to be alot of repetition with checking for status codes here.
-                            // Hmm. Fuck it for now. POC this, then improve later, I waste time pre-optimizing too much over little things.
-                            switch (response.StatusCode)
+                            if (reqIds.TryGetValue(response.RequestId, out ResourceRequestHeader resourceRequestHeader))
                             {
-                                case StatusCode.Success:
-                                    if (response.ResponsePayload.HasValue && workerSystem.TryGetEntity(response.RequestPayload.CollectorId, out Unity.Entities.Entity entity))
-                                    {
-                                        PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition
+                                ResourceRequestReponse resourceRequestReponse = new ResourceRequestReponse
+                                {
+                                    Message = response.Message,
+                                    Success = response.StatusCode == StatusCode.Success,
+                                    EffectedResource = response.ResponsePayload.GetValueOrDefault().ResourceId,
+                                    CollectResponse = response.ResponsePayload
+                                };
+                                switch (response.StatusCode)
+                                {
+                                    case StatusCode.Success:
+                                        if (response.ResponsePayload.HasValue && workerSystem.TryGetEntity(response.RequestPayload.CollectorId, out Unity.Entities.Entity entity))
                                         {
-                                            ItemId = 1,
-                                            Count = 1
-                                        });
-                                    }
-                                    break;
+                                            /* No need anymore.
+                                            PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition
+                                            {
+                                                ItemId = 1,
+                                                Count = 1
+                                            });*/
+                                        }
+                                        break;
+                                }
+                                resourceRequestHeader.callback?.Invoke(resourceRequestReponse);
                             }
                         }
                     }
@@ -195,27 +187,36 @@ namespace MDG.Hunter.Systems
                 {
                     if (reqIds.Count > 0)
                     {
-                        var responses = commandSystem.GetResponses<ResourceManager.Occupy.ReceivedResponse>();
+                        var responses = commandSystem.GetResponses<Resource.Occupy.ReceivedResponse>();
                         for (int i = 0; i < responses.Count; ++i)
                         {
                             ref readonly var response = ref responses[i];
-
-                            //There's going to be alot of repetition with checking for status codes here.
-                            // Hmm. Fuck it for now. POC this, then improve later, I waste time pre-optimizing too much over little things.
-                            switch (response.StatusCode)
+                            if (reqIds.TryGetValue(response.RequestId, out ResourceRequestHeader resourceRequestHeader))
                             {
-                                case StatusCode.Success:
+                                ResourceRequestReponse resourceRequestReponse = new ResourceRequestReponse
+                                {
+                                    Message = response.Message,
+                                    Success = response.StatusCode == StatusCode.Success,
+                                    EffectedResource = response.RequestPayload.ToOccupy,
+                                    OccupyResponse = response.ResponsePayload.Value
+                                };
+                                //There's going to be alot of repetition with checking for status codes here.
+                                // Hmm. Fuck it for now. POC this, then improve later, I waste time pre-optimizing too much over little things.
+                                switch (response.StatusCode)
+                                {
+                                    case StatusCode.Success:
+                                        // Occupy request acknowledged process response.
+                                        if (response.ResponsePayload.Value.FullyOccupied && !response.ResponsePayload.Value.Occupied)
+                                        {
+                                            resourceRequestReponse.Success = false;
+                                            UnityEngine.Debug.LogError($"Resource {response.RequestPayload.ToOccupy} is fully occupied");
+                                        }
+                                        break;
+                                    default:
 
-                                    // Occupy request acknowledged process response.
-                                    if (response.ResponsePayload.Value.FullyOccupied)
-                                    {
-                                        UnityEngine.Debug.LogError($"Resource {response.RequestPayload.ToOccupy} is fully occupied");
-                                    }
-                                    else if (response.ResponsePayload.Value.Occupied)
-                                    {
-                                        // Then send signal to update UI.
-                                    }
-                                    break;
+                                        break;
+                                }
+                                resourceRequestHeader.callback?.Invoke(resourceRequestReponse);
                             }
                         }
                     }
@@ -224,18 +225,30 @@ namespace MDG.Hunter.Systems
                 {
                     if (reqIds.Count > 0)
                     {
-                        var responses = commandSystem.GetResponses<ResourceManager.Release.ReceivedResponse>();
+                        var responses = commandSystem.GetResponses<Resource.Release.ReceivedResponse>();
                         for (int i = 0; i < responses.Count; ++i)
                         {
                             ref readonly var response = ref responses[i];
 
-                            switch (response.StatusCode)
+                            if (reqIds.TryGetValue(response.RequestId, out ResourceRequestHeader resourceRequestHeader))
                             {
-                                case StatusCode.Success:
-                                    // Update UI.
-                                    break;
-                                default:
-                                    break;
+                                ResourceRequestReponse resourceRequestReponse = new ResourceRequestReponse
+                                {
+                                    Message = response.Message,
+                                    Success = response.StatusCode == StatusCode.Success,
+                                    EffectedResource = response.RequestPayload.ResourceId,
+                                    ReleaseResponse = response.ResponsePayload
+                                };
+
+                                switch (response.StatusCode)
+                                {
+                                    case StatusCode.Success:
+                                        // Update UI.
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                resourceRequestHeader.callback?.Invoke(resourceRequestReponse);
                             }
                         }
                     }

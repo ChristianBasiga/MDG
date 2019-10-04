@@ -59,11 +59,8 @@ namespace MDG.Common.Systems.Inventory {
             Dictionary<EntityId, List<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>> addItemRequests = new Dictionary<EntityId, List<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>>();
             Dictionary<EntityId, List<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>> removeItemRequests = new Dictionary<EntityId, List<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>>();
             var addRequests = commandSystem.GetRequests<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>(new EntityId(4));
-            UnityEngine.Debug.LogError(addRequests.Count);
             for (int i = 0; i < addRequests.Count; ++i)
             {
-                Debug.LogError("received request");
-
                 ref readonly var request = ref addRequests[i];
                 if (!addItemRequests.ContainsKey(request.Payload.InventoryOwner))
                 {
@@ -90,6 +87,7 @@ namespace MDG.Common.Systems.Inventory {
                 }
                 removeItemRequests[request.Payload.InventoryOwner].Add(request);
             }
+
 
             if (addItemRequests.Count == 0 && removeItemRequests.Count == 0) return;
             Entities.With(inventoryGroup).ForEach((ref SpatialEntityId spatialEntityId, ref InventorySchema.Inventory.Component inventoryComponent) =>

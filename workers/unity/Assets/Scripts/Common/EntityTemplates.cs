@@ -8,6 +8,7 @@ using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
 using MdgSchema.Units;
+using MdgSchema.Common.Point;
 using MdgSchema.Game.Resource;
 namespace MDG.Common
 {
@@ -22,10 +23,27 @@ namespace MDG.Common
             EntityTemplate template = new EntityTemplate();
             // Actually, hmm if server attribute only one that can write to resource component.
             // then I can't do it in CommandUpdateSystem.
+            template.AddComponent(new EntityTransform.Snapshot(), serverAttribute);
             template.AddComponent(new Position.Snapshot(), serverAttribute);
             template.AddComponent(new Metadata.Snapshot { EntityType = "Resource" }, serverAttribute);
             template.AddComponent(new Persistence.Snapshot(), serverAttribute);
-            template.AddComponent(new Resource.Snapshot(), serverAttribute);
+            template.AddComponent(new ResourceMetadata.Snapshot {
+                MaximumOccupancy = 10,
+                Health = 10,
+                ResourceType = ResourceType.MINERAL
+            }, serverAttribute);
+            template.AddComponent(new Resource.Snapshot
+            {
+                Health = 10,
+                Occupants = new List<EntityId>(),
+            }, serverAttribute);
+            // Should be pointvalue component instead, but reusing this is fine, HONESTLY.
+            template.AddComponent(new PointMetadata.Snapshot
+            {
+                IdleGainRate = 0,
+                StartingPoints = 10
+            }, serverAttribute);
+           
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
 

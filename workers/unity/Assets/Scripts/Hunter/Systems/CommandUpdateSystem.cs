@@ -40,7 +40,6 @@ namespace MDG.Hunter.Systems
         private JobHandle collectJobHandle;
         private List<CollectPayload> pendingCollects;
         private CommandSystem commandSystem;
-        private ResourceRequestSystem resourceRequestSystem;
         private ComponentUpdateSystem componentUpdateSystem;
         private WorkerSystem workerSystem;
         private Dictionary<EntityId, List<EntityId>> unitCollisionMappings;
@@ -86,7 +85,7 @@ namespace MDG.Hunter.Systems
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public float deltaTime;
             [WriteOnly]
-            public NativeList<CollectPayload> collectPayloads;
+            public NativeQueue<CollectPayload>.ParallelWriter collectPayloads;
             public void Execute(Entity entity, int jobIndex, ref SpatialEntityId spatialEntityId, ref CollectCommand collectCommand, ref EntityTransform.Component entityTransform)
             {
                 float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
@@ -110,7 +109,7 @@ namespace MDG.Hunter.Systems
                     // For trigger animation.
                     collectCommand.IsCollecting = true;
                     // Otherwise we can begin collecting.
-                    collectPayloads.Add(new CollectPayload { requestingOccupant = spatialEntityId.EntityId, resourceId = collectCommand.resourceId });
+                    collectPayloads.Enqueue(new CollectPayload { requestingOccupant = spatialEntityId.EntityId, resourceId = collectCommand.resourceId });
                 }
             }
         }
@@ -142,7 +141,43 @@ namespace MDG.Hunter.Systems
             friendlyQuery = GetEntityQuery(ComponentType.ReadOnly<CommandListener>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
         }
 
-    
+        // Could do PostUpdate here, instead of jobifying.
+        // it is essentially in separate thread regardless just doesn't have burst benefits.
+        // If it becomes problem I'll translate it to that for now. Just update directly.
+        private void HandleCollectResponse(CollectResponse receivedResponse)
+        {
+            // Then it is depleted.
+            if (receivedResponse.TimesUntilDepleted == 0)
+            {
+                if (workerSystem.TryGetEntity(receivedResponse.DepleterId.Value, out Entity entity))
+                {
+                    PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
+                }
+                // I mean this HAS to be true for us to get this response.
+                if (pendingCollects.Count > 0)
+                {
+                    foreach (CollectPayload collectPayload in pendingCollects)
+                    {
+                        // If not the depleter, then just interrupt their stuff without adding to inventory.
+                        if (!collectPayload.requestingOccupant.Equals(receivedResponse.DepleterId))
+                        {
+                            if (workerSystem.TryGetEntity(collectPayload.requestingOccupant, out Entity interruptedEntity))
+                            {
+
+                                //Test this.
+                                PostUpdateCommands.RemoveComponent<CollectCommand>(interruptedEntity);
+                            }
+                        }
+                    }
+                }
+                // Along with this need to remove all CollectCommands that have this depleted resource as id.
+                // That has to be a job. List is stll needed.
+            }
+            
+            // So then here adds to native list.
+            collectResponses.Add(receivedResponse);
+        }
+
 
         protected override void OnUpdate()
         {
@@ -158,33 +193,25 @@ namespace MDG.Hunter.Systems
 
             // Move to own function or even its own system and make a system group.
 
-            int capacity = EntityManager.CreateEntityQuery(typeof(CollectCommand)).CalculateEntityCount();
-            NativeList<CollectPayload> pendingCollects = new NativeList<CollectPayload>(capacity, Allocator.Persistent);
+            NativeQueue<CollectPayload> pendingCollects = new NativeQueue<CollectPayload>(Allocator.TempJob);
 
             // Travel to resource jobs.
             MoveToResourceJob moveToResourceJob = new MoveToResourceJob
             {
                 deltaTime = deltaTime,
-                collectPayloads = pendingCollects
+                collectPayloads = pendingCollects.AsParallelWriter()
             };
             // For each pending collect, send Collect request.
-            collectJobHandle = moveToResourceJob.Schedule(this);
+            moveToResourceJob.Schedule(this).Complete();
 
             // Could be a job I run every few frames since won't change or simply on create of this system.
 
             //So instead of collect payload, maybe resourcerequestheader?
-            foreach (CollectPayload collectPayload in pendingCollects)
+            while (pendingCollects.Count > 0)
             {
-                ResourceRequestSystem.ResourceRequestHeader payload = new ResourceRequestSystem.ResourceRequestHeader
-                {
-                    OccupantId = collectPayload.requestingOccupant,
-                    ResourceId = collectPayload.resourceId,
-                    ResourceRequestType = ResourceRequestType.COLLECT
-                };
-                resourceRequestSystem.SendRequest(payload);
+                var collectPayload = pendingCollects.Dequeue();
             }
 
-            this.pendingCollects.AddRange(pendingCollects.ToArray());
             pendingCollects.Dispose();
         }
     }

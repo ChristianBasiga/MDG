@@ -1,0 +1,14 @@
+package mdg_schema.game.territory;
+
+enum TerritoryStatusTypes{
+    CLAIMED = 1;
+    RELEASED = 2;
+    INTERRUPTED = 3;
+}
+
+component TerritoryStatus{
+    id = 505;
+    TerritoryStatusTypes status = 1;
+    // If beig claimed  0 -> 100. If being released 100 -> 0. If interrupted, resets to 0.
+    int32 claim_progress = 2;
+}

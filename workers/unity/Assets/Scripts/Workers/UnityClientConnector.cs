@@ -6,12 +6,13 @@ using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
 using MDG.Common.Systems;
 using MDG.Hunter.Systems;
-using MDG.Hunter.Systems.UnitCreation;
 using UnityEngine;
 using Unity.Rendering;
 using Improbable;
 using Unity.Entities;
 using MDG.Common.Systems.Inventory;
+using MDG.Common.Systems.Spawn;
+using MDG.Common.Systems.Point;
 
 namespace MDG
 {
@@ -19,7 +20,7 @@ namespace MDG
     public class UnityClientConnector : WorkerConnector
     {
         public const string WorkerType = "UnityClient";
-        public CustomGameObjectCreator customGameObjectCreator { get; private set; }
+        public ClientGameObjectCreator clientGameObjectCreator { get; private set; }
 
         private async void Start()
         {
@@ -60,28 +61,23 @@ namespace MDG
 
         protected override void HandleWorkerConnectionEstablished()
         {
-            GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-            customGameObjectCreator = new CustomGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
-            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customGameObjectCreator);
+            
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
-            UnitCreationHelper.AddClientSystems(Worker.World);
-            // This should actually be in server side, but later.
-          //  Worker.World.GetOrCreateSystem<StatUpdateSystem>();
-           /// Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
-            //  Worker.World.GetOrCreateSystem<MoveSystem>();
-            Worker.World.GetOrCreateSystem<ResourceRequestSystem>();
+            Worker.World.GetOrCreateSystem<SpawnRequestSystem>();
+            Worker.World.GetOrCreateSystem<RespawnMonitorSystem>();
             Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
-            // Todo: Move these to helper class to pass in hunter client systems.
-          //  Worker.World.GetOrCreateSystem<CommandGiveSystem>();
-          //  Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
-           // Worker.World.GetOrCreateSystem<EntitySyncSystem>();
-          //  Worker.World.GetOrCreateSystem<SelectionSystem>();
-            /*
-            Worker.World.GetOrCreateSystem<Unity.Rendering.RenderMeshSystemV2>();
-            Worker.World.GetOrCreateSystem<Unity.Rendering.RenderBoundsUpdateSystem>();
-            Worker.World.GetOrCreateSystem<Unity.Rendering.LodRequirementsUpdateSystem>();
-            Worker.World.GetOrCreateSystem<Unity.Rendering.LightSystem>();*/
+            Worker.World.GetOrCreateSystem<PointRequestSystem>();
+            //Invader systems.
+            Worker.World.GetOrCreateSystem<SelectionSystem>();
+            Worker.World.GetOrCreateSystem<CommandGiveSystem>();
+            Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
+            Worker.World.GetOrCreateSystem<ResourceRequestSystem>();
+
+
+            GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
+            clientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
+            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, clientGameObjectCreator);
         }
 
         

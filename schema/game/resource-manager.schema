@@ -1,0 +1,12 @@
+
+package mdg_schema.game.resource;
+
+// Should be done in resoruce manage not resource itself.
+component ResourceManager{
+    id = 501;
+    // Perhaps this will also handle respawning of resources.
+    // Maybe way I did it was the way to go. Since REALLY directly effecting it.
+    /*command CollectResponse collect(CollectRequest);
+    command ReleaseResponse release(ReleaseRequest);
+    command OccupyResponse occupy(OccupyRequest);*/
+}

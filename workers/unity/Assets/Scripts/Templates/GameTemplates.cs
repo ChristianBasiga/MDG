@@ -28,7 +28,7 @@ namespace MDG.Game
             template.AddComponent(new Metadata.Snapshot("Resource"), UnityGameLogicConnector.WorkerType);
             template.AddComponent(new Position.Snapshot(), UnityGameLogicConnector.WorkerType);
             template.AddComponent(new Persistence.Snapshot(), UnityGameLogicConnector.WorkerType);
-            template.AddComponent(new ResourceSchema.Resource.Snapshot
+            template.AddComponent(new ResourceSchema.ResourceMetadata.Snapshot
             {
                 MaximumOccupancy = 1,
                 ResourceType = ResourceSchema.ResourceType.MINERAL

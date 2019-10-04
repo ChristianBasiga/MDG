@@ -33,22 +33,4 @@ namespace MDG.Hunter.Components {
     {
         GameEntityTypes enemyType;
     }
-
-
-    //All Unit entities also have whats in their vision.
-    //Vision and AI are two different systems though.
-    //This may be server component spatial instead.
-    // maybe.
-    public struct UnitComponent : IComponentData
-    {
-        public UnitBehaviourSet BehaviourSet;
-        //Width, Height, Depth
-        public Vector3 LineOfSight;
-    }
-
-    public struct UnitSpawner : IComponentData
-    {
-        public int AmountToSpawn;
-        public Vector3f Position;
-    }
 }

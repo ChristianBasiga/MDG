@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MdgSchema.Player;
-
+using MdgSchema.Common;
 
 namespace MDG.ClientSide.UserInterface
 {
@@ -13,13 +13,13 @@ namespace MDG.ClientSide.UserInterface
         public GameObject roleSelectionUI;
         public Transform selectionGrid;
 
-        public delegate void RoleSelectedHandler(PlayerType type);
+        public delegate void RoleSelectedHandler(GameEntityTypes type);
         public event RoleSelectedHandler OnRoleSelected;
 
 
         public void SelectRole(string role)
         {
-            PlayerType type = (PlayerType) System.Enum.Parse(typeof(PlayerType), role);
+            GameEntityTypes type = (GameEntityTypes) System.Enum.Parse(typeof(GameEntityTypes), role);
             OnRoleSelected?.Invoke(type);
 
             roleSelectionUI.SetActive(false);

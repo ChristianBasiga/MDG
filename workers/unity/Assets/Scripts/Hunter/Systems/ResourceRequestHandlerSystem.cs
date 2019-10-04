@@ -5,6 +5,8 @@ using Unity.Entities;
 using Improbable.Gdk.Core;
 using MDG.Common.Components;
 using ResourceSchema = MdgSchema.Game.Resource;
+using System;
+
 namespace MDG.Common.Systems
 {
     [DisableAutoCreation]
@@ -21,16 +23,35 @@ namespace MDG.Common.Systems
                 ResourceRequestType = type;
             }
         }
+
+        struct ResourceUpdatePayload
+        {
+            public Dictionary<EntityId, List<Tuple<long,EntityId>>> occupying;
+            public Dictionary<EntityId, List<Tuple<long, EntityId>>> collecting;
+            public Dictionary<EntityId, List<Tuple<long, EntityId>>> releasing;
+        }
+        Dictionary<EntityId, ResourceUpdatePayload> resourceIdToUpdate;
         WorkerSystem workerSystem;
         CommandSystem commandSystem;
-        //temproary here need to figure oit best way to manage these.
-        EntityId managerId = new EntityId(5);
+        EntityQuery resourceGroup;
         protected override void OnCreate()
         {
             base.OnCreate();
+            resourceIdToUpdate = new Dictionary<EntityId, ResourceUpdatePayload>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
+            resourceGroup = GetEntityQuery(
+                ComponentType.Exclude<NewlyAddedSpatialOSEntity>(),
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadOnly<ResourceSchema.ResourceMetadata.Component>(),
+                ComponentType.ReadWrite<ResourceSchema.Resource.Component>(),
+                ComponentType.ReadOnly<ResourceSchema.Resource.ComponentAuthority>()
+                );
+
+            resourceGroup.SetFilter(ResourceSchema.Resource.ComponentAuthority.Authoritative);
         }
+
+        // Super requires change, cause occupied component is spatialOS and can't be added later.
         protected override void OnUpdate()
         {
             try
@@ -44,7 +65,7 @@ namespace MDG.Common.Systems
                 switch (requestError.ResourceRequestType)
                 {
                     case ResourceSchema.ResourceRequestType.OCCUPY:
-                        commandSystem.SendResponse(new ResourceSchema.ResourceManager.Occupy.Response
+                        commandSystem.SendResponse(new ResourceSchema.Resource.Occupy.Response
                         {
                             RequestId = requestError.RequestId,
                             FailureMessage = requestError.Message
@@ -54,25 +75,45 @@ namespace MDG.Common.Systems
             }
             catch(System.Exception error)
             {
-                Debug.LogError("Internal server error");
+                Debug.LogError("Internal server error: " + error.Message);
             }
 
         }
+
+        // This needs change.
+        // Filter on authority of acl.
+        // Filter on authority on Occupied.
+
+
+        // If this works, it works. Refactor this later to be more streamlined 
         private void ProcessRequests()
         {
-
+            if (resourceGroup.CalculateEntityCount() == 0) return;
+            ResourceUpdatePayload resourceUpdatePayload = new ResourceUpdatePayload
+            {
+               occupying = new Dictionary<EntityId, List<Tuple<long, EntityId>>>(),
+               collecting = new Dictionary<EntityId, List<Tuple<long, EntityId>>>(),
+               releasing = new Dictionary<EntityId, List<Tuple<long, EntityId>>>()
+            };
+               
             #region Process Release Requests
-            var releaseReqeusts = commandSystem.GetRequests<ResourceSchema.ResourceManager.Release.ReceivedRequest>(managerId);
+            var releaseReqeusts = commandSystem.GetRequests<ResourceSchema.Resource.Release.ReceivedRequest>();
             for (int i = 0; i < releaseReqeusts.Count; ++i)
             {
                 ref readonly var request = ref releaseReqeusts[i];
 
-                // Get resource
-                if (workerSystem.TryGetEntity(request.Payload.ResourceId, out Entity entity))
+                var releasing = resourceUpdatePayload.releasing;
+                if (!releasing.TryGetValue(request.EntityId, out _))
+                {
+                    releasing[request.EntityId] = new List<Tuple<long, EntityId>>();
+                }
+                releasing[request.EntityId].Add(new Tuple<long, EntityId>(request.RequestId, request.Payload.Occupant));
+                /*
+                if (workerSystem.TryGetEntity(request.EntityId, out Entity entity))
                 {
                     if (!EntityManager.HasComponent<ResourceSchema.Occupied.Component>(entity))
                     {
-                        commandSystem.SendResponse(new ResourceSchema.ResourceManager.Release.Response
+                        commandSystem.SendResponse(new ResourceSchema.Resource.Release.Response
                         {
                             RequestId = request.RequestId,
                             FailureMessage = $"{request.Payload.Occupant} is not an occupant of {request.Payload.ResourceId}"
@@ -90,23 +131,33 @@ namespace MDG.Common.Systems
                     {
                         EntityManager.SetComponentData(entity, occupiedComponent);
                     }
-                    commandSystem.SendResponse(new ResourceSchema.ResourceManager.Release.Response
+                    // Biggest thing is sending response. Actually I CAN do that.
+                    commandSystem.SendResponse(new ResourceSchema.Resource.Release.Response
                     {
                         RequestId = request.RequestId,
                         Payload = new ResourceSchema.ReleaseResponse()
                     });
-                }
+                    }
+                    */
             }
             #endregion
 
             #region Process Occupy Requests
-            var occupyRequests = commandSystem.GetRequests<ResourceSchema.ResourceManager.Occupy.ReceivedRequest>(managerId);
+            var occupyRequests = commandSystem.GetRequests<ResourceSchema.Resource.Occupy.ReceivedRequest>();
+            // Maybe should instead do a for each.
             for (int i = 0; i < occupyRequests.Count; ++i)
             {
                 ref readonly var request = ref occupyRequests[i];
 
+                var occupying = resourceUpdatePayload.occupying;
+                if (!occupying.TryGetValue(request.EntityId, out _))
+                {
+                    occupying[request.EntityId] = new List<Tuple<long, EntityId>>();
+                }
+                occupying[request.EntityId].Add(new Tuple<long, EntityId>(request.RequestId, request.Payload.Occupying));
                 // So need to get resource.
-                if (workerSystem.TryGetEntity(request.Payload.ToOccupy, out Entity entity))
+                /*
+                if (workerSystem.TryGetEntity(request.EntityId, out Entity entity))
                 {
                     List<EntityId> occupants;
                     if (EntityManager.HasComponent<ResourceSchema.Occupied.Component>(entity))
@@ -117,7 +168,7 @@ namespace MDG.Common.Systems
                         if (occupants.Count > resourceComponent.MaximumOccupancy)
                         {
                             // Then response with maximum occupancy.
-                            commandSystem.SendResponse<ResourceSchema.ResourceManager.Occupy.Response>(new ResourceSchema.ResourceManager.Occupy.Response
+                            commandSystem.SendResponse<ResourceSchema.Resource.Occupy.Response>(new ResourceSchema.Resource.Occupy.Response
                             {
                                 RequestId = request.RequestId,
                                 Payload =  new ResourceSchema.OccupyResponse
@@ -140,7 +191,8 @@ namespace MDG.Common.Systems
                     {
                         Occupants = occupants
                     });
-                }
+                    
+                }*/
             }
             #endregion
 
@@ -150,20 +202,28 @@ namespace MDG.Common.Systems
 
             // This can't be jobified, because I can't have it be done in paralel due to race condition for collectors
             // collecting same resource. Jobify later, functional first, optimize later, won;t be huge change.
-            var collectRequests = commandSystem.GetRequests<ResourceSchema.ResourceManager.Collect.ReceivedRequest>(managerId);
+            var collectRequests = commandSystem.GetRequests<ResourceSchema.Resource.Collect.ReceivedRequest>();
 
             for (int i = 0; i < collectRequests.Count; ++i)
             {
                 // This 100% should be jobified could pass request as native array.
                 ref readonly var request = ref collectRequests[i];
-                if (workerSystem.TryGetEntity(request.Payload.ResourceId, out Entity entity))
+                var collecting = resourceUpdatePayload.collecting;
+                if (!collecting.TryGetValue(request.EntityId, out _))
+                {
+                    collecting[request.EntityId] = new List<Tuple<long, EntityId>>();
+                }
+                collecting[request.EntityId].Add(new Tuple<long, EntityId>(request.RequestId, request.Payload.CollectorId));
+                /*
+                if (workerSystem.TryGetEntity(request.EntityId, out Entity entity))
                 {
                     ResourceSchema.Occupied.Component occupiedComponent = EntityManager.GetChunkComponentData<ResourceSchema.Occupied.Component>(entity);
                     if (!occupiedComponent.Occupants.Contains(request.Payload.CollectorId))
                     {
                         // Should respond with not occupied response
-                        commandSystem.SendResponse(new ResourceSchema.ResourceManager.Collect.Response
+                        commandSystem.SendResponse(new ResourceSchema.Resource.Collect.Response
                         {
+                      
                             FailureMessage = $"The collect {request.Payload.CollectorId} is not currently occupying {request.Payload.ResourceId}",
                             RequestId = request.RequestId
                         });
@@ -199,13 +259,112 @@ namespace MDG.Common.Systems
                             Occupants = occupiedComponent.Occupants
                         });
                     }
-                    commandSystem.SendResponse(new ResourceSchema.ResourceManager.Collect.Response {
+                    commandSystem.SendResponse(new ResourceSchema.Resource.Collect.Response {
                         RequestId = request.RequestId,
                         Payload = payload
                     }); 
-                }
+                    
+                }*/
             }
             #endregion
+            // Jobify this down line maybe.
+            Entities.With(resourceGroup).ForEach((ref SpatialEntityId spatialEntityId, ref ResourceSchema.ResourceMetadata.Component resourceMetadata, ref ResourceSchema.Resource.Component resource) =>
+            {
+                var releasing = resourceUpdatePayload.releasing;
+                var collecting = resourceUpdatePayload.collecting;
+                var occupying = resourceUpdatePayload.occupying;
+
+                // Should be release, collect, occupy. Because collect may deplete the resource which would interrupt any future occupies.
+                List<EntityId> occupants = resource.Occupants;
+                int resourceHealth = resource.Health;
+
+                if (releasing.TryGetValue(spatialEntityId.EntityId, out List<Tuple<long,EntityId>> releases))
+                {
+                    foreach (Tuple<long,EntityId> release in releases)
+                    {
+                        occupants.Remove(release.Item2);
+
+                        commandSystem.SendResponse(new ResourceSchema.Resource.Release.Response
+                        {
+                            RequestId = release.Item1,
+                            Payload = new ResourceSchema.ReleaseResponse(),
+                        });
+                    }
+                }
+
+                if (collecting.TryGetValue(spatialEntityId.EntityId, out List<Tuple<long, EntityId>> collects))
+                {
+                    foreach (Tuple<long, EntityId> collect in collects)
+                    {
+                        if (resourceHealth <= 0)
+                        {
+                            commandSystem.SendResponse(new ResourceSchema.Resource.Collect.Response
+                            {
+                                RequestId = collect.Item1,
+                                Payload = new ResourceSchema.CollectResponse
+                                {
+                                    TimesUntilDepleted = 0,
+                                    ResourceId = spatialEntityId.EntityId
+                                }
+                            });
+                        }
+                        else
+                        {
+                            //In future, maybe changes collect rate per unit? That's more balancing, not hard to implement.
+                            resourceHealth -= 1;
+                            commandSystem.SendResponse(new ResourceSchema.Resource.Collect.Response
+                            {
+                                RequestId = collect.Item1,
+                                Payload = new ResourceSchema.CollectResponse
+                                {
+
+                                    DepleterId = resourceHealth <= 0 ? collect.Item2 : new EntityId(-1),
+                                    ResourceId = spatialEntityId.EntityId,
+                                    TimesUntilDepleted = resourceHealth
+                                }
+                            });
+                        }
+                    }
+                }
+
+                if (occupying.TryGetValue(spatialEntityId.EntityId, out List<Tuple<long, EntityId>> occupados))
+                {
+                    bool atMaxOccupants = occupants.Count == resourceMetadata.MaximumOccupancy;
+                    foreach (Tuple<long, EntityId> occupod in occupados)
+                    {
+                        ResourceSchema.OccupyResponse occupyResponse = new ResourceSchema.OccupyResponse
+                        {
+                            Occupied = false,
+                            ResourceId = spatialEntityId.EntityId
+                        };
+                        if (occupants.Contains(occupod.Item2))
+                        {
+                            occupyResponse.Occupied = true;
+                        }                   
+                        else if (!atMaxOccupants)
+                        {
+                            occupants.Add(occupod.Item2);
+                            occupyResponse.Occupied = true;
+                        }
+                        // I was using failure message wrong. Operation didn't fail, the result of operation just ended up in diff result than wanted. Key difference.
+                        atMaxOccupants = occupants.Count == resourceMetadata.MaximumOccupancy;
+                        occupyResponse.FullyOccupied = atMaxOccupants;
+                        //In future, maybe changes collect rate per unit? That's more balancing, not hard to implement.
+                        commandSystem.SendResponse(new ResourceSchema.Resource.Occupy.Response
+                        {
+                            RequestId = occupod.Item1,
+                            Payload = occupyResponse,
+
+                        });
+                    }
+                }
+                resource.Health = Unity.Mathematics.math.max(resourceHealth, 0);
+                if (resource.Health == 0)
+                {
+                    occupants.Clear();
+                }
+                resource.Occupants = occupants;
+            });
         }
     }
 }

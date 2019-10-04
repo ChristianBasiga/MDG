@@ -18,8 +18,8 @@ namespace MDG.Hunter.Systems
 {
     // For hunter command givers.
     [DisableAutoCreation]
-    [UpdateAfter(typeof(SelectionSystem))]
     [UpdateInGroup(typeof(EntitySelectionGroup))]
+    [UpdateAfter(typeof(SelectionSystem))]
     public class CommandGiveSystem : ComponentSystem
     {
 
@@ -32,7 +32,7 @@ namespace MDG.Hunter.Systems
             public float3 botLeft;
             public float3 topRight;
 
-            public NativeArray<CommandMetadata> commandMetadata;
+            public NativeArray<CommandListener> commandMetadata;
 
             public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Clickable clickable, [ReadOnly] ref GameMetadata.Component gameMetadata, [ReadOnly] ref EntityTransform.Component entityTransform)
             {
@@ -41,7 +41,7 @@ namespace MDG.Hunter.Systems
                 if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.y
                     && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.y)
                 {
-                    CommandMetadata command = new CommandMetadata { TargetId = spatialEntityId.EntityId, TargetPosition = entityTransform.Position.ToUnityVector() };
+                    CommandListener command = new CommandListener { TargetId = spatialEntityId.EntityId, TargetPosition = entityTransform.Position.ToUnityVector() };
                     switch (gameMetadata.Type)
                     {
                         case GameEntityTypes.Resource:
@@ -65,7 +65,7 @@ namespace MDG.Hunter.Systems
         {
             public EntityId hunterId;
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
-            public CommandMetadata commandGiven;
+            public CommandListener commandGiven;
             public void Execute(Entity entity, int index, [ReadOnly] ref Clickable clicked, [ReadOnly] ref MdgSchema.Units.Unit.Component c1, ref CommandListener commandListener)
             {
                 if (clicked.Clicked && clicked.ClickedEntityId.Equals(hunterId))
@@ -97,6 +97,7 @@ namespace MDG.Hunter.Systems
         protected override void OnUpdate()
         {
             GameObject hunter = GameObject.FindGameObjectWithTag("MainCamera");
+            if (!hunter) return;
             LinkedEntityComponent linkedEntityComponent = hunter.GetComponent<LinkedEntityComponent>();
             if (linkedEntityComponent == null || !Input.GetMouseButtonDown(1))
             {
@@ -110,8 +111,8 @@ namespace MDG.Hunter.Systems
             // Creates bounding box for right click big enough to sense the click.
             float3 botLeft = mousePos + new float3(-10, -10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
             float3 topRight = mousePos + new float3(+10, +10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
-            NativeArray<CommandMetadata> commandGiven = new NativeArray<CommandMetadata>(1, Allocator.TempJob);
-            commandGiven[0] = new CommandMetadata { CommandType = CommandType.None };
+            NativeArray<CommandListener> commandGiven = new NativeArray<CommandListener>(1, Allocator.TempJob);
+            commandGiven[0] = new CommandListener { CommandType = CommandType.None };
             CommandProcessJob commandProcessJob = new CommandProcessJob
             {
                 commandMetadata = commandGiven,
@@ -119,11 +120,11 @@ namespace MDG.Hunter.Systems
                 topRight = topRight
             };
             commandProcessJob.ScheduleSingle(this).Complete();
-            CommandMetadata commandMetadata = commandGiven[0];
+            CommandListener commandMetadata = commandGiven[0];
             // If right click did not overlap with any clickable, then it is a move command.
             if (commandMetadata.CommandType == CommandType.None)
             {
-                commandMetadata = new CommandMetadata { TargetPosition = mousePos, CommandType = CommandType.Move };
+                commandMetadata = new CommandListener { TargetPosition = mousePos, CommandType = CommandType.Move };
             }
             CommandGiveJob commandGiveJob = new CommandGiveJob
             {

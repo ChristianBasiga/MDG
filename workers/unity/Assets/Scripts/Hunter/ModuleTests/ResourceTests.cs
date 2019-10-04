@@ -22,7 +22,7 @@ public class ResourceTests : MonoBehaviour
     {
      //   resource = GameObject.FindGameObjectWithTag("Resource").GetComponent<LinkedEntityComponent>().EntityId;
     }
-
+    /*
     // Update is called once per frame
     void Update()
     {
@@ -89,6 +89,6 @@ public class ResourceTests : MonoBehaviour
                     ResourceId = resourceEntityId
                 }
             });
-        }
-    }
+        }*/
+
 }
