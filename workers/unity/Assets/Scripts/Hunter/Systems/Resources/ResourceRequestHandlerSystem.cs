@@ -81,12 +81,6 @@ namespace MDG.Common.Systems
 
         }
 
-        // This needs change.
-        // Filter on authority of acl.
-        // Filter on authority on Occupied.
-
-
-        // If this works, it works. Refactor this later to be more streamlined 
         private void ProcessRequests()
         {
             if (resourceGroup.CalculateEntityCount() == 0) return;
@@ -97,7 +91,6 @@ namespace MDG.Common.Systems
                releasing = new Dictionary<EntityId, List<Tuple<long, EntityId>>>()
             };
                
-            #region Process Release Requests
             var releaseReqeusts = commandSystem.GetRequests<ResourceSchema.Resource.Release.ReceivedRequest>();
             for (int i = 0; i < releaseReqeusts.Count; ++i)
             {
@@ -109,41 +102,8 @@ namespace MDG.Common.Systems
                     releasing[request.EntityId] = new List<Tuple<long, EntityId>>();
                 }
                 releasing[request.EntityId].Add(new Tuple<long, EntityId>(request.RequestId, request.Payload.Occupant));
-                /*
-                if (workerSystem.TryGetEntity(request.EntityId, out Entity entity))
-                {
-                    if (!EntityManager.HasComponent<ResourceSchema.Occupied.Component>(entity))
-                    {
-                        commandSystem.SendResponse(new ResourceSchema.Resource.Release.Response
-                        {
-                            RequestId = request.RequestId,
-                            FailureMessage = $"{request.Payload.Occupant} is not an occupant of {request.Payload.ResourceId}"
-                        });
-                    }
-                    // Get Occupied component.
-                    var occupiedComponent = EntityManager.GetComponentData<ResourceSchema.Occupied.Component>(entity);
-                    occupiedComponent.Occupants.Remove(request.Payload.Occupant);
-                    // If no more occupants, remove occupied component.
-                    if (occupiedComponent.Occupants.Count == 0)
-                    {
-                        PostUpdateCommands.RemoveComponent<ResourceSchema.Occupied.Component>(entity);
-                    }
-                    else
-                    {
-                        EntityManager.SetComponentData(entity, occupiedComponent);
-                    }
-                    // Biggest thing is sending response. Actually I CAN do that.
-                    commandSystem.SendResponse(new ResourceSchema.Resource.Release.Response
-                    {
-                        RequestId = request.RequestId,
-                        Payload = new ResourceSchema.ReleaseResponse()
-                    });
-                    }
-                    */
             }
-            #endregion
 
-            #region Process Occupy Requests
             var occupyRequests = commandSystem.GetRequests<ResourceSchema.Resource.Occupy.ReceivedRequest>();
             // Maybe should instead do a for each.
             for (int i = 0; i < occupyRequests.Count; ++i)
@@ -156,58 +116,13 @@ namespace MDG.Common.Systems
                     occupying[request.EntityId] = new List<Tuple<long, EntityId>>();
                 }
                 occupying[request.EntityId].Add(new Tuple<long, EntityId>(request.RequestId, request.Payload.Occupying));
-                // So need to get resource.
-                /*
-                if (workerSystem.TryGetEntity(request.EntityId, out Entity entity))
-                {
-                    List<EntityId> occupants;
-                    if (EntityManager.HasComponent<ResourceSchema.Occupied.Component>(entity))
-                    {
-                        occupants = EntityManager.GetComponentData<ResourceSchema.Occupied.Component>(entity).Occupants;
-                        ResourceSchema.Resource.Component resourceComponent = EntityManager.GetComponentData<ResourceSchema.Resource.Component>(entity);
-
-                        if (occupants.Count > resourceComponent.MaximumOccupancy)
-                        {
-                            // Then response with maximum occupancy.
-                            commandSystem.SendResponse<ResourceSchema.Resource.Occupy.Response>(new ResourceSchema.Resource.Occupy.Response
-                            {
-                                RequestId = request.RequestId,
-                                Payload =  new ResourceSchema.OccupyResponse
-                                {
-                                    FullyOccupied = true,
-                                    Occupants = occupants,
-                                    ResourceId = request.Payload.ToOccupy
-                                }
-                            });
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        occupants = new List<EntityId>();
-                        PostUpdateCommands.AddComponent<ResourceSchema.Occupied.Component>(entity);
-                    }
-                    occupants.Add(request.Payload.Occupying);
-                    PostUpdateCommands.SetComponent(entity, new ResourceSchema.Occupied.Component
-                    {
-                        Occupants = occupants
-                    });
-                    
-                }*/
             }
-            #endregion
 
 
-            // For now just added health to occupied component, that's fine for now, they don't need whole stat system.
-            #region Process Collect Requests
-
-            // This can't be jobified, because I can't have it be done in paralel due to race condition for collectors
-            // collecting same resource. Jobify later, functional first, optimize later, won;t be huge change.
             var collectRequests = commandSystem.GetRequests<ResourceSchema.Resource.Collect.ReceivedRequest>();
 
             for (int i = 0; i < collectRequests.Count; ++i)
             {
-                // This 100% should be jobified could pass request as native array.
                 ref readonly var request = ref collectRequests[i];
                 var collecting = resourceUpdatePayload.collecting;
                 if (!collecting.TryGetValue(request.EntityId, out _))
@@ -215,60 +130,7 @@ namespace MDG.Common.Systems
                     collecting[request.EntityId] = new List<Tuple<long, EntityId>>();
                 }
                 collecting[request.EntityId].Add(new Tuple<long, EntityId>(request.RequestId, request.Payload.CollectorId));
-                /*
-                if (workerSystem.TryGetEntity(request.EntityId, out Entity entity))
-                {
-                    ResourceSchema.Occupied.Component occupiedComponent = EntityManager.GetChunkComponentData<ResourceSchema.Occupied.Component>(entity);
-                    if (!occupiedComponent.Occupants.Contains(request.Payload.CollectorId))
-                    {
-                        // Should respond with not occupied response
-                        commandSystem.SendResponse(new ResourceSchema.Resource.Collect.Response
-                        {
-                      
-                            FailureMessage = $"The collect {request.Payload.CollectorId} is not currently occupying {request.Payload.ResourceId}",
-                            RequestId = request.RequestId
-                        });
-                        continue;
-                    }
-                    int health = occupiedComponent.Health;
-                    // Later on should minus the collect speed of occupant
-                    health -= 1;
-                    ResourceSchema.CollectResponse payload;
-                    if (health == 0)
-                    {
-                        PostUpdateCommands.RemoveComponent<ResourceSchema.Occupied.Component>(entity);
-                        payload = new ResourceSchema.CollectResponse
-                        {
-                            DepleterId = request.Payload.CollectorId,
-                            ResourceId = request.Payload.ResourceId
-                        };
-                        
-                        // Along with deleting Occupied Component, I also need to add RespawnPending Component.
-                        // spawns same spot with exact same static information, so really could just activate / deactivate game object.
-                        // but that will be once SpawnSystem is set.
-                    }
-                    else
-                    {
-                        payload = new ResourceSchema.CollectResponse
-                        {
-                            TimesUntilDepleted = health
-                        };
-                        //Otherwise if resource still exists update component
-                        EntityManager.SetComponentData(entity, new ResourceSchema.Occupied.Component
-                        {
-                            Health = health,
-                            Occupants = occupiedComponent.Occupants
-                        });
-                    }
-                    commandSystem.SendResponse(new ResourceSchema.Resource.Collect.Response {
-                        RequestId = request.RequestId,
-                        Payload = payload
-                    }); 
-                    
-                }*/
             }
-            #endregion
-            // Jobify this down line maybe.
             Entities.With(resourceGroup).ForEach((Entity entity, ref SpatialEntityId spatialEntityId, ref ResourceSchema.ResourceMetadata.Component resourceMetadata, ref ResourceSchema.Resource.Component resource) =>
             {
                 var releasing = resourceUpdatePayload.releasing;
@@ -362,7 +224,6 @@ namespace MDG.Common.Systems
                 resource.Health = Unity.Mathematics.math.max(resourceHealth, 0);
                 if (resource.Health == 0)
                 {
-                    // Clear occupants for response / queries.
                     occupants.Clear();
                 }
                 resource.Occupants = occupants;
