@@ -10,6 +10,8 @@ using MdgSchema.Common;
 using MdgSchema.Units;
 using MdgSchema.Common.Point;
 using MdgSchema.Game.Resource;
+using MdgSchema.Common.Spawn;
+
 namespace MDG.Common
 {
     public class Templates
@@ -25,12 +27,21 @@ namespace MDG.Common
             // then I can't do it in CommandUpdateSystem.
             template.AddComponent(new EntityTransform.Snapshot(), serverAttribute);
             template.AddComponent(new Position.Snapshot(), serverAttribute);
+            template.AddComponent(new GameMetadata.Snapshot
+            {
+                Type = GameEntityTypes.Resource,
+                TypeId = 0,
+            }, serverAttribute);
             template.AddComponent(new Metadata.Snapshot { EntityType = "Resource" }, serverAttribute);
             template.AddComponent(new Persistence.Snapshot(), serverAttribute);
+
+            //... Beautiful.
             template.AddComponent(new ResourceMetadata.Snapshot {
                 MaximumOccupancy = 10,
                 Health = 10,
-                ResourceType = ResourceType.MINERAL
+                ResourceType = ResourceType.MINERAL,
+                RespawnTime = 10.0f,
+                WillRespawn = true
             }, serverAttribute);
             template.AddComponent(new Resource.Snapshot
             {
@@ -43,7 +54,7 @@ namespace MDG.Common
                 IdleGainRate = 0,
                 StartingPoints = 10
             }, serverAttribute);
-           
+
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
 

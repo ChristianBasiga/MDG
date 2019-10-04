@@ -314,6 +314,9 @@ namespace PlaymodeTests
                 // Hmm, then again. ResourceRequest system need not know about units, and to keep it truly scalable. I should add that.
                 currHealth -= 1;
                 ResourceRequestSystem.ResourceRequestReponse? collectResponse = null;
+
+                // in resource request system, down line could batch these prior to 
+                // avoid overkill of round trips.
                 resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
                 {
                     OccupantId = linkedUnit.EntityId,
@@ -325,18 +328,37 @@ namespace PlaymodeTests
                     }
                 });
                 yield return new WaitUntil(() => { return collectResponse.HasValue; });
-
                 if (currHealth == 0)
                 {
                     Assert.AreEqual(currHealth, collectResponse.Value.CollectResponse.Value.TimesUntilDepleted, "Did not deplete health down");
                     Assert.AreEqual(linkedUnit.EntityId, collectResponse.Value.CollectResponse.Value.DepleterId.Value, "Incorrent entity id marked as depleter");
                 }
             }
+            var resourceMetadataComponent = entityManager.GetComponentData<ResourceSchema.ResourceMetadata.Component>(entity);
 
             var updatedResoruceComponent = entityManager.GetComponentData<ResourceSchema.Resource.Component>(entity);
             Assert.AreEqual(0, updatedResoruceComponent.Health, "Failed to update health correctly");
             Assert.IsEmpty(updatedResoruceComponent.Occupants, "Failed to clear occupants");
+            yield return new WaitForEndOfFrame();
 
+            if (resourceMetadataComponent.WillRespawn)
+            {
+                yield return new WaitForSeconds(resourceMetadataComponent.RespawnTime);
+                // 3 frames for, sending delete request, processing delete on server, then running callback to make inactive
+                // in main thread.
+                for (int i = 0; i < 3; ++i)
+                {
+                    yield return new WaitForEndOfFrame();
+                }
+                Assert.IsFalse(resourceObject.activeInHierarchy, "Did not despawn previous resource");
+                GameObject respawnedResource = GameObject.FindGameObjectWithTag("Resource");
+                Assert.True(respawnedResource != null, "Failed to respawn resource");
+                Assert.AreNotEqual(linkedResource.EntityId, respawnedResource.GetComponent<LinkedEntityComponent>().EntityId, "Failed to spawn new resource");
+            }
+            else
+            {
+                Assert.False(workerSystem.TryGetEntity(linkedResource.EntityId, out _), "failed to delete depleted resource");
+            }
         }
     }
 }

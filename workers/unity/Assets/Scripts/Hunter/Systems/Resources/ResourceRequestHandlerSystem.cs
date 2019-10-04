@@ -6,6 +6,7 @@ using Improbable.Gdk.Core;
 using MDG.Common.Components;
 using ResourceSchema = MdgSchema.Game.Resource;
 using System;
+using MdgSchema.Common.Spawn;
 
 namespace MDG.Common.Systems
 {
@@ -268,7 +269,7 @@ namespace MDG.Common.Systems
             }
             #endregion
             // Jobify this down line maybe.
-            Entities.With(resourceGroup).ForEach((ref SpatialEntityId spatialEntityId, ref ResourceSchema.ResourceMetadata.Component resourceMetadata, ref ResourceSchema.Resource.Component resource) =>
+            Entities.With(resourceGroup).ForEach((Entity entity, ref SpatialEntityId spatialEntityId, ref ResourceSchema.ResourceMetadata.Component resourceMetadata, ref ResourceSchema.Resource.Component resource) =>
             {
                 var releasing = resourceUpdatePayload.releasing;
                 var collecting = resourceUpdatePayload.collecting;
@@ -361,6 +362,7 @@ namespace MDG.Common.Systems
                 resource.Health = Unity.Mathematics.math.max(resourceHealth, 0);
                 if (resource.Health == 0)
                 {
+                    // Clear occupants for response / queries.
                     occupants.Clear();
                 }
                 resource.Occupants = occupants;
