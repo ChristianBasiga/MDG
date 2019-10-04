@@ -58,7 +58,7 @@ namespace MDG.Common.Systems.Inventory {
 
             Dictionary<EntityId, List<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>> addItemRequests = new Dictionary<EntityId, List<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>>();
             Dictionary<EntityId, List<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>> removeItemRequests = new Dictionary<EntityId, List<InventorySchema.Inventory.RemoveItemFromInventory.ReceivedRequest>>();
-            var addRequests = commandSystem.GetRequests<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>(new EntityId(4));
+            var addRequests = commandSystem.GetRequests<InventorySchema.Inventory.AddItemToInventory.ReceivedRequest>();
             for (int i = 0; i < addRequests.Count; ++i)
             {
                 ref readonly var request = ref addRequests[i];

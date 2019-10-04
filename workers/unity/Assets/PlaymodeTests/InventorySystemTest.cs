@@ -28,25 +28,29 @@ namespace PlaymodeTests
         [UnityTest, Order(1)]
         public IEnumerator SceneValidation()
         {
-            // This should be it's own test altogether, but may change how spawned anyway, fine for now. this is mainly a module test anyway not full.
             SceneManager.LoadScene("DevelopmentScene");
-            yield return null;
-            GameObject uiManger = GameObject.Find("UIManager");
-            Assert.True(uiManger != null);
+            GameObject uiManager = null;
+
+            yield return new WaitUntil(() =>
+            {
+                uiManager = GameObject.Find("UIManager");
+                return uiManager != null;
+
+            });
             yield return new WaitForSeconds(2.0f);
-            uiManger.GetComponent<UIManager>().SelectRole("Hunter");
-            yield return new WaitForSeconds(2.0f);
-            Assert.True(GameObject.Find("Hunter_Spawned"), "Hunter not spawned");
-            yield return new WaitForSeconds(2.0f);
-            Assert.True(GameObject.FindGameObjectWithTag("Unit"), "Unit not spawned");
-            linkedEntityComponent = GameObject.FindGameObjectWithTag("Unit").GetComponent<LinkedEntityComponent>();
-            workerSystem = linkedEntityComponent.World.GetExistingSystem<WorkerSystem>();
+            uiManager.GetComponent<UIManager>().SelectRole("Hunter");
+            yield return new WaitUntil(() =>
+            {
+                return GameObject.Find("Hunter_Spawned") != null && GameObject.FindGameObjectWithTag("Unit") != null;
+            });
+            linkedEntityComponent = GameObject.FindGameObjectWithTag("Unit").GetComponent<LinkedEntityComponent>() ;
 
         }
         [UnityTest, Order(2)]
         public IEnumerator InventoryAddTest()
         {
 
+            workerSystem = linkedEntityComponent.Worker;
             if (workerSystem.TryGetEntity(linkedEntityComponent.EntityId, out Entity entity))
             {
                 EntityManager entityManager = workerSystem.EntityManager;
@@ -62,23 +66,21 @@ namespace PlaymodeTests
                     ItemId = itemAdding.Id
                 });
                 yield return new WaitForEndOfFrame();
-                workerSystem.World.GetOrCreateSystem<InventorySystems.InventoryRequestSystem>();
-                yield return new WaitForEndOfFrame();
 
                 // Request system should have removed it.
                 Assert.IsTrue(!entityManager.HasComponent<InventoryComponents.PendingInventoryAddition>(entity), "Pending Inventory addition not removed");
-                yield return new WaitForEndOfFrame();
+
+                // 4 frames, for queueing inventory addtion, sending request, update component, server to client sync.
+                for (int i = 0; i < 4; ++i)
+                {
+                    yield return new WaitForEndOfFrame();
+                }
                 InventorySchema.Inventory.Component updatedInventory = entityManager.GetComponentData<InventorySchema.Inventory.Component>(entity);
-                Debug.Log(updatedInventory.Inventory.Count);
                 // Confirm that the correct item has been added to inventory.
                 Assert.True(updatedInventory.Inventory.Count == 1, "Inventory not updated with new item");
                 Assert.True(updatedInventory.Inventory.ContainsValue(itemAdding), "Inventory not updated with correct item");
                 InventoryItemFactory inventoryItemFactory = new InventoryItemFactory();
                 inventoryItemFactory.Initialize();
-                foreach (var key in updatedInventory.Inventory.Keys)
-                {
-                    Debug.Log(key);
-                }
                 InventoryItem renderableItem = inventoryItemFactory.GetInventoryItem(updatedInventory.Inventory[0].Id);
                 Assert.True(renderableItem.Equals(inventoryItemFactory.GetInventoryItem(itemAdding.Id)), "Item didn't result in correct render");
                 entityManager.AddComponentData(entity, new InventoryComponents.PendingInventoryAddition
@@ -95,8 +97,6 @@ namespace PlaymodeTests
         public IEnumerator InventoryRemoveTest()
         {
 
-            yield return null;
-            LinkedEntityComponent linkedEntityComponent = GameObject.FindGameObjectWithTag("Unit").GetComponent<LinkedEntityComponent>();
             WorkerSystem workerSystem = linkedEntityComponent.World.GetExistingSystem<WorkerSystem>();
 
             if (workerSystem.TryGetEntity(linkedEntityComponent.EntityId, out Entity entity))
@@ -165,7 +165,6 @@ namespace PlaymodeTests
             {
                 InventorySchema.Inventory.Component inventory = workerSystem.EntityManager.GetComponentData<InventorySchema.Inventory.Component>(entity);
                 int indexRemoving = (int)(inventory.InventorySize / 2);
-                Debug.Log(indexRemoving);
                 workerSystem.EntityManager.AddComponentData(entity, new InventoryComponents.PendingInventoryRemoval
                 {
                     InventoryIndex = (int)(inventory.InventorySize / 2)

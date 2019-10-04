@@ -91,7 +91,7 @@ namespace MDG.Common.Systems.Inventory
                 };
                 long requestId = commandSystem.SendCommand<InventorySchema.Inventory.AddItemToInventory.Request>(new InventorySchema.Inventory.AddItemToInventory.Request
                 {
-                    TargetEntityId = new EntityId(4),
+                    TargetEntityId = requestHeader.InventoryOwner,
                     Payload = new InventorySchema.InventoryAddItemRequest
                     {
                         Count = requestHeader.Count.Value,
@@ -129,7 +129,7 @@ namespace MDG.Common.Systems.Inventory
                 
                 long requestId = commandSystem.SendCommand<InventorySchema.Inventory.RemoveItemFromInventory.Request>(new InventorySchema.Inventory.RemoveItemFromInventory.Request
                 {
-                    TargetEntityId = new EntityId(4),
+                    TargetEntityId = requestHeader.InventoryOwner,
                     Payload = new InventorySchema.InventoryRemoveItemRequest
                     {
                         InventoryOwner = requestHeader.InventoryOwner,
@@ -171,6 +171,7 @@ namespace MDG.Common.Systems.Inventory
                     case RequestType.Remove:
                         requestId = commandSystem.SendCommand<InventorySchema.Inventory.RemoveItemFromInventory.Request>(new InventorySchema.Inventory.RemoveItemFromInventory.Request
                         {
+                            TargetEntityId = requestRetry.RequestHeader.InventoryOwner,
                             Payload = new InventorySchema.InventoryRemoveItemRequest
                             {
                                 InventoryOwner = requestRetry.RequestHeader.InventoryOwner,
