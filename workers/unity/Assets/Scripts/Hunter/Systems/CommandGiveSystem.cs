@@ -97,6 +97,7 @@ namespace MDG.Hunter.Systems
         protected override void OnUpdate()
         {
             GameObject hunter = GameObject.FindGameObjectWithTag("MainCamera");
+            if (!hunter) return;
             LinkedEntityComponent linkedEntityComponent = hunter.GetComponent<LinkedEntityComponent>();
             if (linkedEntityComponent == null || !Input.GetMouseButtonDown(1))
             {

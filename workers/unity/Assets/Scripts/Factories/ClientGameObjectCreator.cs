@@ -169,6 +169,14 @@ namespace MDG
                 gameObject.tag = "Unit";
                 gameObject.name = $"{gameObject.name} {(hasAuthority? "authoritative" : "")}";
             }
+            else if (metaData.EntityType.Equals("Resource"))
+            {
+                // Todo: Query resource component to determine which resource prefab.
+                pathToEntity = $"{pathToEntity}/Resource";
+                //GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
+                GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
+                created.tag = "Resource";
+            }
             else
             {
                 _default.OnEntityCreated(entity, linker);

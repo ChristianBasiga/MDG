@@ -55,6 +55,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<MetricSendSystem>(); 
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
             Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
+            Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<PointSystem>();
             //Worker.World.GetOrCreateSystem<CollisionDetectionSystem>();
             PlayerLifecycleHelper.AddServerSystems(Worker.World);

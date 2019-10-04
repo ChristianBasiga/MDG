@@ -1,17 +1,19 @@
 package mdg_schema.game.resource;
 
-enum ResourceType{
-    MINERAL = 1;
-}
-
 // Resource type never changes.
 // split cold and hot data.
 // Cold data: max occupancy, resource_type,
 // Hot Data: occupants, occupied, also redundant, as occupied can be checked by simply checking length of occupants.
-
-component Resource{
+enum ResourceType{
+    MINERAL = 1;
+}
+// Down the line, small thing, rename to resourcemetadata and resource.
+component ResourceMetadata{
     id = 500;
     int32 maximum_occupancy = 1;
     ResourceType resource_type = 3;
+    int32 health = 4;
+    float respawn_time = 5;
+    bool will_respawn = 6;
 }
 

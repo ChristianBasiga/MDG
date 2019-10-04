@@ -65,7 +65,6 @@ namespace MDG.Common.Systems.Spawn
             {
                 if (pendingRespawn.TimeTillRespawn > 0)
                 {
-                    UnityEngine.Debug.Log(pendingRespawn.TimeTillRespawn);
                     pendingRespawn.TimeTillRespawn = pendingRespawn.TimeTillRespawn - deltaTime;
                 }
                 else
@@ -118,9 +117,6 @@ namespace MDG.Common.Systems.Spawn
                 respawnRequestsSent += 1;
             }
         }
-
-        // I guess a monitor on each client? that feels fucked.
-
         private void SendSpawnRequest()
         {
             if (queuedRespawns.TryDequeue(out RespawnPayload payload))

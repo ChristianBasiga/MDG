@@ -101,6 +101,12 @@ namespace MDG.Common.Systems.Spawn
                             }
                             );
                         break;
+                    case CommonSchema.GameEntityTypes.Resource:
+                        requestId = commandSystem.SendCommand(
+                            new WorldCommands.CreateEntity.Request(
+                                MDG.Common.Templates.GetResourceTemplate()
+                            ));
+                        break;
                 }
                 if (requestId != -1)
                 {

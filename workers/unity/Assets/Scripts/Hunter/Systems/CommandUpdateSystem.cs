@@ -135,8 +135,6 @@ namespace MDG.Hunter.Systems
             collectResponses = new NativeList<CollectResponse>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
-            //resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
-            //resourceRequestSystem.OnCollect += HandleCollectResponse;
             commandSystem = World.GetExistingSystem<CommandSystem>();
             unitCollisionMappings = new Dictionary<EntityId, List<EntityId>>();
             enemyQuery = GetEntityQuery(ComponentType.ReadOnly<EnemyComponent>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
@@ -151,7 +149,7 @@ namespace MDG.Hunter.Systems
             // Then it is depleted.
             if (receivedResponse.TimesUntilDepleted == 0)
             {
-                if (workerSystem.TryGetEntity(receivedResponse.DepleterId, out Entity entity))
+                if (workerSystem.TryGetEntity(receivedResponse.DepleterId.Value, out Entity entity))
                 {
                     PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
                 }
