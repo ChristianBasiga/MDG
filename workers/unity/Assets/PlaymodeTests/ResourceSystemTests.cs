@@ -308,15 +308,11 @@ namespace PlaymodeTests
             int currHealth = resourceComponent.Health;
             while (currHealth > 0)
             {
-                // Yo yeah, to test true depletion callback wise, I need to separate these. One unified was a terrible idea.
-                // Very dumb of me. Much more scalable to do latter. Cause I need the response for depletion.
-                // to do correct work. Granted callbacks atm are REALLY only for tests for most part.
-                // Hmm, then again. ResourceRequest system need not know about units, and to keep it truly scalable. I should add that.
                 currHealth -= 1;
                 ResourceRequestSystem.ResourceRequestReponse? collectResponse = null;
 
                 // in resource request system, down line could batch these prior to 
-                // avoid overkill of round trips.
+                // avoid overkill of round trips. Though prob not huge hindrance tbh.
                 resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
                 {
                     OccupantId = linkedUnit.EntityId,
