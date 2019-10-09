@@ -23,6 +23,7 @@ namespace MDG.Hunter.Systems
     public class CommandGiveSystem : ComponentSystem
     {
 
+        private ResourceRequestSystem resourceRequestSystem;
 
         // Checks what command the right click signified,
         // This would be applying the command to each Unit.
@@ -71,9 +72,18 @@ namespace MDG.Hunter.Systems
                 if (clicked.Clicked && clicked.ClickedEntityId.Equals(hunterId))
                 {
                     //Clean up and stop all command compnents on unit before adding a new one.
+                    // Anything in queue must be released in command update system. so pass queue in job.
+                    // compare the payload to new collect command to send releases accordingly.
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(MoveCommand));
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(AttackCommand));
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(CollectCommand));
+
+                    // Remove it, then add interrupt, to do rest of clean up.
+                    entityCommandBuffer.AddComponent(index, entity, new CommandInterrupt
+                    {
+                        interrupting = commandListener.CommandType,
+                        target = commandGiven.TargetId
+                    });
                     switch (commandGiven.CommandType)
                     {
                         case CommandType.Move:
@@ -92,6 +102,7 @@ namespace MDG.Hunter.Systems
         protected override void OnCreate()
         {
             base.OnCreate();
+            resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
         }
 
         protected override void OnUpdate()

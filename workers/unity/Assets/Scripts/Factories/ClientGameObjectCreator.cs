@@ -10,11 +10,13 @@ using MdgSchema.Player;
 using MDG.Common.Components;
 using MDG.Hunter.Components;
 using MDG.Hunter.Commands;
+using UnitSchema = MdgSchema.Units;
 using MdgSchema.Spawners;
 using MdgSchema.Common;
 using Unity.Transforms;
 using Unity.Rendering;
 using MDG.Common.Systems;
+using UnitTemplates = MDG.Hunter.Unit;
 using SpawnSystems = MDG.Common.Systems.Spawn;
 using InvaderSystems =  MDG.Hunter.Systems;
 
@@ -89,7 +91,6 @@ namespace MDG
             {
                 if (!entity.HasComponent<GameMetadata.Component>())
                 {
-                   
                     return;
                 }
                 GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
@@ -152,26 +153,18 @@ namespace MDG
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 if (worker.TryGetEntity(entity.SpatialOSEntityId, out unitEntity))
                 {
-                    // Custom creator essentially just acting as entity creation call back.
-                    _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadWrite<Clickable>());
-                    if (hasAuthority)
-                    {
-                        pathToEntity = $"{pathToEntity}/Authoritative";
-                        _world.EntityManager.AddComponentData(unitEntity, new CommandListener { CommandType = CommandType.None });
-                    }
-                    else
-                    {
-                        _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadOnly<EnemyComponent>());
-                    }
+                    UnitSchema.Unit.Component unitComponent = entity.GetComponent<UnitSchema.Unit.Component>();
+                    UnitTemplates.Archtypes.AddUnitArchtype(worker.EntityManager, unitEntity, hasAuthority, unitComponent.Type);
                 }
                 pathToEntity = $"{pathToEntity}/Unit";
+                pathToEntity = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
+
                 GameObject gameObject = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 gameObject.tag = "Unit";
                 gameObject.name = $"{gameObject.name} {(hasAuthority? "authoritative" : "")}";
             }
             else if (metaData.EntityType.Equals("Resource"))
             {
-                // Todo: Query resource component to determine which resource prefab.
                 pathToEntity = $"{pathToEntity}/Resource";
                 //GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);

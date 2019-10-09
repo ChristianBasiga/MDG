@@ -72,22 +72,18 @@ namespace MDG.Common.Systems.Spawn
 
         private void ProcessRequests()
         {
-            // replace 25 with actual worker later.
             while (spawnRequests.Count > 0)
             {
                 var request = spawnRequests.Dequeue();
                 long requestId = -1;
                 switch (request.payload.TypeToSpawn)
                 {
-                    // Could format this to be more test friendly. Also could just make module test / scripting tests.
-                    // until figure out best way to unit test systems like these.
                     case CommonSchema.GameEntityTypes.Unit:
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
                                 MDG.Hunter.Unit.Templates.GetUnitEntityTemplate(workerSystem.WorkerId, request.payload.TypeId)
                               ));
                         break;
-
                     case CommonSchema.GameEntityTypes.Hunted:
                     case CommonSchema.GameEntityTypes.Hunter:
                         DTO.PlayerConfig playerConfig = new DTO.PlayerConfig
@@ -118,19 +114,6 @@ namespace MDG.Common.Systems.Spawn
                 }
             }
         }
-        //Move this and the creation requests to manager and just have this call it from manager.
-        private void OnCreatePlayerResponse(PlayerCreator.CreatePlayer.ReceivedResponse response)
-        {
-            if (response.StatusCode != Improbable.Worker.CInterop.StatusCode.Success)
-            {
-                UnityEngine.Debug.LogWarning($"Error: {response.Message}");
-            }
-            else
-            {
-                UnityEngine.Debug.Log("Made player");
-            }
-        }
-
         private void ProcessResponses()
         {
             if (requestIdToPayload.Count == 0)
@@ -143,10 +126,8 @@ namespace MDG.Common.Systems.Spawn
                 ref readonly var response = ref creationResponses[i];
                 if (requestIdToPayload.TryGetValue(response.RequestId, out SpawnRequestHeader spawnRequestHeader))
                 {
-
                     switch (response.StatusCode)
                     {
-
                         // Remove from request mappings and send response back.
                         case StatusCode.Success:
 

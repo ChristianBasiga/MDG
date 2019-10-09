@@ -52,15 +52,12 @@ namespace MDG.Common.Systems
             resourceGroup.SetFilter(ResourceSchema.Resource.ComponentAuthority.Authoritative);
         }
 
-        // Super requires change, cause occupied component is spatialOS and can't be added later.
         protected override void OnUpdate()
         {
             try
             {
                 ProcessRequests();
             }
-            // But I don't want this ot interrupt other cycles
-            // this was kind of waste of time, think about more later.
             catch( ResourceRequestException requestError)
             {
                 switch (requestError.ResourceRequestType)
