@@ -2,13 +2,14 @@
 using Improbable.Gdk.Core;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 
 
 namespace MDG.Common.Datastructures
 {
 
-    public class QuadNode
+    public struct QuadNode
     {
         public EntityId entityId;
         public Vector3f position;
@@ -24,7 +25,7 @@ namespace MDG.Common.Datastructures
         }
     }
     // This will be a quad tree with 
-    public class QuadTree
+    public struct QuadTree
     {
         // Also need dimensions.
         // Maybe flow is I get QuadNodes, then using EntityId I get collider component
@@ -40,22 +41,24 @@ namespace MDG.Common.Datastructures
         Vector3f dimensions;
         Vector3f center;
 
-        QuadTree parent;
         // Four children representing regions wihin this region.
-        QuadTree northWest;
-        QuadTree northEast;
-        QuadTree southWest;
-        QuadTree southEast;
+        QuadTree? northWest;
+        QuadTree? northEast;
+        QuadTree? southWest;
+        QuadTree? southEast;
 
-        Dictionary<EntityId, Vector3f> entitiesInThisRegion;
+        NativeHashMap<EntityId, Vector3f> entitiesInThisRegion;
         #region Interfacing code
-        public QuadTree(int capacity, Vector3f dimensions, Vector3f center, QuadTree parent = null)
+        public QuadTree(int capacity, Vector3f dimensions, Vector3f center)
         {
-            this.parent = parent;
             this.capacity = capacity;
             this.dimensions = dimensions;
             this.center = center;
-            entitiesInThisRegion = new Dictionary<EntityId, Vector3f>();
+            northEast = null;
+            northWest = null;
+            southEast = null;
+            southWest = null;
+            entitiesInThisRegion = new NativeHashMap<EntityId, Vector3f>(this.capacity, Allocator.Persistent);
         }
 
         public List<QuadNode> FindEntities(Vector3f queryPosition)
@@ -70,29 +73,33 @@ namespace MDG.Common.Datastructures
             if (northEast != null)
             {
                 //Recursively find them. If not exist in region, returns empty so no change.
-                entities.AddRange(northEast.FindEntities(queryPosition));
-                entities.AddRange(northWest.FindEntities(queryPosition));
-                entities.AddRange(southEast.FindEntities(queryPosition));
-                entities.AddRange(southWest.FindEntities(queryPosition));
+                entities.AddRange(northEast.Value.FindEntities(queryPosition));
+                entities.AddRange(northWest.Value.FindEntities(queryPosition));
+                entities.AddRange(southEast.Value.FindEntities(queryPosition));
+                entities.AddRange(southWest.Value.FindEntities(queryPosition));
             }
             else
             {
-                foreach(KeyValuePair<EntityId, Vector3f> keyValuePair in entitiesInThisRegion)
+                var keyArr = entitiesInThisRegion.GetKeyArray(Allocator.TempJob);
+                foreach (EntityId entityId in keyArr)
                 {
+                    entitiesInThisRegion.TryGetValue(entityId, out Vector3f pos);
+
                     QuadNode quadNode = new QuadNode
                     {
-                        entityId = keyValuePair.Key,
-                        position = keyValuePair.Value,
+                        entityId = entityId,
+                        position = pos,
                         dimensions = dimensions,
                         center = center
                     };
                     entities.Add(quadNode);
                 }
+                keyArr.Dispose();
             }
             return entities;
         }
 
-        public QuadNode FindEntity(EntityId entityId)
+        public QuadNode? FindEntity(EntityId entityId)
         {
             QuadNode result = new QuadNode
             {
@@ -119,6 +126,23 @@ namespace MDG.Common.Datastructures
             Insert(entityId, newPosition);
         }
 
+        public void MoveEntity(EntityId entityId, Vector3f newPosition)
+        {
+            QuadNode? quadNode = FindEntity(entityId);
+
+            if (!quadNode.HasValue)
+            {
+                throw new System.Exception("Entity is does not exist in quad tree");
+            }
+
+            // If within same region, do nothing, no reason to move it.
+            if (!IsWithinRegion(quadNode.Value.center, quadNode.Value.dimensions, newPosition))
+            {
+                Remove(entityId, quadNode.Value.position);
+                Insert(entityId, newPosition);
+            }
+        }
+
         public bool Insert(EntityId entityId, Vector3f position)
         {
             Debug.Log($"Inserting {entityId} with position {position}");
@@ -134,7 +158,7 @@ namespace MDG.Common.Datastructures
                     throw new System.Exception($" The entity with id {entityId} is already in this quadtree. " +
                         $"Please use MoveEntity insted");
                 }
-                if (entitiesInThisRegion.Count + 1 > capacity)
+                if (entitiesInThisRegion.Length + 1 > capacity)
                 {
                     Debug.Log("Sub dividing");
                     SubDivide();
@@ -146,13 +170,13 @@ namespace MDG.Common.Datastructures
                 Debug.Log("recursively inserting");
                 // Recursively call insert in children, until one of the calls results in true
                 // short circuiting the rest.
-                return northWest.Insert(entityId, position)
-                    || northEast.Insert(entityId, position)
-                    || southWest.Insert(entityId, position)
-                    || southEast.Insert(entityId, position);
+                return northWest.Value.Insert(entityId, position)
+                    || northEast.Value.Insert(entityId, position)
+                    || southWest.Value.Insert(entityId, position)
+                    || southEast.Value.Insert(entityId, position);
             }
             Debug.Log($"Adding into this region with center {center.ToString()} and dimensions {dimensions.ToString()} ");
-            entitiesInThisRegion.Add(entityId, position);
+            entitiesInThisRegion.TryAdd(entityId, position);
             return false;
         }
 
@@ -165,10 +189,10 @@ namespace MDG.Common.Datastructures
             }
             if (northEast != null)
             {
-                return northWest.Remove(entityId, position)
-                    || northEast.Remove(entityId, position)
-                    || southEast.Remove(entityId, position)
-                    || southWest.Remove(entityId, position);
+                return northWest.Value.Remove(entityId, position)
+                    || northEast.Value.Remove(entityId, position)
+                    || southEast.Value.Remove(entityId, position)
+                    || southWest.Value.Remove(entityId, position);
             }
             else
             {
@@ -188,10 +212,10 @@ namespace MDG.Common.Datastructures
 
             if (northEast != null)
             {
-                return northEast.Remove(entityId)
-                   || northWest.Remove(entityId)
-                   || southEast.Remove(entityId)
-                   || southWest.Remove(entityId);
+                return northEast.Value.Remove(entityId)
+                   || northWest.Value.Remove(entityId)
+                   || southEast.Value.Remove(entityId)
+                   || southWest.Value.Remove(entityId);
             }
 
             return false;
@@ -215,10 +239,10 @@ namespace MDG.Common.Datastructures
 
             if (northEast != null)
             {
-                return northEast.FindEntityUtil(id, node)
-                    || northWest.FindEntityUtil(id, node)
-                    || southEast.FindEntityUtil(id, node)
-                    || southWest.FindEntityUtil(id, node);
+                return northEast.Value.FindEntityUtil(id, node)
+                    || northWest.Value.FindEntityUtil(id, node)
+                    || southEast.Value.FindEntityUtil(id, node)
+                    || southWest.Value.FindEntityUtil(id, node);
             }
 
             return false;
@@ -251,17 +275,27 @@ namespace MDG.Common.Datastructures
             southEast = new QuadTree(capacity, newDimensions, new Vector3f(center.X + width / 4, 0,  center.Z - height / 4));
             southWest = new QuadTree(capacity, newDimensions, new Vector3f(center.X - width / 4, 0, center.Z - height / 4));
 
-            foreach (KeyValuePair<EntityId, Vector3f> keyValuePair in entitiesInThisRegion)
+            var keyArr = entitiesInThisRegion.GetKeyArray(Allocator.TempJob);
+            foreach (EntityId entityId in keyArr)
             {
-                bool insertedInSubdivision = northEast.Insert(keyValuePair.Key, keyValuePair.Value)
-                || northWest.Insert(keyValuePair.Key, keyValuePair.Value)
-                || southEast.Insert(keyValuePair.Key, keyValuePair.Value)
-                || southWest.Insert(keyValuePair.Key, keyValuePair.Value);
+                entitiesInThisRegion.TryGetValue(entityId, out Vector3f pos);
+
+                bool insertedInSubdivision = northEast.Value.Insert(entityId, pos)
+                || northWest.Value.Insert(entityId, pos)
+                || southEast.Value.Insert(entityId, pos)
+                || southWest.Value.Insert(entityId, pos);
             }
-            entitiesInThisRegion.Clear();
+            keyArr.Dispose();
+            entitiesInThisRegion.Dispose();
         }
 
         private bool IsWithinRegion(Vector3f position)
+        {
+            return IsWithinRegion(center, dimensions, position);
+        }
+
+        //Perhaps make this public
+        private bool IsWithinRegion(Vector3f center, Vector3f dimensions, Vector3f position)
         {
             float width = dimensions.X;
             float height = dimensions.Z;

@@ -9,8 +9,11 @@ using MDG;
 using Improbable.Gdk.Core;
 using MDG.Common.Systems.Position;
 using SpawnSchema = MdgSchema.Common.Spawn;
+using PositionSchema = MdgSchema.Common.Position;
 using MDG.Common.Datastructures;
 using Improbable;
+using Improbable.Gdk.Subscriptions;
+using MdgSchema.Common;
 
 namespace PlaymodeTests
 {
@@ -36,7 +39,7 @@ namespace PlaymodeTests
         [UnityTest, Order(80)]
         public IEnumerator AddToSpatialPartitionTest()
         {
-            
+
             WorkerInWorld clientWorkerInWorld = null;
             yield return new WaitUntil(() =>
             {
@@ -68,18 +71,18 @@ namespace PlaymodeTests
             );
             yield return new WaitUntil(() => { return unitEntityId.IsValid(); });
             yield return new WaitForEndOfFrame();
-            
-            QuadNode queryById = positionSystem.querySpatialPartition(unitEntityId);
-            Assert.NotNull(queryById, $"Entity id {unitEntityId} not added to spatial partition structure");
-            Assert.AreEqual(queryById.position, payload.Position, $"Entity id {unitEntityId} not placed in correct position from id query.");
+
+            QuadNode? queryById = positionSystem.querySpatialPartition(unitEntityId);
+            Assert.True(queryById.HasValue, $"Entity id {unitEntityId} not added to spatial partition structure");
+            Assert.AreEqual(queryById.Value.position, payload.Position, $"Entity id {unitEntityId} not placed in correct position from id query.");
 
             List<QuadNode> queryByPosition = positionSystem.querySpatialPartition(payload.Position);
             Assert.IsNotEmpty(queryByPosition, $"Entity id {unitEntityId} not placed in correct position from position query");
 
             Assert.AreEqual(queryByPosition[0], queryById, "Query via id returned different result from query via position");
 
-            Vector3f dimensions = queryById.dimensions;
-            Vector3f centerOfRegion = queryById.center;
+            Vector3f dimensions = queryById.Value.dimensions;
+            Vector3f centerOfRegion = queryById.Value.center;
 
             Assert.IsTrue((payload.Position.X <= centerOfRegion.X + dimensions.X / 2)
                 && (payload.Position.X >= centerOfRegion.X - dimensions.X / 2)
@@ -87,7 +90,7 @@ namespace PlaymodeTests
                 && (payload.Position.Z >= centerOfRegion.Z - dimensions.Z / 2), $"Entity ${unitEntityId} not placed in correct region");
         }
 
-        [UnityTest, Order(801)]
+        [UnityTest, Order(81)]
         public IEnumerator SubdivideCorrectlyTest()
         {
             WorkerInWorld clientWorkerInWorld = null;
@@ -121,7 +124,7 @@ namespace PlaymodeTests
                 SpawnSchema.SpawnRequest payload = new SpawnSchema.SpawnRequest
                 {
                     TypeToSpawn = MdgSchema.Common.GameEntityTypes.Unit,
-                    Position = new Improbable.Vector3f(randomX, 0,  1)
+                    Position = new Improbable.Vector3f(randomX, 0, 1)
                 };
                 EntityId unitEntityId = new EntityId(-1);
                 spawnReqSystem.RequestSpawn(payload,
@@ -155,5 +158,66 @@ namespace PlaymodeTests
             }), "Left half placed and right half placed regions are grouped together. Not subdivided correctly");
             // Assert on diff regions between other halfs.
         }
+
+        [UnityTest, Order(81)]
+        public IEnumerator UpdatePositionFromLinearVelocityCorrectly()
+        {
+            WorkerInWorld clientWorkerInWorld = null;
+            yield return new WaitUntil(() =>
+            {
+                clientWorker = GameObject.Find("ClientWorker");
+                clientWorkerInWorld = clientWorker.GetComponent<UnityClientConnector>().Worker;
+                return clientWorkerInWorld != null && clientWorkerInWorld.World != null;
+            });
+            WorkerInWorld serverWorkerInWorld = null;
+
+            yield return new WaitUntil(() =>
+            {
+                serverWorker = GameObject.Find("GameLogicWorker");
+                serverWorkerInWorld = serverWorker.GetComponent<UnityGameLogicConnector>().Worker;
+                return serverWorkerInWorld != null && serverWorkerInWorld.World != null;
+            });
+
+            spawnReqSystem = clientWorkerInWorld.World.GetExistingSystem<SpawnRequestSystem>();
+            positionSystem = serverWorkerInWorld.World.GetExistingSystem<PositionSystem>();
+            workerSystem = clientWorkerInWorld.World.GetExistingSystem<WorkerSystem>();
+
+            SpawnSchema.SpawnRequest payload = new SpawnSchema.SpawnRequest
+            {
+                TypeToSpawn = MdgSchema.Common.GameEntityTypes.Unit,
+                Position = new Improbable.Vector3f(1, 1, 1)
+            };
+            EntityId unitEntityId = new EntityId(-1);
+            spawnReqSystem.RequestSpawn(payload,
+                (EntityId id) =>
+                {
+                    unitEntityId = id;
+                }
+            );
+            yield return new WaitUntil(() => { return unitEntityId.IsValid(); });
+            yield return new WaitForEndOfFrame();
+
+            LinkedEntityComponent linkedEntityComponent = GameObject.FindGameObjectWithTag("Unit").GetComponent<LinkedEntityComponent>();
+            Vector3f linearVelocityApplied = new Vector3f(10, 0, 5);
+            if (workerSystem.TryGetEntity(linkedEntityComponent.EntityId, out Unity.Entities.Entity entity))
+            {
+                Vector3f initialPos = workerSystem.World.EntityManager.GetComponentData<EntityTransform.Component>(entity).Position;
+                clientWorkerInWorld.World.EntityManager.SetComponentData(entity, new PositionSchema.LinearVelocity.Component
+                {
+                    Velocity = linearVelocityApplied
+                });
+                // frames for component add, component sync with server, run job, resync with client
+                yield return new WaitForEndOfFrame();
+                yield return new WaitForEndOfFrame();
+                yield return new WaitForEndOfFrame();
+                float thisFrameDelaTime = Time.deltaTime;
+                yield return new WaitForEndOfFrame();
+                Vector3f updatedPosition = workerSystem.World.EntityManager.GetComponentData<EntityTransform.Component>(entity).Position;
+                Assert.AreNotEqual(initialPos, updatedPosition, "Linear Velocity not applied to position");
+                Assert.AreEqual(initialPos + (linearVelocityApplied * thisFrameDelaTime), updatedPosition, "Linear Velocity not applied correctly");
+            }
+           
+        }
     }
 }
+

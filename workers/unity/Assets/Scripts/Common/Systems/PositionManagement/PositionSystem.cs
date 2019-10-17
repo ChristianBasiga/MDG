@@ -22,8 +22,15 @@ namespace MDG.Common.Systems.Position
     {
         struct UpdatePayload
         {
-            public EntityId entityUpdating;
-            public Vector3f newPosition;
+            public EntityId EntityUpdating;
+            public Vector3f NewPosition;
+        }
+
+        struct BatchInformation
+        {
+            public Vector3f ChangedPosition;
+            // Frames passed with update to position.
+            public int updatesPending;
         }
 
         EntitySystem entitySystem;
@@ -31,15 +38,14 @@ namespace MDG.Common.Systems.Position
         CommandSystem commandSystem;
         EntityQuery toAddToTreeQuery;
         EntityQuery applyVelocityQuery;
-        // This will be dimensions of world down line, injected here.
-        readonly Vector3f initialDimensions = new Vector3f(50, 0, 50);
-        readonly int regionCapacity = 2;
+        public Vector3f RootDimensions { get; } = new Vector3f(50, 0, 50);
+        public int RegionCapacity { get; } = 2;
 
-        public Vector3f RootDimensions { get { return initialDimensions; } }
-        public int RegionCapacity { get { return regionCapacity; } }
 
+        
         QuadTree quadTree;
-        NativeQueue<UpdatePayload> updateQueue;
+        // For batch updating tree.
+        NativeList<UpdatePayload> updateQueue;
 
         Queue<EntityId> toPruneOff;
 
@@ -51,7 +57,7 @@ namespace MDG.Common.Systems.Position
         }
 
         // Returns collective region  that the entityId belongs to.
-        public QuadNode querySpatialPartition(EntityId entityId)
+        public QuadNode? querySpatialPartition(EntityId entityId)
         {
             return quadTree.FindEntity(entityId);
         }
@@ -59,17 +65,18 @@ namespace MDG.Common.Systems.Position
         {
             base.OnCreate();
             worker = World.GetExistingSystem<WorkerSystem>();
-            updateQueue = new NativeQueue<UpdatePayload>(Allocator.Persistent);
+            updateQueue = new NativeList<UpdatePayload>(RegionCapacity * 10, Allocator.Persistent);
             commandSystem = World.GetExistingSystem<CommandSystem>();
             entitySystem = World.GetExistingSystem<EntitySystem>();
             toPruneOff = new Queue<EntityId>();
-            quadTree = new QuadTree(regionCapacity, initialDimensions, new Vector3f(initialDimensions.X / 2, 0, initialDimensions.Z / 2));
+            quadTree = new QuadTree(RegionCapacity, RootDimensions, new Vector3f(RootDimensions.X / 2, 0, RootDimensions.Z / 2));
             toAddToTreeQuery = GetEntityQuery(
                 ComponentType.ReadOnly<NewlyAddedSpatialOSEntity>(),
                 ComponentType.ReadOnly<EntityTransform.Component>(),
                 ComponentType.ReadOnly<SpatialEntityId>()
                 );
             applyVelocityQuery = GetEntityQuery(
+                ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<PositionSchema.LinearVelocity.Component>(),
                 ComponentType.ReadOnly<PositionSchema.AngularVelocity.Component>(),
                 ComponentType.ReadWrite<EntityTransform.Component>(),
@@ -88,16 +95,42 @@ namespace MDG.Common.Systems.Position
         }
 
 
-        struct ApplyVelocityJob : IJobForEach<PositionSchema.LinearVelocity.Component, PositionSchema.AngularVelocity.Component,
-            EntityTransform.Component>
-        {
+        struct ApplyVelocityJob : IJobForEach<SpatialEntityId, PositionSchema.LinearVelocity.Component, PositionSchema.AngularVelocity.Component,
+            EntityTransform.Component> {
+
             public float deltaTime;
-            public void Execute([ReadOnly] ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
+            [WriteOnly]
+            public NativeList<UpdatePayload> updateQueue;
+
+            [WriteOnly]
+            public NativeHashMap<EntityId, BatchInformation>.ParallelWriter batchUpdater;
+        
+            public void Execute([ReadOnly] ref SpatialEntityId entityIdComponent, [ReadOnly] ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
                 [ReadOnly] ref PositionSchema.AngularVelocity.Component angularVelocityComponent,
-                [ReadOnly] ref EntityTransform.Component entityTransform)
+                ref EntityTransform.Component entityTransform)
             {
                 entityTransform.Position += linearVelocityComponent.Velocity * deltaTime;
                 entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;
+                if (!linearVelocityComponent.Velocity.Equals(Vector3f.Zero))
+                {
+                    updateQueue.Add(new UpdatePayload
+                    {
+                        EntityUpdating = entityIdComponent.EntityId,
+                        NewPosition = entityTransform.Position
+                    });
+                }
+            }
+        }
+
+        struct UpdatePartitionJob : IJobParallelFor
+        {
+            [ReadOnly]
+            public NativeList<UpdatePayload> updatePayload;
+            public QuadTree quadTree;
+
+            public void Execute(int index)
+            {
+                quadTree.MoveEntity(updatePayload[index].EntityUpdating, updatePayload[index].NewPosition);
             }
         }
 
@@ -111,9 +144,19 @@ namespace MDG.Common.Systems.Position
             float deltaTime = Time.deltaTime;
             ApplyVelocityJob applyVelocityJob = new ApplyVelocityJob
             {
-                deltaTime = deltaTime
+                deltaTime = deltaTime,
+                updateQueue = updateQueue
             };
-            applyVelocityJob.Run(applyVelocityQuery);
+            applyVelocityJob.Schedule(applyVelocityQuery).Complete();
+
+            UpdatePartitionJob updatePartitionJob = new UpdatePartitionJob
+            {
+                quadTree = quadTree,
+                updatePayload = updateQueue
+            };
+            updatePartitionJob.Schedule(updateQueue.Length, 1).Complete();
+
+            Debug.Log("Running ApplyVelocityJob");
             #endregion
 
             #region Quad Tree operations
@@ -143,26 +186,28 @@ namespace MDG.Common.Systems.Position
         // over a couple frames is fine.
         private void UpdateEntitiesInTree()
         {
+            /*
             // For each entityId to update, first check using the position to update to if still within region.
             while (updateQueue.IsCreated && updateQueue.TryDequeue(out UpdatePayload updatePayload))
             {
-                List<QuadNode> entitiesInRegion = quadTree.FindEntities(updatePayload.newPosition);
-                QuadNode lastRecord = entitiesInRegion.Find((QuadNode quadNode) =>
+                List<QuadNode> entitiesInRegion = quadTree.FindEntities(updatePayload.NewPosition);
+                QuadNode? lastRecord = entitiesInRegion.Find((QuadNode quadNode) =>
                 {
-                    return quadNode.entityId.Equals(updatePayload.entityUpdating);
+                    return quadNode.entityId.Equals(updatePayload.EntityUpdating);
                 });
 
                 // Then no need for update, still in same region.
-                if (lastRecord != null)
+                if (lastRecord.HasValue)
                 {
                     continue;
                 }
                 // Otherwise get entity from old region.
-                lastRecord = quadTree.FindEntity(updatePayload.entityUpdating);
+                lastRecord = quadTree.FindEntity(updatePayload.EntityUpdating);
 
                 //And remove from last and insert in new.
-                quadTree.MoveEntity(updatePayload.entityUpdating, lastRecord.position, updatePayload.newPosition);
+                quadTree.MoveEntity(updatePayload.EntityUpdating, lastRecord.Value.position, updatePayload.NewPosition);
             }
+            */
         }
 
 
