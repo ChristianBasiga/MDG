@@ -24,6 +24,9 @@ namespace MDG.Common.Systems
             public Vector3f newPosition;
         }
 
+        EntitySystem entitySystem;
+        WorkerSystem worker;
+        CommandSystem commandSystem;
         EntityQuery toAddToTreeQuery;
         EntityQuery applyVelocityQuery;
         // This will be dimensions of world down line, injected here.
@@ -32,9 +35,9 @@ namespace MDG.Common.Systems
         QuadTree quadTree;
         NativeQueue<UpdatePayload> updateQueue;
 
-        float shakeBuffer = 1000;
-        float timeSinceLastShake = 0;
+        Queue<EntityId> toPruneOff;
 
+        readonly int shakesPerFrame;
         
         public List<QuadNode> querySpatialPartition(Vector3f position)
         {
@@ -52,6 +55,11 @@ namespace MDG.Common.Systems
         protected override void OnCreate()
         {
             base.OnCreate();
+            worker = World.GetExistingSystem<WorkerSystem>();
+            updateQueue = new NativeQueue<UpdatePayload>(Allocator.Persistent);
+            commandSystem = World.GetExistingSystem<CommandSystem>();
+            entitySystem = World.GetExistingSystem<EntitySystem>();
+            toPruneOff = new Queue<EntityId>();
             quadTree = new QuadTree(regionCapacity, initialDimensions, new Vector3f(initialDimensions.X / 2, 0, initialDimensions.Z / 2));
             updateQueue = new NativeQueue<UpdatePayload>();
             toAddToTreeQuery = GetEntityQuery(
@@ -87,21 +95,27 @@ namespace MDG.Common.Systems
         {
             // This should handle all requests for updates to position.
             // as well as running job to update position via velocity.
+
+            #region Running Jobs
             float deltaTime = Time.deltaTime;
             ApplyVelocityJob applyVelocityJob = new ApplyVelocityJob
             {
                 deltaTime = deltaTime
             };
             applyVelocityJob.Run(applyVelocityQuery);
+            #endregion
 
+            #region Quad Tree operations
             UpdateEntitiesInTree();
             AddNewEntitiesToQuadTree();
-
-            timeSinceLastShake += deltaTime;
-            if (timeSinceLastShake >= shakeBuffer)
+            // Prepping shake queueing up entities removed this frame.
+            List<EntityId> removedEntities = entitySystem.GetEntitiesRemoved();
+            foreach (EntityId removedEntity in removedEntities)
             {
-                ShakeQuadTree();
+                toPruneOff.Enqueue(removedEntity);
             }
+            ShakeQuadTree();
+            #endregion
         }
 
         // Iterates through newly added entities and inserts into quad tree.
@@ -120,10 +134,8 @@ namespace MDG.Common.Systems
         private void UpdateEntitiesInTree()
         {
             // For each entityId to update, first check using the position to update to if still within region.
-            while (updateQueue.Count > 0)
+            while (updateQueue.TryDequeue(out UpdatePayload updatePayload))
             {
-                UpdatePayload updatePayload = updateQueue.Dequeue();
-
                 List<QuadNode> entitiesInRegion = quadTree.FindEntities(updatePayload.newPosition);
                 QuadNode lastRecord = entitiesInRegion.Find((QuadNode quadNode) =>
                 {
@@ -143,12 +155,23 @@ namespace MDG.Common.Systems
             }
         }
 
+
+        
+
         // Prunes tree of any entities in quad tree that are no longer active.
         // thus reducing size. Maybe down road will clean to close any subdivisions.
-        // or keep subdivided, but still prune.
+        // or keep subdivided, but still prune. Worry about this later.
         private void ShakeQuadTree()
         {
-            timeSinceLastShake = 0;
+            // Shaking is expensive, could do smarter, and prune per region, make entities to remove also subdivided.
+            int shakesThisFrame = 0;
+            while (shakesThisFrame < shakesPerFrame && toPruneOff.Count > 0)
+            {
+                // For now it's fine, like this.
+                EntityId toRemove = toPruneOff.Dequeue();
+                quadTree.Remove(toRemove);
+                shakesThisFrame += 1;
+            }
         }
     }
 }

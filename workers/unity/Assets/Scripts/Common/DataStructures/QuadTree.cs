@@ -8,6 +8,11 @@ using UnityEngine;
 namespace MDG.Common.Datastructures
 {
 
+    public class QuadNode
+    {
+        public EntityId entityId;
+        public Vector3f position;
+    }
     // This will be a quad tree with 
     public class QuadTree
     {
@@ -19,15 +24,13 @@ namespace MDG.Common.Datastructures
         // Look into GJK as that will likely be better
         // either way broad phase, could be firs this, then dot product to see if potentially overlapping.
         // that won't result in false negative but false positives which I'll handle in narrow phase.
-        public struct QuadNode
-        {
-            public EntityId entityId;
-            public Vector3f position;
-        }
+        
         // Information about this region.
         int capacity;
         Vector3f dimensions;
         Vector3f center;
+
+        QuadTree parent;
         // Four children representing regions wihin this region.
         QuadTree northWest;
         QuadTree northEast;
@@ -36,8 +39,9 @@ namespace MDG.Common.Datastructures
 
         Dictionary<EntityId, Vector3f> entitiesInThisRegion;
         #region Interfacing code
-        public QuadTree(int capacity, Vector3f dimensions, Vector3f center)
+        public QuadTree(int capacity, Vector3f dimensions, Vector3f center, QuadTree parent = null)
         {
+            this.parent = parent;
             this.capacity = capacity;
             this.dimensions = dimensions;
             this.center = center;
@@ -73,6 +77,24 @@ namespace MDG.Common.Datastructures
                 }
             }
             return entities;
+        }
+
+        public QuadNode FindEntity(EntityId entityId)
+        {
+            QuadNode result = new QuadNode
+            {
+                entityId = entityId
+            };
+            bool found = FindEntityUtil(entityId, result);
+
+            if (found)
+            {
+                return result;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         // Instead of moving via initial and new, can just pass transformation?
@@ -124,7 +146,7 @@ namespace MDG.Common.Datastructures
             {
                 return false;
             }
-            if (northEast == null)
+            if (northEast != null)
             {
                 return northWest.Remove(entityId, position)
                     || northEast.Remove(entityId, position)
@@ -138,11 +160,50 @@ namespace MDG.Common.Datastructures
             }
         }
 
+        public bool Remove(EntityId entityId)
+        {
+
+            if (entitiesInThisRegion.TryGetValue(entityId, out Vector3f currPos))
+            {
+                entitiesInThisRegion.Remove(entityId);
+                return true;
+            }
+
+            if (northEast != null)
+            {
+                return northEast.Remove(entityId)
+                   || northWest.Remove(entityId)
+                   || southEast.Remove(entityId)
+                   || southWest.Remove(entityId);
+            }
+
+            return false;
+        }
 
         #endregion
 
 
         #region Helper private functions
+
+
+        private bool FindEntityUtil(EntityId id, QuadNode node)
+        {
+            if (entitiesInThisRegion.TryGetValue(id, out Vector3f currPos))
+            {
+                node.position = currPos;
+                return true;
+            }
+
+            if (northEast == null)
+            {
+                return northEast.FindEntityUtil(id, node)
+                    || northWest.FindEntityUtil(id, node)
+                    || southEast.FindEntityUtil(id, node)
+                    || southWest.FindEntityUtil(id, node);
+            }
+
+            return false;
+        }
 
         // Just keeping it in interface functions fine, them returning bools NOT huge deal.
         private bool TryRemove(EntityId entityId, Vector3f position)
@@ -155,8 +216,15 @@ namespace MDG.Common.Datastructures
         {
             float width = dimensions.X;
             float height = dimensions.Z;
+            // Technically can subdivide indefinitely, but no need.
+            if (width <= 1 || height <= 1)
+            {
+                // Replace with my custom logger.
+                UnityEngine.Debug.Log("At unit size, cannot subdivide further");
+            }
             Vector3f newDimensions = new Vector3f(width / 2, 0, height / 2);
-            // Dimensions also needs to be halved.
+            //Dimensions also needs to be halved.
+            //Subdividing all at once, makes  pruning a little harder, but reduces duplicate code.
             northEast = new QuadTree(capacity, newDimensions, new Vector3f(center.X + width / 4, 0, center.Z + height / 4 ));
             northWest = new QuadTree(capacity, newDimensions, new Vector3f(center.X - width / 4, 0, center.Z + height / 4));
             southEast = new QuadTree(capacity, newDimensions, new Vector3f(center.X + width / 4, 0,  center.Z - height / 4));
