@@ -12,6 +12,16 @@ namespace MDG.Common.Datastructures
     {
         public EntityId entityId;
         public Vector3f position;
+        public Vector3f center;
+        public Vector3f dimensions;
+        public override bool Equals(object obj)
+        {
+            QuadNode other = (QuadNode)obj;
+            return entityId.Equals(other.entityId)
+                && position.Equals(other.position)
+                && center.Equals(other.center)
+                && dimensions.Equals(other.dimensions);
+        }
     }
     // This will be a quad tree with 
     public class QuadTree
@@ -57,7 +67,7 @@ namespace MDG.Common.Datastructures
                 return entities;
             }
             // Check if subdivided.
-            if (northEast == null)
+            if (northEast != null)
             {
                 //Recursively find them. If not exist in region, returns empty so no change.
                 entities.AddRange(northEast.FindEntities(queryPosition));
@@ -72,8 +82,11 @@ namespace MDG.Common.Datastructures
                     QuadNode quadNode = new QuadNode
                     {
                         entityId = keyValuePair.Key,
-                        position = keyValuePair.Value
+                        position = keyValuePair.Value,
+                        dimensions = dimensions,
+                        center = center
                     };
+                    entities.Add(quadNode);
                 }
             }
             return entities;
@@ -83,7 +96,7 @@ namespace MDG.Common.Datastructures
         {
             QuadNode result = new QuadNode
             {
-                entityId = entityId
+                entityId = entityId,
             };
             bool found = FindEntityUtil(entityId, result);
 
@@ -108,6 +121,7 @@ namespace MDG.Common.Datastructures
 
         public bool Insert(EntityId entityId, Vector3f position)
         {
+            Debug.Log($"Inserting {entityId} with position {position}");
             if (!IsWithinRegion(position))
             {
                 return false;
@@ -122,12 +136,14 @@ namespace MDG.Common.Datastructures
                 }
                 if (entitiesInThisRegion.Count + 1 > capacity)
                 {
+                    Debug.Log("Sub dividing");
                     SubDivide();
                 }
             }
             // This is if we already subdivided before, or subdivided within this stack frame.
             if (northEast != null)
             {
+                Debug.Log("recursively inserting");
                 // Recursively call insert in children, until one of the calls results in true
                 // short circuiting the rest.
                 return northWest.Insert(entityId, position)
@@ -135,6 +151,7 @@ namespace MDG.Common.Datastructures
                     || southWest.Insert(entityId, position)
                     || southEast.Insert(entityId, position);
             }
+            Debug.Log($"Adding into this region with center {center.ToString()} and dimensions {dimensions.ToString()} ");
             entitiesInThisRegion.Add(entityId, position);
             return false;
         }
@@ -191,10 +208,12 @@ namespace MDG.Common.Datastructures
             if (entitiesInThisRegion.TryGetValue(id, out Vector3f currPos))
             {
                 node.position = currPos;
+                node.center = center;
+                node.dimensions = dimensions;
                 return true;
             }
 
-            if (northEast == null)
+            if (northEast != null)
             {
                 return northEast.FindEntityUtil(id, node)
                     || northWest.FindEntityUtil(id, node)
@@ -212,6 +231,8 @@ namespace MDG.Common.Datastructures
         }
 
         // Insantiates 4 children to create inner regions.
+        // Here is peace I'm forgetting.
+        // When I subdivide, they need to move to divisions.
         private void SubDivide()
         {
             float width = dimensions.X;
@@ -229,6 +250,15 @@ namespace MDG.Common.Datastructures
             northWest = new QuadTree(capacity, newDimensions, new Vector3f(center.X - width / 4, 0, center.Z + height / 4));
             southEast = new QuadTree(capacity, newDimensions, new Vector3f(center.X + width / 4, 0,  center.Z - height / 4));
             southWest = new QuadTree(capacity, newDimensions, new Vector3f(center.X - width / 4, 0, center.Z - height / 4));
+
+            foreach (KeyValuePair<EntityId, Vector3f> keyValuePair in entitiesInThisRegion)
+            {
+                bool insertedInSubdivision = northEast.Insert(keyValuePair.Key, keyValuePair.Value)
+                || northWest.Insert(keyValuePair.Key, keyValuePair.Value)
+                || southEast.Insert(keyValuePair.Key, keyValuePair.Value)
+                || southWest.Insert(keyValuePair.Key, keyValuePair.Value);
+            }
+            entitiesInThisRegion.Clear();
         }
 
         private bool IsWithinRegion(Vector3f position)

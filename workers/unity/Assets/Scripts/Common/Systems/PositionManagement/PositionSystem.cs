@@ -9,13 +9,15 @@ using Improbable;
 using Improbable.Gdk.Core;
 using MdgSchema.Common;
 using PositionSchema = MdgSchema.Common.Position;
-namespace MDG.Common.Systems
+namespace MDG.Common.Systems.Position
 {
     /// <summary>
     /// System that runs on server, manages the spatial partitioned collection of all entities with entity
     /// transform component. It also does ALL updates to position. All position updates must request this system.
     /// Latter might not be good idea. All just change velocity, but it only ever actually applies when hits this system.
     /// </summary>
+    [DisableAutoCreation]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class PositionSystem : ComponentSystem
     {
         struct UpdatePayload
@@ -31,7 +33,11 @@ namespace MDG.Common.Systems
         EntityQuery applyVelocityQuery;
         // This will be dimensions of world down line, injected here.
         readonly Vector3f initialDimensions = new Vector3f(50, 0, 50);
-        readonly int regionCapacity = 10;
+        readonly int regionCapacity = 2;
+
+        public Vector3f RootDimensions { get { return initialDimensions; } }
+        public int RegionCapacity { get { return regionCapacity; } }
+
         QuadTree quadTree;
         NativeQueue<UpdatePayload> updateQueue;
 
@@ -41,17 +47,14 @@ namespace MDG.Common.Systems
         
         public List<QuadNode> querySpatialPartition(Vector3f position)
         {
-            throw new System.NotImplementedException();
+            return quadTree.FindEntities(position);
         }
 
         // Returns collective region  that the entityId belongs to.
-        public List<QuadNode> querySpatialPartition(EntityId entityId)
+        public QuadNode querySpatialPartition(EntityId entityId)
         {
-            throw new System.NotImplementedException();
+            return quadTree.FindEntity(entityId);
         }
-
-        
-
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -61,7 +64,6 @@ namespace MDG.Common.Systems
             entitySystem = World.GetExistingSystem<EntitySystem>();
             toPruneOff = new Queue<EntityId>();
             quadTree = new QuadTree(regionCapacity, initialDimensions, new Vector3f(initialDimensions.X / 2, 0, initialDimensions.Z / 2));
-            updateQueue = new NativeQueue<UpdatePayload>();
             toAddToTreeQuery = GetEntityQuery(
                 ComponentType.ReadOnly<NewlyAddedSpatialOSEntity>(),
                 ComponentType.ReadOnly<EntityTransform.Component>(),
@@ -76,14 +78,23 @@ namespace MDG.Common.Systems
             applyVelocityQuery.SetFilter(EntityTransform.ComponentAuthority.Authoritative);
         }
 
+        protected override void OnDestroy()
+        {
+            if (updateQueue.IsCreated)
+            {
+                updateQueue.Dispose();
+            }
+            base.OnDestroy();
+        }
+
 
         struct ApplyVelocityJob : IJobForEach<PositionSchema.LinearVelocity.Component, PositionSchema.AngularVelocity.Component,
             EntityTransform.Component>
         {
             public float deltaTime;
-            public void Execute(ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
-                ref PositionSchema.AngularVelocity.Component angularVelocityComponent,
-                ref EntityTransform.Component entityTransform)
+            public void Execute([ReadOnly] ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
+                [ReadOnly] ref PositionSchema.AngularVelocity.Component angularVelocityComponent,
+                [ReadOnly] ref EntityTransform.Component entityTransform)
             {
                 entityTransform.Position += linearVelocityComponent.Velocity * deltaTime;
                 entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;
@@ -120,7 +131,6 @@ namespace MDG.Common.Systems
 
         // Iterates through newly added entities and inserts into quad tree.
         // Main issue here, is position not updated yet. So will be adding the entity, then immediemtly moving it next frame.
-        // we'll see how that goes. May need to delay it later.
         private void AddNewEntitiesToQuadTree()
         {
             Entities.With(toAddToTreeQuery).ForEach((ref SpatialEntityId spatialEntityId, ref EntityTransform.Component entityTransform) =>
@@ -134,7 +144,7 @@ namespace MDG.Common.Systems
         private void UpdateEntitiesInTree()
         {
             // For each entityId to update, first check using the position to update to if still within region.
-            while (updateQueue.TryDequeue(out UpdatePayload updatePayload))
+            while (updateQueue.IsCreated && updateQueue.TryDequeue(out UpdatePayload updatePayload))
             {
                 List<QuadNode> entitiesInRegion = quadTree.FindEntities(updatePayload.newPosition);
                 QuadNode lastRecord = entitiesInRegion.Find((QuadNode quadNode) =>
