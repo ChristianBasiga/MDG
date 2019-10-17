@@ -19,10 +19,14 @@ using MDG.Common.Systems;
 using UnitTemplates = MDG.Hunter.Unit;
 using SpawnSystems = MDG.Common.Systems.Spawn;
 using InvaderSystems =  MDG.Hunter.Systems;
-
+using MdgSchema.Units;
 
 namespace MDG
 {
+
+    // This needs to be updated to do multiple things.
+    // 
+
     /// <summary>
     /// This creates corresponding game object to entity, as well as adds any extra ECS components
     /// an entity needs. Perhaps ladder can be moved to different.
@@ -113,7 +117,8 @@ namespace MDG
                                 spawnReqSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                                 {
                                     TypeToSpawn = GameEntityTypes.Unit,
-                                    Position = initialUnitCoordinates[i]
+                                    Position = initialUnitCoordinates[i],
+                                    TypeId = (int)UnitTypes.WORKER
                                 });
                             }
                         }
@@ -156,8 +161,8 @@ namespace MDG
                     UnitSchema.Unit.Component unitComponent = entity.GetComponent<UnitSchema.Unit.Component>();
                     UnitTemplates.Archtypes.AddUnitArchtype(worker.EntityManager, unitEntity, hasAuthority, unitComponent.Type);
                 }
-                pathToEntity = $"{pathToEntity}/Unit";
                 pathToEntity = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
+                pathToEntity = $"{pathToEntity}/Unit";
 
                 GameObject gameObject = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 gameObject.tag = "Unit";

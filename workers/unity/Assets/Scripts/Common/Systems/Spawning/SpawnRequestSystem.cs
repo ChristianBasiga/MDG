@@ -8,6 +8,7 @@ using CommonSchema = MdgSchema.Common;
 using Improbable.Gdk.PlayerLifecycle;
 using MdgSchema.Common;
 using System;
+using MdgSchema.Units;
 
 namespace MDG.Common.Systems.Spawn
 {
@@ -81,7 +82,7 @@ namespace MDG.Common.Systems.Spawn
                     case CommonSchema.GameEntityTypes.Unit:
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
-                                MDG.Hunter.Unit.Templates.GetUnitEntityTemplate(workerSystem.WorkerId, request.payload.TypeId)
+                                MDG.Hunter.Unit.Templates.GetUnitEntityTemplate(workerSystem.WorkerId, (UnitTypes)request.payload.TypeId, request.payload.Position)
                               ));
                         break;
                     case CommonSchema.GameEntityTypes.Hunted:
@@ -120,6 +121,10 @@ namespace MDG.Common.Systems.Spawn
             {
                 return;
             }
+
+            // So at this point is when for sure position is set. So it is here I want to send event.
+            // spawn request is client side, but collision detection is server side.
+            // so i need i to be spatial event.
             var creationResponses = commandSystem.GetResponses<WorldCommands.CreateEntity.ReceivedResponse>();
             for (int i = 0; i < creationResponses.Count; ++i)
             {
@@ -131,13 +136,6 @@ namespace MDG.Common.Systems.Spawn
                         // Remove from request mappings and send response back.
                         case StatusCode.Success:
 
-                            if (workerSystem.TryGetEntity(response.EntityId.Value, out Unity.Entities.Entity entity))
-                            {
-                                EntityManager.SetComponentData(entity, new EntityTransform.Component
-                                {
-                                    Position = spawnRequestHeader.requestInfo.payload.Position
-                                });
-                            }
                             spawnRequestHeader.requestInfo.callback?.Invoke(response.EntityId.Value);
                             requestIdToPayload.Remove(response.RequestId);
                             break;

@@ -50,6 +50,8 @@ component Resource{
     id = 503;
     list<EntityId> occupants = 1;
     int32 health = 2;
+    // Should there be an event that will interrupt these commands?
+    // That WOULD be cleaner, or no cause already in query. group. hmm
     command CollectResponse collect(CollectRequest);
     command ReleaseResponse release(ReleaseRequest);
     command OccupyResponse occupy(OccupyRequest);

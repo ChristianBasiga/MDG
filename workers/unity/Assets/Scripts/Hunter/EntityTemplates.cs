@@ -13,19 +13,26 @@ using UnitComponents = MDG.Hunter.Components;
 using Unity.Entities;
 using MDG.Common.Components;
 using MDG.Hunter.Components;
+using MdgSchema.Units;
+using MdgSchema.Common.Collision;
+using MdgSchema.Common.Position;
+using MDG.DTO;
 
 namespace MDG.Hunter.Unit
 {
     public class Templates
     {
-        public static EntityTemplate GetUnitEntityTemplate(string workerId, int typeId = 1)
+        public static EntityTemplate GetUnitEntityTemplate(string workerId, UnitTypes unitType, Vector3f spawnPositon)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
             var serverAttribute = UnityGameLogicConnector.WorkerType;
             EntityTemplate template = new EntityTemplate();
             template.AddComponent(new Metadata.Snapshot { EntityType = "Unit" }, serverAttribute);
             template.AddComponent(new GameMetadata.Snapshot { Type = GameEntityTypes.Unit }, serverAttribute);
-            
+            template.AddComponent(new EntityTransform.Snapshot { Position = spawnPositon }, serverAttribute);
+            template.AddComponent(new LinearVelocity.Snapshot { Velocity = Vector3f.Zero }, clientAttribute);
+            template.AddComponent(new AngularVelocity.Snapshot { AngularVelocity = Vector3f.Zero }, clientAttribute);
+
             // Actuall this is collider on entity, so position will always be unit position
             // prob shouldn't track this here.
             template.AddComponent(new EntityCollider.Snapshot {
@@ -33,7 +40,10 @@ namespace MDG.Hunter.Unit
                 ColliderType = ColliderType.SPHERE
             }, serverAttribute);
 
-            UnitsSchema.UnitTypes unitType = (UnitsSchema.UnitTypes)typeId;
+            template.AddComponent(new UnitsSchema.Unit.Snapshot
+            {
+                Type = unitType
+            }, serverAttribute);
             switch (unitType)
             {
                 case UnitsSchema.UnitTypes.WORKER:
@@ -49,22 +59,24 @@ namespace MDG.Hunter.Unit
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);
             return template;
         }
+        /*
+        public static EntityTemplate GetUnitEntityTemplate(string workerId, byte[] serializedArgs)
+        {
+
+            UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(serializedArgs);
+            return GetUnitEntityTemplate(workerId, unitConfig.unitType, unitConfig.spawnPosition);
+        }*/
 
 
         private static void MakeWorkerUnit(EntityTemplate template, string clientAttribute)
         {
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
-            template.AddComponent(new UnitsSchema.Unit.Snapshot
-            {
-                Type = UnitsSchema.UnitTypes.WORKER
-            }, serverAttribute);
             template.AddComponent(new InventorySchema.Inventory.Snapshot
             {
                 Inventory = new Dictionary<int, InventorySchema.Item>(),
                 InventorySize = 6
             }, serverAttribute);
-            template.AddComponent(new EntityTransform.Snapshot { Scale = new Vector3f(10, 10, 10) }, clientAttribute);
 
             template.AddComponent(new Stats.Snapshot {
                 Health = 5
@@ -87,15 +99,7 @@ namespace MDG.Hunter.Unit
             {
                 Type = UnitsSchema.UnitTypes.TANK
             }, serverAttribute);
-
-            // Scale is REALLY Irrelevant tbh. transform should just e position at this point.
-            template.AddComponent(new EntityTransform.Snapshot {
-                Scale = new Vector3f(10, 10, 10)
-            }, 
-            clientAttribute);
         }
-
-
     }
     // For adding componetns to entities that don't need to be synced with server.
     // Do this for all entities.
