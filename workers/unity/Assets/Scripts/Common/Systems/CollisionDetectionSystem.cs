@@ -4,12 +4,12 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Collections;
 using Improbable.Gdk.Core;
-using MdgSchema.Common;
 using EntityQuery = Improbable.Worker.CInterop.Query.EntityQuery;
 using Improbable.Worker.CInterop.Query;
 using Improbable.Gdk.Core.Commands;
 using System.Linq;
 using Improbable;
+using MdgSchema.Common.Collision;
 //Perhaps make a group
 
 namespace MDG.Common.Systems
@@ -28,6 +28,7 @@ namespace MDG.Common.Systems
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
 
+
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -40,6 +41,7 @@ namespace MDG.Common.Systems
 
         protected override void OnUpdate()
         {
+            /*
 
             #region Sending queries to check for collisions.
             Entities.WithAllReadOnly<SpatialEntityId, EntityCollider.Component, Position.Component>().ForEach((ref SpatialEntityId spatialEntityId, ref EntityCollider.Component collider, ref Position.Component position ) =>
@@ -84,6 +86,7 @@ namespace MDG.Common.Systems
                 {
                     queryIdToEntityId.Remove(idResolved);
                 }
+
             }
             #endregion
 
@@ -108,6 +111,7 @@ namespace MDG.Common.Systems
                 });
             }
             #endregion
+                */
         }
     }
 }
