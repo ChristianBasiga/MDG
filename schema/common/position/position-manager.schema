@@ -1,0 +1,9 @@
+package mdg_schema.common.collision;
+
+
+
+
+component PositionManager{
+    id = 851;    
+
+}
