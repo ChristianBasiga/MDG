@@ -1,13 +1,15 @@
 {
     "name": "PlaymodeTests",
     "references": [
-        "GUID:edb3612c44ad0d24988d387581fd5fbe",
-        "GUID:d8b37626807d99446aa07b743a8724ab",
-        "GUID:38b6a488ea20e4a35a00e50b07444806",
-        "GUID:734d92eba21c94caba915361bd5ac177",
-        "GUID:8e2f79f713f5a47dcb69903037d4bc0e",
-        "GUID:09d0b0c8e43bd56409834b050a8a2ceb",
-        "GUID:2462d220cd70f6048a0706d191d5af74"
+        "Unity.Entities",
+        "Unity.Entities.Tests",
+        "MDG",
+        "Improbable.Gdk.Core",
+        "Improbable.Gdk.Generated",
+        "Improbable.Gdk.TestUtils.EditmodeTests",
+        "Improbable.Gdk.TestUtils",
+        "Zenject",
+        "Unity.Collections"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

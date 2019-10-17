@@ -72,17 +72,17 @@ namespace PlaymodeTests
             yield return new WaitUntil(() => { return unitEntityId.IsValid(); });
             yield return new WaitForEndOfFrame();
 
-            QuadNode? queryById = positionSystem.querySpatialPartition(unitEntityId);
-            Assert.True(queryById.HasValue, $"Entity id {unitEntityId} not added to spatial partition structure");
-            Assert.AreEqual(queryById.Value.position, payload.Position, $"Entity id {unitEntityId} not placed in correct position from id query.");
+            QuadNode queryById = positionSystem.querySpatialPartition(unitEntityId);
+            Assert.NotNull(queryById, $"Entity id {unitEntityId} not added to spatial partition structure");
+            Assert.AreEqual(queryById.position, payload.Position, $"Entity id {unitEntityId} not placed in correct position from id query.");
 
             List<QuadNode> queryByPosition = positionSystem.querySpatialPartition(payload.Position);
             Assert.IsNotEmpty(queryByPosition, $"Entity id {unitEntityId} not placed in correct position from position query");
 
             Assert.AreEqual(queryByPosition[0], queryById, "Query via id returned different result from query via position");
 
-            Vector3f dimensions = queryById.Value.dimensions;
-            Vector3f centerOfRegion = queryById.Value.center;
+            Vector3f dimensions = queryById.dimensions;
+            Vector3f centerOfRegion = queryById.center;
 
             Assert.IsTrue((payload.Position.X <= centerOfRegion.X + dimensions.X / 2)
                 && (payload.Position.X >= centerOfRegion.X - dimensions.X / 2)

@@ -7,7 +7,6 @@ using Improbable.Gdk.PlayerLifecycle;
 using MDG.Hunter.Systems;
 using MDG.Common.Systems;
 
-using MdgSchema.Spawners;
 using Improbable.Worker.CInterop.Query;
 using Improbable.Gdk.Core.Commands;
 using Unity.Collections;
