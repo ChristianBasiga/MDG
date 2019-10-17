@@ -1,4 +1,5 @@
 ﻿using Improbable.Gdk.Core;
+using MDG.Hunter.Commands;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -24,5 +25,12 @@ namespace MDG.Hunter.Components
         public bool IsAtResource;
         public bool IsCollecting;
         public bool GoingToResource;
+    }
+
+    [RemoveAtEndOfTick]
+    public struct CommandInterrupt : IComponentData
+    {
+        public CommandType interrupting;
+        public EntityId? target;
     }
 }

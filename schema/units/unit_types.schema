@@ -1,8 +1,9 @@
 package mdg_schema.units;
-//units will be in 600 range.
+// Prob can reuse this for defender units.
 enum UnitTypes{
-    COLLECTOR = 0;
-
+    WORKER = 1;
+    TANK = 2;
+    DPS = 3;
 }
 
 

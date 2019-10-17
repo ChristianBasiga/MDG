@@ -1,0 +1,8 @@
+package mdg_schema.common.position;
+import "improbable/vector3.schema";
+
+
+component LinearVelocity{
+    id = 853;
+    improbable.Vector3f velocity = 1;
+}

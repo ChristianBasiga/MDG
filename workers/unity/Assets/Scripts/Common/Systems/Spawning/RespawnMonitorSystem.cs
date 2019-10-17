@@ -95,7 +95,7 @@ namespace MDG.Common.Systems.Spawn
             // Complete rest of unfinished respawns form last frame to keep things in sync.
             while (queuedRespawns.Count > 0)
             {
-                SendSpawnRequest();
+                SendRespawnRequest();
             }
 
             // Might just make persisent and allow it to finish process over athe course of few frames instead of single frame.
@@ -107,17 +107,16 @@ namespace MDG.Common.Systems.Spawn
                 deltaTime = UnityEngine.Time.deltaTime
             };
 
-            // Run prob does same thing I beleive.
-            tickPendingRespawnJob.Schedule(this).Complete();
+            tickPendingRespawnJob.Run(this);
             // Send spawn requsts.
             int respawnRequestsSent = 0;
             while (queuedRespawns.Count > 0 && respawnRequestsSent < maxRespawnsPerFrame)
             {
-                SendSpawnRequest();
+                SendRespawnRequest();
                 respawnRequestsSent += 1;
             }
         }
-        private void SendSpawnRequest()
+        private void SendRespawnRequest()
         {
             if (queuedRespawns.TryDequeue(out RespawnPayload payload))
             {
@@ -143,7 +142,7 @@ namespace MDG.Common.Systems.Spawn
                         // This is why, removing from pending keys. I mean double my responses versus
                         // once all responses, what is more.
                         pendingRespawnRequests.Remove(response.RequestId);
-                            break;
+                        break;
 
                     case StatusCode.Timeout:
 

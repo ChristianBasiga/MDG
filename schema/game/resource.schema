@@ -18,7 +18,8 @@ type CollectRequest{
 type CollectResponse{
     int32 times_until_depleted = 1;
     option<EntityId> depleter_id = 2;
-    EntityId resource_id = 3;
+    EntityId occupant_id = 3;
+    EntityId resource_id = 4;
 }
 
 type OccupyRequest{
@@ -29,6 +30,7 @@ type OccupyRequest{
 type OccupyResponse{
     // Maybe response with list of all occupants on resource.
     bool occupied = 1;
+    EntityId occupant_id = 2;
     EntityId resource_id = 3;
     bool fully_occupied = 4;
 }
@@ -38,7 +40,8 @@ type ReleaseRequest{
     EntityId resource_id = 2;
 }
 type ReleaseResponse{
-
+    EntityId occupant = 1;
+    EntityId resource_id = 2;
 }
 
 
@@ -47,6 +50,8 @@ component Resource{
     id = 503;
     list<EntityId> occupants = 1;
     int32 health = 2;
+    // Should there be an event that will interrupt these commands?
+    // That WOULD be cleaner, or no cause already in query. group. hmm
     command CollectResponse collect(CollectRequest);
     command ReleaseResponse release(ReleaseRequest);
     command OccupyResponse occupy(OccupyRequest);

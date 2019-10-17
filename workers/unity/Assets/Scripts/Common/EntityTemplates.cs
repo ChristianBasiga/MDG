@@ -60,19 +60,5 @@ namespace MDG.Common
 
             return template;
         }
-
-        // Insted of snapshot create entity in server world upon creation.
-        public static EntityTemplate GetResourceManagerTemplate()
-        {
-            const string serverAttribute = UnityGameLogicConnector.WorkerType;
-            EntityTemplate template = new EntityTemplate();
-            template.AddComponent(new Position.Snapshot(), serverAttribute);
-            template.AddComponent(new Persistence.Snapshot(), serverAttribute);
-            template.AddComponent(new Metadata.Snapshot { EntityType = "ResourceManager" }, serverAttribute);
-            template.AddComponent(new ResourceManager.Snapshot(), serverAttribute);
-            template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
-            template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
-            return template;
-        }
     }
 }

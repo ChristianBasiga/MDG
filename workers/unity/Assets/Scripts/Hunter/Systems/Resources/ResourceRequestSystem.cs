@@ -32,9 +32,6 @@ namespace MDG.Hunter.Systems
             public Action<ResourceRequestReponse> callback;
         }
 
-
-        // Yeah, no this is terrible. God damnit.
-        // Best way is perhaps this.
         public struct ResourceRequestReponse
         {
             public bool Success;
@@ -52,11 +49,6 @@ namespace MDG.Hunter.Systems
         private long resourceManagerRequestId;
         private Queue<ResourceRequestHeader> pendingRequests;
         private Dictionary<ResourceRequestType, Dictionary<long, ResourceRequestHeader>> reqIdsToPayload;
-        private readonly EntityQuery resourceManagerGroup = new EntityQuery
-        {
-            Constraint = new ComponentConstraint(ResourceManager.ComponentId),
-            ResultType = new SnapshotResultType()
-        };
 
         protected override void OnCreate()
         {

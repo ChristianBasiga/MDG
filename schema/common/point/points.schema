@@ -10,8 +10,10 @@ type PointResponse{
     int32 total_points = 1;
 }
 
+
+// Point stuff will be ids 820-830
 component Point{
-    id = 807;
+    id = 821;
     int32 value = 1;
     command PointResponse update_points(PointRequest);
 }

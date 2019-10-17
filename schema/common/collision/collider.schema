@@ -1,0 +1,24 @@
+package mdg_schema.common.collision;
+// All common components be in 800 range.
+import "improbable/standard_library.schema";
+import "common/metadata.schema";
+enum ColliderType{
+    SPHERE = 1;
+    BOX = 2;
+}
+
+
+type CollisionEventPayload{
+    EntityId colliding_entity = 1;
+    list<EntityId> collided_with = 2;
+    GameEntityTypes type_of_entity = 3;
+    ColliderType collider_type = 4;
+}
+
+// collision componetns will be 850-870.
+component EntityCollider{
+    id = 850;
+    float radius = 1;
+    ColliderType collider_type = 2;
+    event CollisionEventPayload on_collision;
+}

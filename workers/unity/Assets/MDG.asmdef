@@ -12,8 +12,6 @@
         "Improbable.Gdk.GameObjectCreation",
         "Zenject",
         "Zenject-Editor",
-        "Zenject-PoolMonitor-Editor",
-        "Zenject-ReflectionBaking-Editor",
         "Unity.Transforms",
         "Unity.Transforms.Hybrid",
         "Unity.Transforms.PerformanceTests",

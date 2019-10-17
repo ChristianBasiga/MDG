@@ -14,6 +14,9 @@ using MDG.Hunter.Components;
 using MDG.Common.Systems;
 using MDG.Common.Components;
 using MDG.Logging;
+using PointSchema = MdgSchema.Common.Point;
+using MDG.Common.Systems.Point;
+using Improbable.Gdk.Subscriptions;
 
 namespace MDG.Hunter.Systems
 {
@@ -38,11 +41,16 @@ namespace MDG.Hunter.Systems
 
         private bool assignedJobHandle = false;
         private JobHandle collectJobHandle;
-        private List<CollectPayload> pendingCollects;
+        private NativeQueue<CollectPayload> pendingOccupy;
+        private NativeQueue<CollectPayload> pendingCollects;
+        private NativeQueue<CollectPayload> pendingReleases;
+
         private CommandSystem commandSystem;
+        private ResourceRequestSystem resourceRequestSystem;
         private ComponentUpdateSystem componentUpdateSystem;
         private WorkerSystem workerSystem;
         private Dictionary<EntityId, List<EntityId>> unitCollisionMappings;
+        private EntityQuery interruptedGroup;
         private EntityQuery enemyQuery;
         private EntityQuery friendlyQuery;
         public JobHandle CommandExecuteJobHandle { get; private set; }
@@ -85,14 +93,14 @@ namespace MDG.Hunter.Systems
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public float deltaTime;
             [WriteOnly]
-            public NativeQueue<CollectPayload>.ParallelWriter collectPayloads;
+            public NativeQueue<CollectPayload>.ParallelWriter occupyPayloads;
             public void Execute(Entity entity, int jobIndex, ref SpatialEntityId spatialEntityId, ref CollectCommand collectCommand, ref EntityTransform.Component entityTransform)
             {
                 float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
                 float distance = math.distance(collectCommand.destination, pos);
                 const float minDistance = 1.0f;
                 // When should I mark IsAtResource
-                if (!collectCommand.IsAtResource)
+                if (!collectCommand.IsCollecting && !collectCommand.IsAtResource)
                 {
                     if (distance < minDistance)
                     {
@@ -106,83 +114,148 @@ namespace MDG.Hunter.Systems
                 }
                 else
                 {
+                    // So once this happens, it will start sending collect requests form payload.
                     // For trigger animation.
+                    // Maybe could add transient components to better do these in sync.
+                    // TryingOccupy, TryingCollect, etc. For now it's fine just check isCollecting
+                    // Former thought would be cleanest.
+
                     collectCommand.IsCollecting = true;
                     // Otherwise we can begin collecting.
-                    collectPayloads.Enqueue(new CollectPayload { requestingOccupant = spatialEntityId.EntityId, resourceId = collectCommand.resourceId });
+                    occupyPayloads.Enqueue(new CollectPayload { requestingOccupant = spatialEntityId.EntityId, resourceId = collectCommand.resourceId });
                 }
             }
         }
-
-        
-        /// <summary>
-        /// Flow of collecting:
-        /// - Move to resource, job on the Unit
-        /// - Start collecting of resource, units should be set to collecting(trigger animation) and resource needs to know that it is occupied.
-        ///     - Maybe transfer from map and push to list that are done collecting. Or map of resource type.
-        ///     - Then another job loops through units, collect command, and inventory component. Then simply add an item of htat resource type.
-        ///     - Gotta figure out inventory for now, but that should work.
-        /// - Put resource into inventory.
-        /// - despawn resource.
-        /// 
-        /// </summary>
-
 
         protected override void OnCreate()
         {
             base.OnCreate();
-            pendingCollects = new List<CollectPayload>();
+            pendingCollects = new NativeQueue<CollectPayload>(Allocator.Persistent);
+            pendingOccupy = new NativeQueue<CollectPayload>(Allocator.Persistent);
             collectResponses = new NativeList<CollectResponse>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
+            resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
             unitCollisionMappings = new Dictionary<EntityId, List<EntityId>>();
+            interruptedGroup = GetEntityQuery(ComponentType.ReadOnly<CommandInterrupt>(), ComponentType.ReadOnly<SpatialEntityId>());
             enemyQuery = GetEntityQuery(ComponentType.ReadOnly<EnemyComponent>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
             friendlyQuery = GetEntityQuery(ComponentType.ReadOnly<CommandListener>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
         }
 
-        // Could do PostUpdate here, instead of jobifying.
-        // it is essentially in separate thread regardless just doesn't have burst benefits.
-        // If it becomes problem I'll translate it to that for now. Just update directly.
-        private void HandleCollectResponse(CollectResponse receivedResponse)
+        protected override void OnDestroy()
         {
-            // Then it is depleted.
-            if (receivedResponse.TimesUntilDepleted == 0)
-            {
-                if (workerSystem.TryGetEntity(receivedResponse.DepleterId.Value, out Entity entity))
-                {
-                    PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
-                }
-                // I mean this HAS to be true for us to get this response.
-                if (pendingCollects.Count > 0)
-                {
-                    foreach (CollectPayload collectPayload in pendingCollects)
-                    {
-                        // If not the depleter, then just interrupt their stuff without adding to inventory.
-                        if (!collectPayload.requestingOccupant.Equals(receivedResponse.DepleterId))
-                        {
-                            if (workerSystem.TryGetEntity(collectPayload.requestingOccupant, out Entity interruptedEntity))
-                            {
+            base.OnDestroy();
+            pendingCollects.Dispose();
+            pendingOccupy.Dispose();
+        }
 
-                                //Test this.
-                                PostUpdateCommands.RemoveComponent<CollectCommand>(interruptedEntity);
-                            }
-                        }
+        private void HandleCollectCommandResponse(ResourceRequestSystem.ResourceRequestReponse receivedResponse)
+        {
+            // Simplest way is let them continue to it, then send occupy request and simply fail that way instead of interrupting mid way
+            // otherwies would have to iterate past it.
+            if (receivedResponse.OccupyResponse.HasValue)
+            {
+                var occupyResponse = receivedResponse.OccupyResponse.Value;
+                if (occupyResponse.Occupied)
+                {
+                    // Need to re think this 
+                    // Add to collecting
+                    pendingCollects.Enqueue(new CollectPayload
+                    {
+                        requestingOccupant = occupyResponse.OccupantId,
+                        resourceId = occupyResponse.ResourceId,
+                    });
+                }
+                else if (occupyResponse.FullyOccupied)
+                {
+                    //Then remove component.
+                    if (workerSystem.TryGetEntity(occupyResponse.OccupantId, out Entity entity))
+                    {
+                        EntityManager entityManager = workerSystem.EntityManager;
+                        PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
                     }
                 }
-                // Along with this need to remove all CollectCommands that have this depleted resource as id.
-                // That has to be a job. List is stll needed.
             }
-            
-            // So then here adds to native list.
-            collectResponses.Add(receivedResponse);
+            else if (receivedResponse.CollectResponse.HasValue)
+            {
+                var collectResponse = receivedResponse.CollectResponse.Value;
+
+                if (collectResponse.TimesUntilDepleted == 0)
+                {
+                    if (collectResponse.DepleterId.HasValue)
+                    {
+                        // Irrelevant now since units no longer have inventory, but maybe down line
+                        // increase collect skill to increase rate or whatever.
+                        EntityId depleter = collectResponse.DepleterId.Value;
+
+                        if (depleter.Equals(collectResponse.OccupantId))
+                        {
+                            // Do something.
+                        }
+
+                    }
+                    if (workerSystem.TryGetEntity(collectResponse.OccupantId, out Entity entity))
+                    {
+                        EntityManager entityManager = workerSystem.EntityManager;
+                        PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
+
+                    }
+                    // Resource depleted so remove it.
+                }
+                else
+                {
+                    // Continue collecting.
+                    pendingCollects.Enqueue(new CollectPayload
+                    {
+                        requestingOccupant = collectResponse.OccupantId,
+                        resourceId = collectResponse.ResourceId,
+                    });
+                }
+
+                // Then add points to Invader.
+                if (receivedResponse.Success)
+                {
+                    // Get resource point value.
+                    if (workerSystem.TryGetEntity(collectResponse.ResourceId, out Entity entity))
+                    {
+                        EntityManager entityManager = workerSystem.EntityManager;
+                        PointSchema.PointMetadata.Component pointMetadata = entityManager.GetComponentData<PointSchema.PointMetadata.Component>(entity);
+                        // Replace this with getting from zenject store.
+                        GameObject invaderObject = GameObject.Find("Hunter_Spawned");
+                        PointRequestSystem pointRequestSystem = World.GetExistingSystem<PointRequestSystem>();
+                        pointRequestSystem.AddPointRequest(new MdgSchema.Common.Point.PointRequest
+                        {
+                            EntityUpdating = invaderObject.GetComponent<LinkedEntityComponent>().EntityId,
+                            PointUpdate = pointMetadata.StartingPoints
+                        });
+                    }
+                }
+            }
+            else if (receivedResponse.ReleaseResponse.HasValue)
+            {
+                var releaseResponse = receivedResponse.ReleaseResponse.Value;
+                if (receivedResponse.Success)
+                {
+                    if (workerSystem.TryGetEntity(releaseResponse.Occupant, out Entity entity))
+                    {
+                        PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
+                    }
+                }
+            }
         }
 
 
         protected override void OnUpdate()
         {
+            RunCommandJobs();
+            RunCommandRequests();
+            ProcessInterruptedCommands();
+        }
+
+        private void RunCommandJobs()
+        {
             float deltaTime = Time.deltaTime;
-            
             MoveCommandJob moveCommandJob = new MoveCommandJob
             {
                 deltaTime = deltaTime,
@@ -191,28 +264,68 @@ namespace MDG.Hunter.Systems
             };
             moveCommandJob.Schedule(this).Complete();
 
-            // Move to own function or even its own system and make a system group.
-
-            NativeQueue<CollectPayload> pendingCollects = new NativeQueue<CollectPayload>(Allocator.TempJob);
-
-            // Travel to resource jobs.
             MoveToResourceJob moveToResourceJob = new MoveToResourceJob
             {
                 deltaTime = deltaTime,
-                collectPayloads = pendingCollects.AsParallelWriter()
+                occupyPayloads = pendingOccupy.AsParallelWriter()
             };
             // For each pending collect, send Collect request.
             moveToResourceJob.Schedule(this).Complete();
+        }
 
-            // Could be a job I run every few frames since won't change or simply on create of this system.
-
-            //So instead of collect payload, maybe resourcerequestheader?
+        private void RunCommandRequests()
+        {
+            while (pendingOccupy.Count > 0)
+            {
+                var occupyPayload = pendingOccupy.Dequeue();
+                resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
+                {
+                    ResourceRequestType = ResourceRequestType.OCCUPY,
+                    OccupantId = occupyPayload.requestingOccupant,
+                    ResourceId = occupyPayload.resourceId,
+                    callback = HandleCollectCommandResponse,
+                });
+            }
             while (pendingCollects.Count > 0)
             {
                 var collectPayload = pendingCollects.Dequeue();
+                resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
+                {
+                    ResourceRequestType = ResourceRequestType.COLLECT,
+                    OccupantId = collectPayload.requestingOccupant,
+                    ResourceId = collectPayload.resourceId,
+                    callback = HandleCollectCommandResponse
+                });
             }
 
-            pendingCollects.Dispose();
+        }
+
+        // Main issue with this is that it's doing too much.
+        // Tbh, for stuff like animations, it should be diff system also acting on CommandInterrupt.
+        private void ProcessInterruptedCommands()
+        {
+           Entities.With(interruptedGroup).ForEach((Entity entity, ref SpatialEntityId spatialEntityId,  ref CommandInterrupt commandInterrupted) =>
+           {
+               switch (commandInterrupted.interrupting)
+               {
+                   // Fall through because I am treating everything as a 'resource' so units focusing on an enemy
+                   // are 'occupying' it. When unit is disarming a trap, it is 'occupying' the resource.
+                   // Collect in itself is very generic just 'health' but health could mean anything.
+                   case Commands.CommandType.Attack:
+                      
+                   case Commands.CommandType.Collect:
+                       resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
+                       {
+                           OccupantId = spatialEntityId.EntityId,
+                           ResourceId = commandInterrupted.target.Value,
+                           ResourceRequestType = ResourceRequestType.RELEASE
+                       });
+                       break;
+                   case Commands.CommandType.Move:
+                       // Animation, interrupt, etc.
+                       break;
+               }
+           });
         }
     }
 }

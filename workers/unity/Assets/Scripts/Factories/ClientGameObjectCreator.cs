@@ -10,17 +10,23 @@ using MdgSchema.Player;
 using MDG.Common.Components;
 using MDG.Hunter.Components;
 using MDG.Hunter.Commands;
+using UnitSchema = MdgSchema.Units;
 using MdgSchema.Spawners;
 using MdgSchema.Common;
 using Unity.Transforms;
 using Unity.Rendering;
 using MDG.Common.Systems;
+using UnitTemplates = MDG.Hunter.Unit;
 using SpawnSystems = MDG.Common.Systems.Spawn;
 using InvaderSystems =  MDG.Hunter.Systems;
-
+using MdgSchema.Units;
 
 namespace MDG
 {
+
+    // This needs to be updated to do multiple things.
+    // 
+
     /// <summary>
     /// This creates corresponding game object to entity, as well as adds any extra ECS components
     /// an entity needs. Perhaps ladder can be moved to different.
@@ -89,7 +95,6 @@ namespace MDG
             {
                 if (!entity.HasComponent<GameMetadata.Component>())
                 {
-                   
                     return;
                 }
                 GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
@@ -112,7 +117,8 @@ namespace MDG
                                 spawnReqSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                                 {
                                     TypeToSpawn = GameEntityTypes.Unit,
-                                    Position = initialUnitCoordinates[i]
+                                    Position = initialUnitCoordinates[i],
+                                    TypeId = (int)UnitTypes.WORKER
                                 });
                             }
                         }
@@ -152,26 +158,18 @@ namespace MDG
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 if (worker.TryGetEntity(entity.SpatialOSEntityId, out unitEntity))
                 {
-                    // Custom creator essentially just acting as entity creation call back.
-                    _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadWrite<Clickable>());
-                    if (hasAuthority)
-                    {
-                        pathToEntity = $"{pathToEntity}/Authoritative";
-                        _world.EntityManager.AddComponentData(unitEntity, new CommandListener { CommandType = CommandType.None });
-                    }
-                    else
-                    {
-                        _world.EntityManager.AddComponent(unitEntity, ComponentType.ReadOnly<EnemyComponent>());
-                    }
+                    UnitSchema.Unit.Component unitComponent = entity.GetComponent<UnitSchema.Unit.Component>();
+                    UnitTemplates.Archtypes.AddUnitArchtype(worker.EntityManager, unitEntity, hasAuthority, unitComponent.Type);
                 }
+                pathToEntity = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
                 pathToEntity = $"{pathToEntity}/Unit";
+
                 GameObject gameObject = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 gameObject.tag = "Unit";
                 gameObject.name = $"{gameObject.name} {(hasAuthority? "authoritative" : "")}";
             }
             else if (metaData.EntityType.Equals("Resource"))
             {
-                // Todo: Query resource component to determine which resource prefab.
                 pathToEntity = $"{pathToEntity}/Resource";
                 //GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
