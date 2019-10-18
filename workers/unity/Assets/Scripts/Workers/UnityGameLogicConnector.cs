@@ -58,7 +58,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<PointSystem>();
             Worker.World.GetOrCreateSystem<PositionSystem>();
-            //Worker.World.GetOrCreateSystem<CollisionDetectionSystem>();
+            Worker.World.GetOrCreateSystem<MDG.Common.Systems.Collision.CollisionDetectionSystem>();
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
         }
     }

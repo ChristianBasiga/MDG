@@ -41,25 +41,34 @@ namespace MDG.Common.Systems.Position
         public Vector3f RootDimensions { get; } = new Vector3f(100, 0, 100);
         public int RegionCapacity { get; } = 2;
 
-
-        
-        QuadTree quadTree;
+        QuadTree spatialPartitioning;
         // For batch updating tree.
         NativeQueue<UpdatePayload> updateQueue;
 
         Queue<EntityId> toPruneOff;
 
         readonly int shakesPerFrame;
-        
+
+
+        public int GetRegionCount()
+        {
+            return spatialPartitioning.GetNumberRegions();
+        }
+
         public List<QuadNode> querySpatialPartition(Vector3f position)
         {
-            return quadTree.FindEntities(position);
+            return spatialPartitioning.FindEntities(position);
+        }
+
+        public NativeList<QuadNode> querySpatialPartition(Vector3f position, Allocator allocator)
+        {
+            return spatialPartitioning.FindEntities(position, allocator);
         }
 
         // Returns collective region  that the entityId belongs to.
-        public QuadNode querySpatialPartition(EntityId entityId)
+        public QuadNode? querySpatialPartition(EntityId entityId)
         {
-            return quadTree.FindEntity(entityId);
+            return spatialPartitioning.FindEntity(entityId);
         }
         protected override void OnCreate()
         {
@@ -69,7 +78,7 @@ namespace MDG.Common.Systems.Position
             commandSystem = World.GetExistingSystem<CommandSystem>();
             entitySystem = World.GetExistingSystem<EntitySystem>();
             toPruneOff = new Queue<EntityId>();
-            quadTree = new QuadTree(RegionCapacity, RootDimensions, new Vector3f(RootDimensions.X / 2, 0, RootDimensions.Z / 2));
+            spatialPartitioning = new QuadTree(RegionCapacity, RootDimensions, new Vector3f(RootDimensions.X / 2, 0, RootDimensions.Z / 2));
             toAddToTreeQuery = GetEntityQuery(
                 ComponentType.ReadOnly<NewlyAddedSpatialOSEntity>(),
                 ComponentType.ReadOnly<EntityTransform.Component>(),
@@ -118,7 +127,7 @@ namespace MDG.Common.Systems.Position
                 }
             }
         }
-        /*
+        /* 
         struct UpdatePartitionJob : IJobParallelFor
         {
             [ReadOnly]
@@ -175,7 +184,7 @@ namespace MDG.Common.Systems.Position
         {
             Entities.With(toAddToTreeQuery).ForEach((ref SpatialEntityId spatialEntityId, ref EntityTransform.Component entityTransform) =>
             {
-                quadTree.Insert(spatialEntityId.EntityId, entityTransform.Position);
+                spatialPartitioning.Insert(spatialEntityId.EntityId, entityTransform.Position);
             });
         }
 
@@ -183,18 +192,15 @@ namespace MDG.Common.Systems.Position
         // over a couple frames is fine.
         private void UpdateEntitiesInTree()
         {
-            /*
+            
             // For each entityId to update, first check using the position to update to if still within region.
             while (updateQueue.IsCreated && updateQueue.TryDequeue(out UpdatePayload updatePayload))
             {
                 //And remove from last and insert in new.
-                quadTree.MoveEntity(updatePayload.EntityUpdating, updatePayload.NewPosition);
-            }*/
+                spatialPartitioning.MoveEntity(updatePayload.EntityUpdating, updatePayload.NewPosition);
+            }
             
         }
-
-
-        
 
         // Prunes tree of any entities in quad tree that are no longer active.
         // thus reducing size. Maybe down road will clean to close any subdivisions.
@@ -207,7 +213,7 @@ namespace MDG.Common.Systems.Position
             {
                 // For now it's fine, like this.
                 EntityId toRemove = toPruneOff.Dequeue();
-                quadTree.Remove(toRemove);
+                spatialPartitioning.Remove(toRemove);
                 shakesThisFrame += 1;
             }
         }

@@ -14,7 +14,7 @@ using Unity.Entities;
 using MDG.Common.Components;
 using MDG.Hunter.Components;
 using MdgSchema.Units;
-using MdgSchema.Common.Collision;
+using CollisionSchema = MdgSchema.Common.Collision;
 using MdgSchema.Common.Position;
 using MDG.DTO;
 
@@ -33,12 +33,17 @@ namespace MDG.Hunter.Unit
             template.AddComponent(new LinearVelocity.Snapshot { Velocity = Vector3f.Zero }, clientAttribute);
             template.AddComponent(new AngularVelocity.Snapshot { AngularVelocity = Vector3f.Zero }, clientAttribute);
 
-            // Actuall this is collider on entity, so position will always be unit position
-            // prob shouldn't track this here.
-            template.AddComponent(new EntityCollider.Snapshot {
-                Radius = 5.0f,
-                ColliderType = ColliderType.SPHERE
+            template.AddComponent(new CollisionSchema.Collision.Snapshot
+            {
+                Collisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>()
             }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                Position = spawnPositon,
+                Dimensions = new Vector3f(10, 0, 10)
+            }, serverAttribute);
+
 
             template.AddComponent(new UnitsSchema.Unit.Snapshot
             {

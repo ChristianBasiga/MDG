@@ -14,7 +14,7 @@ using MDG.Common.Datastructures;
 using Improbable;
 using Improbable.Gdk.Subscriptions;
 using MdgSchema.Common;
-
+using System.Linq;
 namespace PlaymodeTests
 {
     // These should be suites.
@@ -72,8 +72,9 @@ namespace PlaymodeTests
             yield return new WaitUntil(() => { return unitEntityId.IsValid(); });
             yield return new WaitForEndOfFrame();
 
-            QuadNode queryById = positionSystem.querySpatialPartition(unitEntityId);
-            Assert.NotNull(queryById, $"Entity id {unitEntityId} not added to spatial partition structure");
+            QuadNode? queryByIdPotential = positionSystem.querySpatialPartition(unitEntityId);
+            Assert.IsTrue(queryByIdPotential.HasValue, $"Entity id {unitEntityId} not added to spatial partition structure");
+            QuadNode queryById = queryByIdPotential.Value;
             Assert.AreEqual(queryById.position, payload.Position, $"Entity id {unitEntityId} not placed in correct position from id query.");
 
             List<QuadNode> queryByPosition = positionSystem.querySpatialPartition(payload.Position);
@@ -141,18 +142,19 @@ namespace PlaymodeTests
 
             // Assert on same regions per half.
             List<QuadNode> leftHalfQuery = positionSystem.querySpatialPartition(spawnedEntityToPayload[0].Position);
-            Assert.NotNull(leftHalfQuery.Find((QuadNode qn) =>
+            Assert.True(leftHalfQuery.Any((QuadNode qn) =>
             {
                 return qn.entityId.Equals(entityIds[0]);
             }), "Left Half region placed entities not grouped together. Not inserting correctly");
 
             List<QuadNode> rightHalfQuery = positionSystem.querySpatialPartition(spawnedEntityToPayload[2].Position);
-            Assert.NotNull(rightHalfQuery.Find((QuadNode qn) =>
+
+            Assert.True(rightHalfQuery.Any((QuadNode qn) =>
             {
                 return qn.entityId.Equals(entityIds[3]);
             }), "Right Half region placed entities not grouped together. Not inserting correctly");
 
-            Assert.IsNull(leftHalfQuery.Find((QuadNode qn) =>
+            Assert.False(leftHalfQuery.Any((QuadNode qn) =>
             {
                 return qn.entityId.Equals(entityIds[2]);
             }), "Left half placed and right half placed regions are grouped together. Not subdivided correctly");
