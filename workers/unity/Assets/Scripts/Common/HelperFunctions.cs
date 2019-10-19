@@ -34,9 +34,9 @@ namespace MDG.Common
         {
             return (
                     center1.X + dimensions1.X / 2 >= center2.X - dimensions2.X / 2
-                    || center1.Z + dimensions1.Z / 2 >= center2.Z - dimensions2.Z / 2
-                    || center1.X - dimensions1.X / 2 <= center2.X + dimensions2.X / 2
-                    || center1.Z - dimensions1.Z / 2 <= center2.Z + dimensions2.Z / 2
+                    && center1.Z + dimensions1.Z / 2 >= center2.Z - dimensions2.Z / 2
+                    && center1.X - dimensions1.X / 2 <= center2.X + dimensions2.X / 2
+                    && center1.Z - dimensions1.Z / 2 <= center2.Z + dimensions2.Z / 2
                 );
         }
     }

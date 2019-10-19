@@ -106,16 +106,17 @@ namespace MDG.Common.Systems.Collision
             {
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> currentCollisions = collisionComponent.Collisions;
                 List<QuadNode> potentialCollisions = positionSystem.querySpatialPartition(entityTransform.Position);
-
+                Debug.Log("I happen tho");
                 foreach (QuadNode potentialCollision in potentialCollisions)
                 {
 
                     workerSystem.TryGetEntity(potentialCollision.entityId, out Entity entity);
                     CollisionSchema.BoxCollider.Component otherBoxCollider = EntityManager.GetComponentData<CollisionSchema.BoxCollider.Component>(entity);
-
-                    if (HelperFunctions.Intersect( potentialCollision.position - otherBoxCollider.Position,  otherBoxCollider.Dimensions,
+                    Debug.Log("I happen");
+                    if (!potentialCollision.entityId.Equals(spatialEntityId.EntityId) && HelperFunctions.Intersect( potentialCollision.position - otherBoxCollider.Position,  otherBoxCollider.Dimensions,
                         entityTransform.Position - boxCollider.Position, boxCollider.Dimensions))
                     {
+                        Debug.Log("Ever intersects??");
                         currentCollisions[potentialCollision.entityId] = new CollisionSchema.CollisionPoint
                         {
                             CollidingWith = potentialCollision.entityId,

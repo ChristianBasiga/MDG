@@ -218,7 +218,6 @@ namespace PlaymodeTests
                 Assert.AreNotEqual(initialPos, updatedPosition, "Linear Velocity not applied to position");
                 Assert.AreEqual(initialPos + (linearVelocityApplied * thisFrameDelaTime), updatedPosition, "Linear Velocity not applied correctly");
             }
-           
         }
     }
 }

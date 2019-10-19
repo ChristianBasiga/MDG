@@ -162,7 +162,6 @@ namespace MDG.Common.Systems.Position
             };
             updatePartitionJob.Schedule(updateQueue.Length, 1).Complete();*/
 
-            Debug.Log("Running ApplyVelocityJob");
             #endregion
 
             #region Quad Tree operations

@@ -40,7 +40,7 @@ namespace MDG.Hunter.Unit
 
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {
-                Position = spawnPositon,
+                Position = new Vector3f(0,0,0),
                 Dimensions = new Vector3f(10, 0, 10)
             }, serverAttribute);
 
