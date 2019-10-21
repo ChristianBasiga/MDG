@@ -13,9 +13,7 @@ type CollisionPoint{
 // Will add vision too later.
 // Along with having event, will have state that is updated as well. Keeps acting upon collisions more flexible.
 type CollisionEventPayload{
-    EntityId colliding_entity = 1;
     map<EntityId, CollisionPoint> collided_with = 2;
-    GameEntityTypes type_of_entity = 3;
 }
 
 // This is component that is essentially the event payload but as a maintained state.

@@ -13,4 +13,5 @@ component BoxCollider{
     id = 862;
     improbable.Vector3f position = 1;
     improbable.Vector3f dimensions = 2;
+    bool is_trigger = 3;
 }

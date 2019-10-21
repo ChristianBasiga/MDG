@@ -9,6 +9,8 @@ using Improbable;
 using Improbable.Gdk.Core;
 using MdgSchema.Common;
 using PositionSchema = MdgSchema.Common.Position;
+using MDG.Common.Systems.Collision;
+
 namespace MDG.Common.Systems.Position
 {
     /// <summary>
@@ -18,6 +20,7 @@ namespace MDG.Common.Systems.Position
     /// </summary>
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
+    [UpdateBefore(typeof(CollisionDetectionSystem))]
     public class PositionSystem : ComponentSystem
     {
         struct UpdatePayload
@@ -103,6 +106,7 @@ namespace MDG.Common.Systems.Position
             base.OnDestroy();
         }
 
+        // Either here or on client side?? Clients have authority over velocity components so wuld be there.
 
         struct ApplyVelocityJob : IJobForEach<SpatialEntityId, PositionSchema.LinearVelocity.Component, PositionSchema.AngularVelocity.Component,
             EntityTransform.Component> {
@@ -165,7 +169,7 @@ namespace MDG.Common.Systems.Position
             #endregion
 
             #region Quad Tree operations
-            UpdateEntitiesInTree();
+           // UpdateEntitiesInTree();
             AddNewEntitiesToQuadTree();
             // Prepping shake queueing up entities removed this frame.
             List<EntityId> removedEntities = entitySystem.GetEntitiesRemoved();

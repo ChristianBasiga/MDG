@@ -75,7 +75,6 @@ namespace MDG
             Worker.World.GetOrCreateSystem<ResourceRequestSystem>();
             Worker.World.GetOrCreateSystem<ResourceMonitorSystem>();
 
-
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
             clientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, clientGameObjectCreator);

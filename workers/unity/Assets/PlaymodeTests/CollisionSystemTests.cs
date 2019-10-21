@@ -10,13 +10,14 @@ using UnityEngine.TestTools;
 using CollisionSchema = MdgSchema.Common.Collision;
 using CollisionSystems = MDG.Common.Systems.Collision;
 using SpawnSchema = MdgSchema.Common.Spawn;
+using PositionSchema = MdgSchema.Common.Position;
 using SpawnSystems = MDG.Common.Systems.Spawn;
 using PositionSystems = MDG.Common.Systems.Position;
 using MDG.Common.Datastructures;
 
 namespace PlaymodeTests
 {
-    public class CollisionSystemTests: IPrebuildSetup
+    public class CollisionSystemTests : IPrebuildSetup
     {
 
         GameObject clientWorker;
@@ -32,8 +33,8 @@ namespace PlaymodeTests
         }
 
         // This is enough.
-        [UnityTest]
-        public IEnumerator CollisionDetectionPasses()
+        [UnityTest, Order(901)]
+        public IEnumerator CollisionDetectionPreventsOverlap()
         {
             WorkerInWorld clientWorkerInWorld = null;
             yield return new WaitUntil(() =>
@@ -82,7 +83,7 @@ namespace PlaymodeTests
             EntityId secondSpawned = new EntityId(-1);
 
             // So it should be within the collider of first, barely at edge.
-            Vector3f secondPosition = firstPosition + boxCollider.Dimensions;
+            Vector3f secondPosition = firstPosition + new Vector3f(boxCollider.Dimensions.X * 2, 0, 0);
 
             spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
             {
@@ -97,7 +98,7 @@ namespace PlaymodeTests
             {
                 return secondSpawned.IsValid();
             });
-            
+
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
@@ -109,16 +110,36 @@ namespace PlaymodeTests
             Assert.IsTrue(region.FindIndex((QuadNode qn) =>
             {
                 return qn.entityId.Equals(secondSpawned);
-            }) != -1, "Entities not in same region" );
-
-
-
+            }) != -1, "Entities not in same region");
             workerSystem.TryGetEntity(secondSpawned, out Unity.Entities.Entity secondEntity);
+
+            workerSystem.EntityManager.SetComponentData(secondEntity, new PositionSchema.LinearVelocity.Component
+            {
+                Velocity = firstPosition - secondPosition
+            });
             CollisionSchema.Collision.Component firstCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(firstEntity);
             CollisionSchema.Collision.Component secondCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(secondEntity);
+            yield return new WaitUntil(() =>
+            {
+                secondCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(secondEntity);
+                firstCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(firstEntity);
+                return secondCollision.Collisions.ContainsKey(firstSpawned);
+            });
+            
+
             Assert.IsTrue(!firstCollision.Collisions.ContainsKey(firstSpawned), "Collides with self");
-            Assert.IsTrue(firstCollision.Collisions.ContainsKey(secondSpawned), "First entity does not register second entity colliding with it");
             Assert.IsTrue(secondCollision.Collisions.ContainsKey(firstSpawned), "Second entity does not register first entity colliding with it");
+            yield return new WaitUntil(() =>
+            {
+                secondCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(secondEntity);
+                firstCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(firstEntity);
+                return !secondCollision.Collisions.ContainsKey(firstSpawned);
+            });
+            firstCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(firstEntity);
+            secondCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(secondEntity);
+            Assert.IsFalse(firstCollision.Collisions.ContainsKey(secondSpawned), "First entity still collides with second");
+            Assert.IsFalse(secondCollision.Collisions.ContainsKey(firstSpawned), "Second entity still collides with first");
         }
+
     }
 }
