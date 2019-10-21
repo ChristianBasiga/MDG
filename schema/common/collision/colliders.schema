@@ -1,0 +1,17 @@
+package mdg_schema.common.collision;
+import "improbable/standard_library.schema";
+import "improbable/vector3.schema";
+
+
+// Will make seperate component for each kind.
+
+// Down line will do convex colliders better generalization but this sif ine for now.
+// will run jobs for each kind of collider in order. Or pass in 3 maps from each kind.
+
+
+component BoxCollider{
+    id = 862;
+    improbable.Vector3f position = 1;
+    improbable.Vector3f dimensions = 2;
+    bool is_trigger = 3;
+}

@@ -3,12 +3,13 @@ using Improbable.Gdk.Core;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using MDG.Common;
+using Unity.Collections;
 
 namespace MDG.Common.Datastructures
 {
 
-    public class QuadNode
+    public struct QuadNode
     {
         public EntityId entityId;
         public Vector3f position;
@@ -58,6 +59,33 @@ namespace MDG.Common.Datastructures
             entitiesInThisRegion = new Dictionary<EntityId, Vector3f>();
         }
 
+        public NativeList<QuadNode> FindEntities(Vector3f queryPosition, Allocator allocator)
+        {
+            List<QuadNode> normalSearch = FindEntities(queryPosition);
+            NativeList<QuadNode> quadNodes = new NativeList<QuadNode>(normalSearch.Count, allocator);
+            foreach (QuadNode quadNode in normalSearch)
+            {
+                quadNodes.Add(quadNode);
+            }
+            return quadNodes;
+        }
+
+        // Number of regions is number of children.
+        public int GetNumberRegions()
+        {
+            return (int)Mathf.Pow(4, GetLevel());
+        }
+
+        public int GetLevel()
+        {
+            if (northEast == null)
+            {
+                return 0;
+            }
+            return 1 + northEast.GetLevel();
+        }
+
+
         public List<QuadNode> FindEntities(Vector3f queryPosition)
         {
             List<QuadNode> entities = new List<QuadNode>();
@@ -92,7 +120,7 @@ namespace MDG.Common.Datastructures
             return entities;
         }
 
-        public QuadNode FindEntity(EntityId entityId)
+        public QuadNode? FindEntity(EntityId entityId)
         {
             QuadNode result = new QuadNode
             {
@@ -117,6 +145,23 @@ namespace MDG.Common.Datastructures
         {
             Remove(entityId, originalPosition);
             Insert(entityId, newPosition);
+        }
+
+        public void MoveEntity(EntityId entityId, Vector3f newPosition)
+        {
+            QuadNode? quadNode = FindEntity(entityId);
+
+            if (!quadNode.HasValue)
+            {
+                throw new System.Exception($"Entity id: {entityId} isn't in any region in spatial partition structure");
+            }
+
+
+            // See if new position would land within same region, if does no need for move.
+            if (!HelperFunctions.IsWithinRegion(quadNode.Value.center, quadNode.Value.dimensions, newPosition))
+            {
+                MoveEntity(entityId, quadNode.Value.position, newPosition);
+            }
         }
 
         public bool Insert(EntityId entityId, Vector3f position)
@@ -263,14 +308,11 @@ namespace MDG.Common.Datastructures
 
         private bool IsWithinRegion(Vector3f position)
         {
-            float width = dimensions.X;
-            float height = dimensions.Z;
-
-            return (position.X <= center.X + width / 2)
-                && (position.X >= center.X - width / 2)
-                && (position.Z <= center.Z + height / 2)
-                && (position.Z >= center.Z - height / 2);
+            return HelperFunctions.IsWithinRegion(center, dimensions, position);
         }
+
+        // MOve this to  helper function class later.
+        
         #endregion
     }
 }
