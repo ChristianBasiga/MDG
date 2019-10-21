@@ -10,6 +10,7 @@ using UnityEngine;
 using Unity.Rendering;
 using Improbable;
 using Unity.Entities;
+using MDG.Templates;
 using MDG.Common.Systems.Inventory;
 using MDG.Common.Systems.Spawn;
 using MDG.Common.Systems.Point;
@@ -54,7 +55,7 @@ namespace MDG
                 builder.SetConnectionFlow(new ReceptionistFlow(CreateNewWorkerId(WorkerType)));
             }
 
-            PlayerLifecycleConfig.CreatePlayerEntityTemplate = Player.Templates.CreatePlayerEntityTemplate;
+            PlayerLifecycleConfig.CreatePlayerEntityTemplate = PlayerTemplates.CreatePlayerEntityTemplate;
 
             await Connect(builder, new ForwardingDispatcher()).ConfigureAwait(false);
         }

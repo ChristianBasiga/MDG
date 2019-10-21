@@ -12,10 +12,15 @@ public class UnitMovementSynchronization : MonoBehaviour
 
     [Require] EntityTransformReader positionReader;
 
-
-    private void Update()
+    private void Start()
     {
-        transform.position = positionReader.Data.Position.ToUnityVector();
+        positionReader.OnPositionUpdate += PositionReader_OnPositionUpdate;
+        
+    }
+
+    private void PositionReader_OnPositionUpdate(Vector3f newPos)
+    {
+        transform.position = newPos.ToUnityVector();
     }
 
 }

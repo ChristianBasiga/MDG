@@ -18,9 +18,9 @@ using CollisionSchema = MdgSchema.Common.Collision;
 using MdgSchema.Common.Position;
 using MDG.DTO;
 
-namespace MDG.Hunter.Unit
+namespace MDG.Templates
 {
-    public class Templates
+    public class UnitTemplates
     {
         public static EntityTemplate GetUnitEntityTemplate(string workerId, UnitTypes unitType, Vector3f spawnPositon)
         {
@@ -41,7 +41,7 @@ namespace MDG.Hunter.Unit
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {
                 Position = new Vector3f(0,0,0),
-                Dimensions = new Vector3f(10, 0, 10)
+                Dimensions = new Vector3f(15, 0, 15)
             }, serverAttribute);
 
 
@@ -114,7 +114,7 @@ namespace MDG.Hunter.Unit
         {
             if (authoritative)
             {
-                entityManager.AddComponentData(entity, new CommandListener { CommandType = Commands.CommandType.None });
+                entityManager.AddComponentData(entity, new CommandListener { CommandType = MDG.Hunter.Commands.CommandType.None });
             }
             entityManager.AddComponent<Clickable>(entity);
         }

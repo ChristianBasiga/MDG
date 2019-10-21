@@ -41,8 +41,8 @@ namespace MDG.Common.Systems.Position
         CommandSystem commandSystem;
         EntityQuery toAddToTreeQuery;
         EntityQuery applyVelocityQuery;
-        public Vector3f RootDimensions { get; } = new Vector3f(100, 0, 100);
-        public int RegionCapacity { get; } = 2;
+        public Vector3f RootDimensions { get; } = new Vector3f(1000, 0, 1000);
+        public int RegionCapacity { get; } = 5;
 
         QuadTree spatialPartitioning;
         // For batch updating tree.
@@ -81,7 +81,7 @@ namespace MDG.Common.Systems.Position
             commandSystem = World.GetExistingSystem<CommandSystem>();
             entitySystem = World.GetExistingSystem<EntitySystem>();
             toPruneOff = new Queue<EntityId>();
-            spatialPartitioning = new QuadTree(RegionCapacity, RootDimensions, new Vector3f(RootDimensions.X / 2, 0, RootDimensions.Z / 2));
+            spatialPartitioning = new QuadTree(RegionCapacity, RootDimensions, new Vector3f(0,0,0));
             toAddToTreeQuery = GetEntityQuery(
                 ComponentType.ReadOnly<NewlyAddedSpatialOSEntity>(),
                 ComponentType.ReadOnly<EntityTransform.Component>(),
@@ -169,7 +169,7 @@ namespace MDG.Common.Systems.Position
             #endregion
 
             #region Quad Tree operations
-           // UpdateEntitiesInTree();
+            UpdateEntitiesInTree();
             AddNewEntitiesToQuadTree();
             // Prepping shake queueing up entities removed this frame.
             List<EntityId> removedEntities = entitySystem.GetEntitiesRemoved();
@@ -200,7 +200,14 @@ namespace MDG.Common.Systems.Position
             while (updateQueue.IsCreated && updateQueue.TryDequeue(out UpdatePayload updatePayload))
             {
                 //And remove from last and insert in new.
-                spatialPartitioning.MoveEntity(updatePayload.EntityUpdating, updatePayload.NewPosition);
+                try
+                {
+                    spatialPartitioning.MoveEntity(updatePayload.EntityUpdating, updatePayload.NewPosition);
+                }
+                catch (System.Exception error)
+                {
+                    Debug.Log(error);
+                }
             }
             
         }

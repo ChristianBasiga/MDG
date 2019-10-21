@@ -14,6 +14,7 @@ using MDG.Hunter.Components;
 using MDG.Common.Systems;
 using MDG.Common.Components;
 using MDG.Logging;
+using PositionSchema = MdgSchema.Common.Position;
 using PointSchema = MdgSchema.Common.Point;
 using MDG.Common.Systems.Point;
 using Improbable.Gdk.Subscriptions;
@@ -50,6 +51,7 @@ namespace MDG.Hunter.Systems
         private ComponentUpdateSystem componentUpdateSystem;
         private WorkerSystem workerSystem;
         private Dictionary<EntityId, List<EntityId>> unitCollisionMappings;
+        private EntityQuery applyingMoveCommandGroup;
         private EntityQuery interruptedGroup;
         private EntityQuery enemyQuery;
         private EntityQuery friendlyQuery;
@@ -58,25 +60,26 @@ namespace MDG.Hunter.Systems
         private NativeList<CollectResponse> collectResponses;
 
 
-        // For general reuse of move command job, maybe could have call back to be done?
-        // but callbacks aren't blittable.
-        public struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component>
+        public struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component, PositionSchema.LinearVelocity.Component>
         {
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public float deltaTime;
-            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref MoveCommand moveCommand, [ReadOnly] ref EntityTransform.Component entityTransform)
+            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref MoveCommand moveCommand, [ReadOnly] ref EntityTransform.Component entityTransform,
+                ref PositionSchema.LinearVelocity.Component linearVelocityComponent)
             {
                 float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
                 float distance = math.distance(moveCommand.destination, pos);
                 const float minDistance = 1.0f;
                 if (distance < minDistance)
                 {
+                    linearVelocityComponent.Velocity = Vector3f.Zero;
                     entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(MoveCommand));
                 }
                 else
                 {
-                    Vector3f destinationVector = new Vector3f(moveCommand.destination.x, moveCommand.destination.y, moveCommand.destination.z);
-                    entityTransform.Position = entityTransform.Position + (destinationVector - entityTransform.Position) * deltaTime;
+                    Vector3f direction = new Vector3f(moveCommand.destination.x, entityTransform.Position.Y, moveCommand.destination.z) - entityTransform.Position;
+                    //All commands overwrite any other effect on velocity
+                    linearVelocityComponent.Velocity = direction;
                 }
             }
         }
@@ -130,6 +133,15 @@ namespace MDG.Hunter.Systems
         protected override void OnCreate()
         {
             base.OnCreate();
+            applyingMoveCommandGroup = GetEntityQuery(
+                ComponentType.ReadOnly<CommandListener>(),
+                ComponentType.ReadWrite<PositionSchema.LinearVelocity.Component>(),
+                ComponentType.ReadOnly<PositionSchema.LinearVelocity.ComponentAuthority>(),
+                ComponentType.ReadOnly<MoveCommand>(),
+                ComponentType.ReadOnly<EntityTransform.Component>()
+                );
+            applyingMoveCommandGroup.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
+
             pendingCollects = new NativeQueue<CollectPayload>(Allocator.Persistent);
             pendingOccupy = new NativeQueue<CollectPayload>(Allocator.Persistent);
             collectResponses = new NativeList<CollectResponse>();
@@ -262,7 +274,7 @@ namespace MDG.Hunter.Systems
                 // Need to be able to get post update commands in client world in job component system.
                 entityCommandBuffer = PostUpdateCommands.ToConcurrent()
             };
-            moveCommandJob.Schedule(this).Complete();
+            moveCommandJob.Schedule(applyingMoveCommandGroup).Complete();
 
             MoveToResourceJob moveToResourceJob = new MoveToResourceJob
             {
@@ -322,7 +334,6 @@ namespace MDG.Hunter.Systems
                        });
                        break;
                    case Commands.CommandType.Move:
-                       // Animation, interrupt, etc.
                        break;
                }
            });

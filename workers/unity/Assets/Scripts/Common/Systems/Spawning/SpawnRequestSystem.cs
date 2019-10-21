@@ -9,6 +9,7 @@ using Improbable.Gdk.PlayerLifecycle;
 using MdgSchema.Common;
 using System;
 using MdgSchema.Units;
+using EntityTemplates = MDG.Templates;
 
 namespace MDG.Common.Systems.Spawn
 {
@@ -82,7 +83,7 @@ namespace MDG.Common.Systems.Spawn
                     case CommonSchema.GameEntityTypes.Unit:
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
-                                MDG.Hunter.Unit.Templates.GetUnitEntityTemplate(workerSystem.WorkerId, (UnitTypes)request.payload.TypeId, request.payload.Position)
+                                EntityTemplates.UnitTemplates.GetUnitEntityTemplate(workerSystem.WorkerId, (UnitTypes)request.payload.TypeId, request.payload.Position)
                               ));
                         break;
                     case CommonSchema.GameEntityTypes.Hunted:
@@ -101,7 +102,7 @@ namespace MDG.Common.Systems.Spawn
                     case CommonSchema.GameEntityTypes.Resource:
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
-                                MDG.Common.Templates.GetResourceTemplate()
+                                MDG.Templates.WorldTemplates.GetResourceTemplate()
                             ));
                         break;
                 }

@@ -51,7 +51,7 @@ namespace MDG.Editor
         }
         private static void AddResources(Snapshot snapshot)
         {
-            snapshot.AddEntity(MDG.Common.Templates.GetResourceTemplate());
+            snapshot.AddEntity(MDG.Templates.WorldTemplates.GetResourceTemplate());
         }
 
         private static void AddLobby(Snapshot snapshot)
