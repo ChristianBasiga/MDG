@@ -46,15 +46,20 @@ namespace MDG.Common.Systems.Collision {
             {
                 if (!boxCollider.IsTrigger && c1.Collisions.Count > 0)
                 {
-                    bool add = true;
+                    bool add = false;
                     foreach (var key in c1.Collisions.Keys)
                     {
                         // Check if velocity is tending same direction as distance to collision.
-                        // If it it's not, then don't undo the position update.
-                        float dotProduct = Vector3.Dot(linearVelocity.Velocity.ToUnityVector(), c1.Collisions[key].Distance.ToUnityVector());
-                        if (dotProduct < 1)
+                        // If it it's not, then don't undo the position update. Otherwise if does tend in same direction, then will contine collision.
+                        float dotProduct = Vector3.Dot(linearVelocity.Velocity.ToUnityVector().normalized, c1.Collisions[key].Distance.ToUnityVector().normalized);
+                        Debug.Log($"Normalized velocity {linearVelocity.Velocity.ToUnityVector().normalized}");
+                        Debug.Log($"Normalized distance {c1.Collisions[key].Distance.ToUnityVector().normalized}");
+
+                        Debug.Log($"dot product result {dotProduct}");
+                        if (dotProduct > 0)
                         {
-                            add = false;
+                            add = true;
+                            break;
                         }
                     }
                     if (add)
@@ -67,6 +72,8 @@ namespace MDG.Common.Systems.Collision {
 
         // If prior no velocity applied, then I give it velocity.
         // if has collisions it auto inverses it. but it should only do that if in same direction.
+        // Should they reroute always? that is client side job.
+        // So get OnCollisionEvent, apply angular velocity towards direction of collided with
         struct UndoPositionChangeJob : IJobForEach<SpatialEntityId, PositionSchema.LinearVelocity.Component, EntityTransform.Component>
         {
             public float deltaTime;

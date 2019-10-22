@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace MDG.Hunter.Monobehaviours
+namespace MDG.Invader.Monobehaviours
 {
     // Handles processing commands given by hunter.
     public class CommandController : MonoBehaviour

@@ -10,7 +10,7 @@ using Improbable;
 using Improbable.Gdk.PlayerLifecycle;
 using Unity.Mathematics;
 using MdgSchema.Game.Resource;
-using MDG.Hunter.Components;
+using MDG.Invader.Components;
 using MDG.Common.Systems;
 using MDG.Common.Components;
 using MDG.Logging;
@@ -19,7 +19,7 @@ using PointSchema = MdgSchema.Common.Point;
 using MDG.Common.Systems.Point;
 using Improbable.Gdk.Subscriptions;
 
-namespace MDG.Hunter.Systems
+namespace MDG.Invader.Systems
 {
     /// <summary>
     ///  This will be flow, swtich on meta data of command listener.

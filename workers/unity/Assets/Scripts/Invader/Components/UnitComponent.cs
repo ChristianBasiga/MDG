@@ -8,7 +8,7 @@ using Improbable;
 using Unity.Collections;
 using MdgSchema.Common;
 
-namespace MDG.Hunter.Components {
+namespace MDG.Invader.Components {
 
     
 

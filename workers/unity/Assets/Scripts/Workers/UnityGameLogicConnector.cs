@@ -9,7 +9,7 @@ using UnityEngine;
 using MdgSchema.Player;
 using MdgSchema.Lobby;
 
-using MDG.Hunter.Systems;
+using MDG.Invader.Systems;
 using MDG.Common.Systems;
 using MDG.Common.Systems.Inventory;
 using MDG.Common.Systems.Spawn;

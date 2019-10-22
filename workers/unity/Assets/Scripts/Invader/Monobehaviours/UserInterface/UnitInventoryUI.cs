@@ -8,7 +8,7 @@ using InventorySchema = MdgSchema.Common.Inventory;
 using MDG.Factories;
 using UnityEngine.UI;
 
-namespace MDG.Hunter.Monobehaviours
+namespace MDG.Invader.Monobehaviours
 {
    
     public class UnitInventoryUI : MonoBehaviour

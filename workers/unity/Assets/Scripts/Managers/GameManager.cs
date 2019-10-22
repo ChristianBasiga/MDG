@@ -4,7 +4,7 @@ using UnityEngine;
 using MdgSchema.Player;
 using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
-using MDG.Hunter.Systems;
+using MDG.Invader.Systems;
 using MDG.Common.Systems;
 
 using Improbable.Worker.CInterop.Query;

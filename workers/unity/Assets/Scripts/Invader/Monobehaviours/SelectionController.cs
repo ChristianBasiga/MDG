@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace MDG.Hunter.Monobehaviours
+namespace MDG.Invader.Monobehaviours
 {
     public class SelectionController : MonoBehaviour
     {

@@ -6,7 +6,7 @@ using Unity.Entities;
 using Improbable;
 using Unity.Rendering;
 
-namespace MDG.Hunter.Monobehaviours
+namespace MDG.Invader.Monobehaviours
 {
     public class CameraController : MonoBehaviour
     {

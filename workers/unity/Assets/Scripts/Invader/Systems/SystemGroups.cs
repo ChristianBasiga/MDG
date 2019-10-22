@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
 
-namespace MDG.Hunter.Systems
+namespace MDG.Invader.Systems
 {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]

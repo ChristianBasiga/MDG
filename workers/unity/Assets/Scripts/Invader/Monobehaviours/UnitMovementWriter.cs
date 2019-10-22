@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace MDG.Hunter.Monobehaviours
+namespace MDG.Invader.Monobehaviours
 {
     // Rename this to writer in general for updating stuff like animation playing, etc.
     //

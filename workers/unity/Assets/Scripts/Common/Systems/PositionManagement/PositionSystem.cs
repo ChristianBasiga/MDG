@@ -106,8 +106,6 @@ namespace MDG.Common.Systems.Position
             base.OnDestroy();
         }
 
-        // Either here or on client side?? Clients have authority over velocity components so wuld be there.
-
         struct ApplyVelocityJob : IJobForEach<SpatialEntityId, PositionSchema.LinearVelocity.Component, PositionSchema.AngularVelocity.Component,
             EntityTransform.Component> {
 
@@ -120,7 +118,7 @@ namespace MDG.Common.Systems.Position
                 ref EntityTransform.Component entityTransform)
             {
                 entityTransform.Position += linearVelocityComponent.Velocity * deltaTime;
-                entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;
+                entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;   
                 if (!linearVelocityComponent.Velocity.Equals(Vector3f.Zero))
                 {
                     updateQueue.Enqueue(new UpdatePayload

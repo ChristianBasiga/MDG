@@ -8,7 +8,7 @@ using Improbable.Gdk.Subscriptions;
 using InventorySchema = MdgSchema.Common.Inventory;
 using MDG.Factories;
 
-namespace MDG.Hunter.Monobehaviours
+namespace MDG.Invader.Monobehaviours
 {
     public class InvaderInventoryUI : MonoBehaviour
     {

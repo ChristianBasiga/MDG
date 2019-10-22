@@ -1,9 +1,9 @@
 ﻿using Unity.Entities;
-using MDG.Hunter.Commands;
+using MDG.Invader.Commands;
 using Improbable.Gdk.Core;
 using UnityEngine;
 
-namespace MDG.Hunter.Components
+namespace MDG.Invader.Components
 {
     public struct CommandListener : IComponentData
     {

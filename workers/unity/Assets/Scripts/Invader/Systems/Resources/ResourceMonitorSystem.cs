@@ -11,7 +11,7 @@ using Unity.Jobs;
 using MdgSchema.Common;
 using Unity.Collections;
 
-namespace MDG.Hunter.Systems
+namespace MDG.Invader.Systems
 {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]

@@ -1,6 +1,6 @@
 ﻿using Improbable.Gdk.Subscriptions;
-using MDG.Hunter.Components;
-using MDG.Hunter.Systems;
+using MDG.Invader.Components;
+using MDG.Invader.Systems;
 using MdgSchema.Common;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace MDG.Hunter.Monobehaviours {
+namespace MDG.Invader.Monobehaviours {
 
     public class HunterController : MonoBehaviour
     {

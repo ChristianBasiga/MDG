@@ -1,10 +1,10 @@
 ﻿using Unity.Entities;
 using Unity.Jobs;
 using Unity.Collections;
-using MDG.Hunter.Components;
+using MDG.Invader.Components;
 using MDG.Common.Components;
 using Improbable.Gdk.Core;
-using MDG.Hunter.Commands;
+using MDG.Invader.Commands;
 using log4net;
 using UnityEngine.Jobs;
 using MDG.Common.Systems;
@@ -14,7 +14,7 @@ using Unity.Mathematics;
 using MdgSchema.Units;
 using Improbable.Gdk.Subscriptions;
 
-namespace MDG.Hunter.Systems
+namespace MDG.Invader.Systems
 {
     // For hunter command givers.
     [DisableAutoCreation]

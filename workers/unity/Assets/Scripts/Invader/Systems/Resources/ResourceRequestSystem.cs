@@ -11,7 +11,7 @@ using System.Linq;
 using MDG.Common.Components;
 using System;
 
-namespace MDG.Hunter.Systems
+namespace MDG.Invader.Systems
 {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]

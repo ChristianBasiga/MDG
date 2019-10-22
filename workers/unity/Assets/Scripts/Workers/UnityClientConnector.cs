@@ -5,7 +5,7 @@ using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
 using MDG.Common.Systems;
-using MDG.Hunter.Systems;
+using MDG.Invader.Systems;
 using UnityEngine;
 using Unity.Rendering;
 using Improbable;

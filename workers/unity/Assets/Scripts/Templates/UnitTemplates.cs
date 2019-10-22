@@ -9,10 +9,10 @@ using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
 using InventorySchema = MdgSchema.Common.Inventory;
 using UnitsSchema = MdgSchema.Units;
-using UnitComponents = MDG.Hunter.Components;
+using UnitComponents = MDG.Invader.Components;
 using Unity.Entities;
 using MDG.Common.Components;
-using MDG.Hunter.Components;
+using MDG.Invader.Components;
 using MdgSchema.Units;
 using CollisionSchema = MdgSchema.Common.Collision;
 using MdgSchema.Common.Position;
@@ -114,7 +114,7 @@ namespace MDG.Templates
         {
             if (authoritative)
             {
-                entityManager.AddComponentData(entity, new CommandListener { CommandType = MDG.Hunter.Commands.CommandType.None });
+                entityManager.AddComponentData(entity, new CommandListener { CommandType = MDG.Invader.Commands.CommandType.None });
             }
             entityManager.AddComponent<Clickable>(entity);
         }

@@ -1,9 +1,9 @@
 ﻿using Improbable.Gdk.Core;
-using MDG.Hunter.Commands;
+using MDG.Invader.Commands;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace MDG.Hunter.Components
+namespace MDG.Invader.Components
 {
     //Add more to these as needed.
     public struct MoveCommand : IComponentData
