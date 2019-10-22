@@ -33,6 +33,11 @@ namespace MDG
     // Use zenject to install stuff here.
     public class ClientGameObjectCreator : IEntityGameObjectCreator
     {
+        public delegate void EntityChangeEventHandler(EntityId entityId);
+
+        // For others to know when thish happens.
+        public event EntityChangeEventHandler OnEntityAdded;
+        public event EntityChangeEventHandler OnEntityDeleted;
         // Storing here prob fine actually.
         public Dictionary<EntityId, List<GameObject>> EntityToGameObjects { private set; get; }
         // Get from pool down line.
@@ -179,12 +184,19 @@ namespace MDG
                 _default.OnEntityCreated(entity, linker);
                 return;
             }
+
+            OnEntityAdded?.Invoke(entity.SpatialOSEntityId);
         }
 
+        // Also needs to know about this when Units are deleted. Easieset is to just run qury.
+        // This might end up doing too much, but this could have ref to respective HUD
+        // then once one of these happens, checks if what was removed / added was unit and update accordingly.
+        // Feels like spaghetti tho.
         public void OnEntityRemoved(EntityId entityId)
         {
             _default.OnEntityRemoved(entityId);
             List<GameObject> linkedGameObjects;
+
             if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObjects))
             {
                 // Destroy GameObject represnting it and remove from mappings.
@@ -194,6 +206,7 @@ namespace MDG
                 }
             }
             EntityToGameObjects.Remove(entityId);
+            OnEntityDeleted?.Invoke(entityId);
         }
 
         GameObject CreateEntityObject(SpatialOSEntity entity, EntityGameObjectLinker linker, string pathToEntity, Transform parent = null, System.Type[] ecsComponents = null)
