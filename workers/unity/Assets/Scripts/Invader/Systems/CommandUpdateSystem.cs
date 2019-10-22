@@ -15,6 +15,7 @@ using MDG.Common.Systems;
 using MDG.Common.Components;
 using MDG.Logging;
 using PositionSchema = MdgSchema.Common.Position;
+using CollisionSchema = MdgSchema.Common.Collision;
 using PointSchema = MdgSchema.Common.Point;
 using MDG.Common.Systems.Point;
 using Improbable.Gdk.Subscriptions;
@@ -51,7 +52,7 @@ namespace MDG.Invader.Systems
         private ComponentUpdateSystem componentUpdateSystem;
         private WorkerSystem workerSystem;
         private Dictionary<EntityId, List<EntityId>> unitCollisionMappings;
-        private EntityQuery applyingMoveCommandGroup;
+        private ComponentType[] authVelocityGroup;
         private EntityQuery interruptedGroup;
         private EntityQuery enemyQuery;
         private EntityQuery friendlyQuery;
@@ -60,16 +61,17 @@ namespace MDG.Invader.Systems
         private NativeList<CollectResponse> collectResponses;
 
 
-        public struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component, PositionSchema.LinearVelocity.Component>
+        public struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component, PositionSchema.LinearVelocity.Component,
+            CollisionSchema.BoxCollider.Component>
         {
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public float deltaTime;
             public void Execute(Entity entity, int jobIndex, [ReadOnly] ref MoveCommand moveCommand, [ReadOnly] ref EntityTransform.Component entityTransform,
-                ref PositionSchema.LinearVelocity.Component linearVelocityComponent)
+                ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider)
             {
                 float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
                 float distance = math.distance(moveCommand.destination, pos);
-                const float minDistance = 1.0f;
+                float minDistance = boxCollider.Dimensions.ToUnityVector().magnitude;
                 if (distance < minDistance)
                 {
                     linearVelocityComponent.Velocity = Vector3f.Zero;
@@ -89,7 +91,9 @@ namespace MDG.Invader.Systems
         // then adds to map, for actual collecting to take place
         // but that's onl if has both. Which I could query on command meta data, but not as clean.
         // that will iterate on all resources.
-        public struct MoveToResourceJob : IJobForEachWithEntity<SpatialEntityId, CollectCommand, EntityTransform.Component>
+        // Update this to change velocity instead. How this rolls out needs to be reworked a little.
+        public struct MoveToResourceJob : IJobForEachWithEntity<SpatialEntityId, CollectCommand, EntityTransform.Component, 
+            PositionSchema.LinearVelocity.Component, CollisionSchema.BoxCollider.Component>
         {
             // There is chance that the resource moving to is gone before get there.
             // In that case collect command needs to removed on not just those ready to collect but on all.
@@ -97,22 +101,31 @@ namespace MDG.Invader.Systems
             public float deltaTime;
             [WriteOnly]
             public NativeQueue<CollectPayload>.ParallelWriter occupyPayloads;
-            public void Execute(Entity entity, int jobIndex, ref SpatialEntityId spatialEntityId, ref CollectCommand collectCommand, ref EntityTransform.Component entityTransform)
+
+            public void Execute(Entity entity, int jobIndex, ref SpatialEntityId spatialEntityId, ref CollectCommand collectCommand, 
+                ref EntityTransform.Component entityTransform, ref PositionSchema.LinearVelocity.Component linearVelocityComponent,
+                [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider)
             {
                 float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
                 float distance = math.distance(collectCommand.destination, pos);
-                const float minDistance = 1.0f;
+                // Min distance should take really take into account collider, for now I'll fudg vaue
+                // DOwn line pass in NativeArray of BoxCollider. to more accurate.
+                const float bufferRoom = 1.0f;
+                // Just magnitude prob fine, if all uniform, they won't be uniform though.
+                float minDistance = boxCollider.Dimensions.ToUnityVector().magnitude + bufferRoom;
                 // When should I mark IsAtResource
                 if (!collectCommand.IsCollecting && !collectCommand.IsAtResource)
                 {
                     if (distance < minDistance)
                     {
                         collectCommand.IsAtResource = true;
+                        linearVelocityComponent.Velocity = Vector3f.Zero;
                     }
                     else
                     {
-                        Vector3f destinationVector = new Vector3f(collectCommand.destination.x, collectCommand.destination.y, collectCommand.destination.z);
-                        entityTransform.Position = entityTransform.Position + (destinationVector - entityTransform.Position) * deltaTime;
+                        Vector3f direction = new Vector3f(collectCommand.destination.x, entityTransform.Position.Y, collectCommand.destination.z) - entityTransform.Position;
+                        //All commands overwrite any other effect on velocity
+                        linearVelocityComponent.Velocity = direction;
                     }
                 }
                 else
@@ -133,14 +146,17 @@ namespace MDG.Invader.Systems
         protected override void OnCreate()
         {
             base.OnCreate();
-            applyingMoveCommandGroup = GetEntityQuery(
+         
+            authVelocityGroup = new ComponentType[7]
+            {
                 ComponentType.ReadOnly<CommandListener>(),
                 ComponentType.ReadWrite<PositionSchema.LinearVelocity.Component>(),
                 ComponentType.ReadOnly<PositionSchema.LinearVelocity.ComponentAuthority>(),
-                ComponentType.ReadOnly<MoveCommand>(),
-                ComponentType.ReadOnly<EntityTransform.Component>()
-                );
-            applyingMoveCommandGroup.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
+                ComponentType.ReadOnly<EntityTransform.Component>(),
+                ComponentType.ReadOnly<CollisionSchema.BoxCollider.Component>(),
+                null,
+                null
+            };
 
             pendingCollects = new NativeQueue<CollectPayload>(Allocator.Persistent);
             pendingOccupy = new NativeQueue<CollectPayload>(Allocator.Persistent);
@@ -274,15 +290,25 @@ namespace MDG.Invader.Systems
                 // Need to be able to get post update commands in client world in job component system.
                 entityCommandBuffer = PostUpdateCommands.ToConcurrent()
             };
-            moveCommandJob.Schedule(applyingMoveCommandGroup).Complete();
+            authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<MoveCommand>();
+            EntityQueryDesc entityQueryDesc = new EntityQueryDesc
+            {
+                All = authVelocityGroup
+            };
+            EntityQuery entityQuery = GetEntityQuery(entityQueryDesc);
+            entityQuery.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
+            moveCommandJob.Schedule(entityQuery).Complete();
+            authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<CollectCommand>();
+            authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
 
             MoveToResourceJob moveToResourceJob = new MoveToResourceJob
             {
                 deltaTime = deltaTime,
                 occupyPayloads = pendingOccupy.AsParallelWriter()
             };
+            entityQuery = GetEntityQuery(entityQueryDesc);
             // For each pending collect, send Collect request.
-            moveToResourceJob.Schedule(this).Complete();
+            moveToResourceJob.Schedule(entityQuery).Complete();
         }
 
         private void RunCommandRequests()
