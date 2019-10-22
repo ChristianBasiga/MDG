@@ -11,13 +11,16 @@ using MdgSchema.Units;
 using MdgSchema.Common.Point;
 using MdgSchema.Game.Resource;
 using MdgSchema.Common.Spawn;
-
+using CollisionSchema = MdgSchema.Common.Collision;
 namespace MDG.Templates
 {
     public class WorldTemplates
     {
         // For now basic functionality it what I want. Worry about granular scheme of how I'll handle resources.
         // This first sprint is the true POC I should have had. Then build it greater.
+        // Since I'm going with route tht EVERYTHING is a resource, need to update template for getting resource.
+        // for now will keep as this for testing collect.
+        // Collect could also essentially be disarm
         public static EntityTemplate GetResourceTemplate()
         {
             // Replace this later with server worker that manges resource management.
@@ -34,7 +37,7 @@ namespace MDG.Templates
             }, serverAttribute);
             template.AddComponent(new Metadata.Snapshot { EntityType = "Resource" }, serverAttribute);
             template.AddComponent(new Persistence.Snapshot(), serverAttribute);
-
+            
             template.AddComponent(new ResourceMetadata.Snapshot {
                 MaximumOccupancy = 10,
                 Health = 10,
@@ -52,6 +55,18 @@ namespace MDG.Templates
             {
                 IdleGainRate = 0,
                 StartingPoints = 10
+            }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                Dimensions = new Vector3f(10, 0, 10),
+                IsTrigger = false,
+                Position = new Vector3f(0,0,0)
+            }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.Collision.Snapshot
+            {
+                Collisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>()
             }, serverAttribute);
 
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
