@@ -16,6 +16,9 @@ namespace MDG.Common.Systems.Spawn
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class RespawnMonitorSystem : ComponentSystem
     {
+        // This also needs event to update timer in UI before respawn happens.
+        // Can't reuse delay in spawn request as also does deletion at end of ticker.
+        // Can just query PendingRespawn for that actually.
         public struct RespawnPayload
         {
             public EntityId entityIdToDespawn;
@@ -53,8 +56,6 @@ namespace MDG.Common.Systems.Spawn
             queuedRespawns.Dispose();
         }
 
-        // Respawn should be on entity, but maybe process should be same? Hmm.
-        // I got too obsessed with job. When in reality, it should be deleted prior, or rather, hmm. dead state, not deleted.
         public struct TickPendingRespawnJob : IJobForEachWithEntity<SpatialEntityId, SpawnSchema.PendingRespawn.Component, CommonSchema.GameMetadata.Component>
         {
             public NativeQueue<RespawnPayload>.ParallelWriter queuedRespawns;
@@ -63,6 +64,7 @@ namespace MDG.Common.Systems.Spawn
             public void Execute(Unity.Entities.Entity entity, int index, [ReadOnly] ref SpatialEntityId spatialEntityId, 
                 ref SpawnSchema.PendingRespawn.Component pendingRespawn, ref CommonSchema.GameMetadata.Component gameMetaData)
             {
+
                 if (pendingRespawn.TimeTillRespawn > 0)
                 {
                     pendingRespawn.TimeTillRespawn = pendingRespawn.TimeTillRespawn - deltaTime;
@@ -107,7 +109,7 @@ namespace MDG.Common.Systems.Spawn
                 deltaTime = UnityEngine.Time.deltaTime
             };
 
-            tickPendingRespawnJob.Run(this);
+            tickPendingRespawnJob.Schedule(this).Complete();
             // Send spawn requsts.
             int respawnRequestsSent = 0;
             while (queuedRespawns.Count > 0 && respawnRequestsSent < maxRespawnsPerFrame)

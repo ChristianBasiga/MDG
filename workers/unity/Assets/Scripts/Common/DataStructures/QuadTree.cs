@@ -249,10 +249,6 @@ namespace MDG.Common.Datastructures
 
         private bool FindEntityUtil(EntityId id, QuadNode node)
         {
-            foreach(var key in entitiesInThisRegion.Keys)
-            {
-                Debug.Log("entry in spatial partition " + key);
-            }
             if (entitiesInThisRegion.TryGetValue(id, out Vector3f currPos))
             {
                 node.position = currPos;
