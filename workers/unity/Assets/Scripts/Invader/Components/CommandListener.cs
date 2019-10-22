@@ -2,6 +2,7 @@
 using MDG.Invader.Commands;
 using Improbable.Gdk.Core;
 using UnityEngine;
+using Improbable;
 
 namespace MDG.Invader.Components
 {
@@ -9,6 +10,6 @@ namespace MDG.Invader.Components
     {
         public CommandType CommandType;
         public EntityId TargetId;
-        public Vector3 TargetPosition;
+        public Vector3f TargetPosition;
     }
 }

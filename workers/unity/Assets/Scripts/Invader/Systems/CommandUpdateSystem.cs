@@ -19,6 +19,9 @@ using CollisionSchema = MdgSchema.Common.Collision;
 using PointSchema = MdgSchema.Common.Point;
 using MDG.Common.Systems.Point;
 using Improbable.Gdk.Subscriptions;
+using MDG.Common.Systems.Position;
+using MDG.Common.Datastructures;
+using MDG.Common;
 
 namespace MDG.Invader.Systems
 {
@@ -47,6 +50,7 @@ namespace MDG.Invader.Systems
         private NativeQueue<CollectPayload> pendingCollects;
         private NativeQueue<CollectPayload> pendingReleases;
 
+        private PositionSystem positionSystem;
         private CommandSystem commandSystem;
         private ResourceRequestSystem resourceRequestSystem;
         private ComponentUpdateSystem componentUpdateSystem;
@@ -70,7 +74,9 @@ namespace MDG.Invader.Systems
                 ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider)
             {
                 float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
-                float distance = math.distance(moveCommand.destination, pos);
+                Vector3f direction = moveCommand.destination - entityTransform.Position;
+
+                float distance = direction.ToUnityVector().magnitude;
                 float minDistance = boxCollider.Dimensions.ToUnityVector().magnitude;
                 if (distance < minDistance)
                 {
@@ -79,7 +85,6 @@ namespace MDG.Invader.Systems
                 }
                 else
                 {
-                    Vector3f direction = new Vector3f(moveCommand.destination.x, entityTransform.Position.Y, moveCommand.destination.z) - entityTransform.Position;
                     //All commands overwrite any other effect on velocity
                     linearVelocityComponent.Velocity = direction;
                 }
@@ -106,8 +111,7 @@ namespace MDG.Invader.Systems
                 ref EntityTransform.Component entityTransform, ref PositionSchema.LinearVelocity.Component linearVelocityComponent,
                 [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider)
             {
-                float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
-                float distance = math.distance(collectCommand.destination, pos);
+                Vector3f direction = collectCommand.destination - entityTransform.Position;
                 // Min distance should take really take into account collider, for now I'll fudg vaue
                 // DOwn line pass in NativeArray of BoxCollider. to more accurate.
                 const float bufferRoom = 1.0f;
@@ -116,6 +120,8 @@ namespace MDG.Invader.Systems
                 // When should I mark IsAtResource
                 if (!collectCommand.IsCollecting && !collectCommand.IsAtResource)
                 {
+                    float distance = direction.ToUnityVector().magnitude;
+
                     if (distance < minDistance)
                     {
                         collectCommand.IsAtResource = true;
@@ -123,8 +129,6 @@ namespace MDG.Invader.Systems
                     }
                     else
                     {
-                        Vector3f direction = new Vector3f(collectCommand.destination.x, entityTransform.Position.Y, collectCommand.destination.z) - entityTransform.Position;
-                        //All commands overwrite any other effect on velocity
                         linearVelocityComponent.Velocity = direction;
                     }
                 }
@@ -143,9 +147,22 @@ namespace MDG.Invader.Systems
             }
         }
 
+
+        public struct FindNearbyResourceJob : IJobParallelFor
+        {
+            [ReadOnly]
+            public NativeArray<QuadNode> potentialResources;
+
+            public void Execute(int index)
+            {
+                throw new System.NotImplementedException();
+            }
+        }
+
         protected override void OnCreate()
         {
             base.OnCreate();
+            
          
             authVelocityGroup = new ComponentType[7]
             {
@@ -161,10 +178,13 @@ namespace MDG.Invader.Systems
             pendingCollects = new NativeQueue<CollectPayload>(Allocator.Persistent);
             pendingOccupy = new NativeQueue<CollectPayload>(Allocator.Persistent);
             collectResponses = new NativeList<CollectResponse>();
+
             workerSystem = World.GetExistingSystem<WorkerSystem>();
+            positionSystem = World.GetExistingSystem<PositionSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
             resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
+
             unitCollisionMappings = new Dictionary<EntityId, List<EntityId>>();
             interruptedGroup = GetEntityQuery(ComponentType.ReadOnly<CommandInterrupt>(), ComponentType.ReadOnly<SpatialEntityId>());
             enemyQuery = GetEntityQuery(ComponentType.ReadOnly<EnemyComponent>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
@@ -226,10 +246,43 @@ namespace MDG.Invader.Systems
                     if (workerSystem.TryGetEntity(collectResponse.OccupantId, out Entity entity))
                     {
                         EntityManager entityManager = workerSystem.EntityManager;
-                        PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
 
+                        CollectCommand collectCommand = entityManager.GetComponentData<CollectCommand>(entity);
+
+                        List<QuadNode> quadNodes = positionSystem.querySpatialPartition(collectCommand.destination);
+
+                        CollectCommand? closestNewResource = null;
+                        float shortestDistance = float.PositiveInfinity;
+                        foreach (QuadNode quadNode in quadNodes)
+                        {
+                            if (workerSystem.TryGetEntity(quadNode.entityId, out Entity potentialResourceEntity))
+                            {
+                                if (entityManager.HasComponent<Resource.Component>(potentialResourceEntity))
+                                {
+                                    EntityTransform.Component resourceTransform = entityManager.GetComponentData<EntityTransform.Component>(potentialResourceEntity);
+
+                                    float currDistance = HelperFunctions.Distance(resourceTransform.Position, collectCommand.destination);
+                                    if ( currDistance < shortestDistance)
+                                    {
+                                        shortestDistance = currDistance;
+                                        closestNewResource = new CollectCommand
+                                        {
+                                            resourceId = quadNode.entityId,
+                                            destination = quadNode.position
+                                        };
+                                    }
+                                }
+                            }
+                        }
+                        if (closestNewResource.HasValue)
+                        {
+                            entityManager.SetComponentData(entity, closestNewResource.Value);
+                        }
+                        else
+                        {
+                            PostUpdateCommands.RemoveComponent<CollectCommand>(entity);
+                        }
                     }
-                    // Resource depleted so remove it.
                 }
                 else
                 {
@@ -245,6 +298,8 @@ namespace MDG.Invader.Systems
                 if (receivedResponse.Success)
                 {
                     // Get resource point value.
+                    // Adds points while collecting resource, should I just add only when deplete?
+                    // That's game design choice.
                     if (workerSystem.TryGetEntity(collectResponse.ResourceId, out Entity entity))
                     {
                         EntityManager entityManager = workerSystem.EntityManager;
@@ -252,10 +307,16 @@ namespace MDG.Invader.Systems
                         // Replace this with getting from zenject store.
                         GameObject invaderObject = GameObject.Find("Hunter_Spawned");
                         PointRequestSystem pointRequestSystem = World.GetExistingSystem<PointRequestSystem>();
+
+                        // Could I use call back here for something?
+                        // point update already an event itself, just incase will add log.
                         pointRequestSystem.AddPointRequest(new MdgSchema.Common.Point.PointRequest
                         {
                             EntityUpdating = invaderObject.GetComponent<LinkedEntityComponent>().EntityId,
                             PointUpdate = pointMetadata.StartingPoints
+                        }, (PointSchema.PointResponse pointResponse) =>
+                        {
+                            Debug.Log("Callback for added points returned");
                         });
                     }
                 }

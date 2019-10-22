@@ -13,6 +13,7 @@ using UnityEngine;
 using Unity.Mathematics;
 using MdgSchema.Units;
 using Improbable.Gdk.Subscriptions;
+using Improbable;
 
 namespace MDG.Invader.Systems
 {
@@ -42,7 +43,7 @@ namespace MDG.Invader.Systems
                 if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.y
                     && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.y)
                 {
-                    CommandListener command = new CommandListener { TargetId = spatialEntityId.EntityId, TargetPosition = entityTransform.Position.ToUnityVector() };
+                    CommandListener command = new CommandListener { TargetId = spatialEntityId.EntityId, TargetPosition = entityTransform.Position };
                     switch (gameMetadata.Type)
                     {
                         case GameEntityTypes.Resource:
@@ -135,7 +136,8 @@ namespace MDG.Invader.Systems
             // If right click did not overlap with any clickable, then it is a move command.
             if (commandMetadata.CommandType == CommandType.None)
             {
-                commandMetadata = new CommandListener { TargetPosition = mousePos, CommandType = CommandType.Move };
+                Vector3f convertedMousePos = new Vector3f(mousePos.x, mousePos.y, mousePos.z);
+                commandMetadata = new CommandListener { TargetPosition = convertedMousePos, CommandType = CommandType.Move };
             }
             CommandGiveJob commandGiveJob = new CommandGiveJob
             {

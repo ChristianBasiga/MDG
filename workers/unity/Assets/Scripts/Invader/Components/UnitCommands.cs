@@ -1,4 +1,5 @@
-﻿using Improbable.Gdk.Core;
+﻿using Improbable;
+using Improbable.Gdk.Core;
 using MDG.Invader.Commands;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -8,7 +9,7 @@ namespace MDG.Invader.Components
     //Add more to these as needed.
     public struct MoveCommand : IComponentData
     {
-        public float3 destination;
+        public Vector3f destination;
     }
 
     // Will get positon of target each time to follow.
@@ -21,7 +22,7 @@ namespace MDG.Invader.Components
     public struct CollectCommand : IComponentData
     {
         public EntityId resourceId;
-        public float3 destination;
+        public Vector3f destination;
         public bool IsAtResource;
         public bool IsCollecting;
         public bool GoingToResource;

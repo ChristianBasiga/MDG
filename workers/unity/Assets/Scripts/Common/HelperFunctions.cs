@@ -30,6 +30,11 @@ namespace MDG.Common
                 && (position.Z >= center.Z - height / 2);
         }
 
+        public static float Distance(Vector3f pos1, Vector3f pos2)
+        {
+            return (pos1 - pos2).ToUnityVector().magnitude;
+        }
+
         public static bool Intersect(Vector3f center1, Vector3f dimensions1, Vector3f center2, Vector3f dimensions2)
         {
             return (

@@ -11,9 +11,6 @@ namespace MDG.Common.Systems.Point
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]   
     public class PointRequestSystem : ComponentSystem
     {
-        // I should reserve these.
-        private EntityId pointWorkerId = new EntityId(4);
-
         public struct PointRequestPayload
         {
             public PointSchema.PointRequest payload;
