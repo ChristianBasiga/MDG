@@ -56,6 +56,7 @@ namespace MDG
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
             Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
+            Worker.World.GetOrCreateSystem<Game.GameStatusSystem>();
             Worker.World.GetOrCreateSystem<PointSystem>();
             Worker.World.GetOrCreateSystem<PositionSystem>();
             Worker.World.GetOrCreateSystem<MDG.Common.Systems.Collision.CollisionDetectionSystem>();

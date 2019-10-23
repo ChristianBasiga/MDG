@@ -95,6 +95,7 @@ namespace MDG
             string pathToEntity = $"Prefabs/{_workerType}";
             var hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
 
+            Debug.Log($"creating {metaData.EntityType}");
             if (metaData.EntityType.Equals("Player"))
             {
                 if (!entity.HasComponent<GameMetadata.Component>())
@@ -178,6 +179,11 @@ namespace MDG
                 //GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 created.tag = "Resource";
+            }
+            else if (metaData.EntityType.Equals("GameManager"))
+            {
+                pathToEntity = $"{pathToEntity}/GameManager";
+                GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
             }
             else
             {
