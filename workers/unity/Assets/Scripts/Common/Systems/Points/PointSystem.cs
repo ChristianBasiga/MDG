@@ -25,6 +25,8 @@ namespace MDG.Common.Systems.Point
         // I should reserve these.
         EntityId pointWorkerId = new EntityId(4);
 
+        float timeSinceIdleGain = 0;
+        float gainRateInterval = 1.0f;
       
         protected override void OnCreate()
         {
@@ -71,16 +73,24 @@ namespace MDG.Common.Systems.Point
                 }); 
             }
 
-            Entities.With(pointGroup).ForEach((ref SpatialEntityId spatialEntityId, ref PointSchema.PointMetadata.Component pointMetaData, ref PointSchema.Point.Component point) =>
+            if (timeSinceIdleGain <= 0)
             {
-                int totalGain = point.Value + pointMetaData.IdleGainRate;
-                if (idToPoints.TryGetValue(spatialEntityId.EntityId, out int points))
+                Entities.With(pointGroup).ForEach((ref SpatialEntityId spatialEntityId, ref PointSchema.PointMetadata.Component pointMetaData, ref PointSchema.Point.Component point) =>
                 {
-                    totalGain += points;
-                    idToPoints.Remove(spatialEntityId.EntityId);
-                }
-                point.Value = totalGain;
-            });
+                    int totalGain = point.Value + pointMetaData.IdleGainRate;
+                    if (idToPoints.TryGetValue(spatialEntityId.EntityId, out int points))
+                    {
+                        totalGain += points;
+                        idToPoints.Remove(spatialEntityId.EntityId);
+                    }
+                    point.Value = totalGain;
+                });
+                timeSinceIdleGain = gainRateInterval;
+            }
+            else
+            {
+                timeSinceIdleGain -= UnityEngine.Time.deltaTime;
+            }
         }
     }
 }
