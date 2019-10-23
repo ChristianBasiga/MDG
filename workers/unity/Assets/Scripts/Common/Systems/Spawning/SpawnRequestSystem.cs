@@ -7,8 +7,11 @@ using SpawnSchema = MdgSchema.Common.Spawn;
 using CommonSchema = MdgSchema.Common;
 using Improbable.Gdk.PlayerLifecycle;
 using MdgSchema.Common;
+using Unity.Collections;
+using Unity.Jobs;
 using System;
 using MdgSchema.Units;
+using EntityTemplates = MDG.Templates;
 
 namespace MDG.Common.Systems.Spawn
 {
@@ -17,19 +20,40 @@ namespace MDG.Common.Systems.Spawn
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class SpawnRequestSystem : ComponentSystem
     {
+        /* TO ADD HERE:
+        - Event for showing progress on building, needed for UI to show construction of building.
+        no need to show progress maybe, and can just make request, then while waiting for callback.
+        pop up build in progress UI.
+        - If add parameter for delay in spawning, could use that as progress
+        time plus amount of frames.
+        
+
+        */
         CommandSystem commandSystem;
         // Specialized system for linking player life cycle and heart beat tracking.
         SendCreatePlayerRequestSystem sendCreatePlayerRequestSystem;
         WorkerSystem workerSystem;
         Dictionary<long, SpawnRequestHeader> requestIdToPayload;
-        Queue<SpawnRequestPayload> spawnRequests;
-        public delegate void SpawnFulfilledCallback(EntityId spawned);
+
+
 
         public class SpawnRequestPayload
         {
             public SpawnSchema.SpawnRequest payload;
             public Action<EntityId> callback;
         }
+
+        public class SpawnRequestWithDelay
+        {
+            public SpawnRequestPayload requestPayload;
+            public float delay;
+        }
+
+        Queue<SpawnRequestPayload> spawnRequests;
+        // So flow is, add to here. Create native array each frame having delays in here.
+        // tick down in job, then update by index each one, checking which one to enqueue.
+        List<SpawnRequestWithDelay> tickingRequests;
+        public delegate void SpawnFulfilledCallback(EntityId spawned);
 
         public class SpawnRequestHeader
         {
@@ -40,6 +64,7 @@ namespace MDG.Common.Systems.Spawn
         protected override void OnCreate()
         {
             base.OnCreate();
+            tickingRequests = new List<SpawnRequestWithDelay>();
             spawnRequests = new Queue<SpawnRequestPayload>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
@@ -48,28 +73,92 @@ namespace MDG.Common.Systems.Spawn
             requestIdToPayload = new Dictionary<long, SpawnRequestHeader>();
         }
 
-        public void RequestSpawn(SpawnSchema.SpawnRequest spawnRequest, Action<EntityId> spawnFulfilledCallback = null)
+        public void RequestSpawn(SpawnSchema.SpawnRequest spawnRequest, Action<EntityId> spawnFulfilledCallback = null, float delay = 0)
         {
             var payload = new SpawnRequestPayload
             {
                 payload = spawnRequest,
-                callback = spawnFulfilledCallback
+                callback = spawnFulfilledCallback,
             };
-            spawnRequests.Enqueue(payload);
+            // Don't want to enqueue this, so need to put in other list first for ticking them, then 
+            // enqueue to this list afterwards. Maybe make this native queue to avoid extra iterations.
+            if (delay == 0)
+            {
+                spawnRequests.Enqueue(payload);
+            }
+            else
+            {
+                tickingRequests.Add(new SpawnRequestWithDelay {
+
+                    delay = delay,
+                    requestPayload = payload
+                });
+            }
+        }
+
+
+        struct TickSpawnDelayJob : IJobParallelFor
+        {
+            public NativeArray<float> times;
+            public NativeQueue<int>.ParallelWriter finishedTimes;
+            public float deltaTime;
+            public void Execute(int index)
+            {
+                times[index] -= deltaTime;
+                if (times[index] <= 0)
+                {
+                    finishedTimes.Enqueue(index);
+                }
+            }
         }
 
         protected override void OnUpdate()
         {
             try
             {
+                // Start tick job.
+                NativeArray<float> timesToTick = new NativeArray<float>(tickingRequests.Count, Allocator.TempJob);
+
+                for (int i = 0; i < tickingRequests.Count; ++i)
+                {
+                    timesToTick[i] = tickingRequests[i].delay;
+                }
+
+                NativeQueue<int> finishedTicks = new NativeQueue<int>(Allocator.TempJob);
+                float deltaTime = UnityEngine.Time.deltaTime;
+                TickSpawnDelayJob tickSpawnDelayJob = new TickSpawnDelayJob
+                {
+                    times = timesToTick,
+                    deltaTime = deltaTime,
+                    finishedTimes = finishedTicks.AsParallelWriter()
+                };
+                JobHandle scheduledTick = tickSpawnDelayJob.Schedule(tickingRequests.Count, 64);
+
+                // Process requets and responses while let tick run in parralel.
                 ProcessRequests();
                 ProcessResponses();
+
+
+                // Complete tick job if still running.
+                scheduledTick.Complete();
+                timesToTick.Dispose();
+
+                // Queue for spawning the finished ticking requests
+                while (finishedTicks.Count > 0)
+                {
+                    int finishedIndex = finishedTicks.Dequeue();
+                    spawnRequests.Enqueue(tickingRequests[finishedIndex].requestPayload);
+                    tickingRequests.RemoveAt(finishedIndex);
+                }
+                finishedTicks.Dispose();
             }
             catch (System.Exception exception)
             {
                 UnityEngine.Debug.Log(exception);
             }
         }
+
+
 
         private void ProcessRequests()
         {
@@ -82,7 +171,7 @@ namespace MDG.Common.Systems.Spawn
                     case CommonSchema.GameEntityTypes.Unit:
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
-                                MDG.Hunter.Unit.Templates.GetUnitEntityTemplate(workerSystem.WorkerId, (UnitTypes)request.payload.TypeId, request.payload.Position)
+                                EntityTemplates.UnitTemplates.GetUnitEntityTemplate(workerSystem.WorkerId, (UnitTypes)request.payload.TypeId, request.payload.Position)
                               ));
                         break;
                     case CommonSchema.GameEntityTypes.Hunted:
@@ -101,7 +190,7 @@ namespace MDG.Common.Systems.Spawn
                     case CommonSchema.GameEntityTypes.Resource:
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
-                                MDG.Common.Templates.GetResourceTemplate()
+                                MDG.Templates.WorldTemplates.GetResourceTemplate()
                             ));
                         break;
                 }
@@ -131,11 +220,16 @@ namespace MDG.Common.Systems.Spawn
                 ref readonly var response = ref creationResponses[i];
                 if (requestIdToPayload.TryGetValue(response.RequestId, out SpawnRequestHeader spawnRequestHeader))
                 {
+                    // Callbacks are good enough to notify direct requester.
+                    // but events would also be good. Hmm I mean if Invader side is one making the request
+                    // can update unit count accordingly. Former more general and expansive
+                    // but latter is enough.
                     switch (response.StatusCode)
                     {
                         // Remove from request mappings and send response back.
                         case StatusCode.Success:
-
+                            // This callback. Instead of sending  event further.
+                            // Could attach in callback the call to update hud would be cleanest.
                             spawnRequestHeader.requestInfo.callback?.Invoke(response.EntityId.Value);
                             requestIdToPayload.Remove(response.RequestId);
                             break;

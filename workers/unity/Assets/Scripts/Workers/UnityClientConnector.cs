@@ -5,11 +5,12 @@ using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
 using MDG.Common.Systems;
-using MDG.Hunter.Systems;
+using MDG.Invader.Systems;
 using UnityEngine;
 using Unity.Rendering;
 using Improbable;
 using Unity.Entities;
+using MDG.Templates;
 using MDG.Common.Systems.Inventory;
 using MDG.Common.Systems.Spawn;
 using MDG.Common.Systems.Point;
@@ -54,7 +55,7 @@ namespace MDG
                 builder.SetConnectionFlow(new ReceptionistFlow(CreateNewWorkerId(WorkerType)));
             }
 
-            PlayerLifecycleConfig.CreatePlayerEntityTemplate = Player.Templates.CreatePlayerEntityTemplate;
+            PlayerLifecycleConfig.CreatePlayerEntityTemplate = PlayerTemplates.CreatePlayerEntityTemplate;
 
             await Connect(builder, new ForwardingDispatcher()).ConfigureAwait(false);
         }
@@ -74,6 +75,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
             Worker.World.GetOrCreateSystem<ResourceRequestSystem>();
             Worker.World.GetOrCreateSystem<ResourceMonitorSystem>();
+            Worker.World.GetOrCreateSystem<UnitRerouteSystem>();
 
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
             clientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);

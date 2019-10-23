@@ -166,7 +166,7 @@ namespace MDG.Common.Datastructures
 
         public bool Insert(EntityId entityId, Vector3f position)
         {
-            Debug.Log($"Inserting {entityId} with position {position}");
+
             if (!IsWithinRegion(position))
             {
                 return false;
@@ -196,7 +196,6 @@ namespace MDG.Common.Datastructures
                     || southWest.Insert(entityId, position)
                     || southEast.Insert(entityId, position);
             }
-            Debug.Log($"Adding into this region with center {center.ToString()} and dimensions {dimensions.ToString()} ");
             entitiesInThisRegion.Add(entityId, position);
             return false;
         }

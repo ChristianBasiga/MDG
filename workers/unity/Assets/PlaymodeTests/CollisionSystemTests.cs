@@ -140,6 +140,13 @@ namespace PlaymodeTests
             Assert.IsFalse(firstCollision.Collisions.ContainsKey(secondSpawned), "First entity still collides with second");
             Assert.IsFalse(secondCollision.Collisions.ContainsKey(firstSpawned), "Second entity still collides with first");
         }
+        [UnityTest, Order(902)]
+        public IEnumerator DoReroute()
+        {
+
+            yield return null;
+        }
+
 
     }
 }

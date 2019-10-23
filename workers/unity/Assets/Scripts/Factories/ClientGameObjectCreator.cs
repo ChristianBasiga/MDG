@@ -8,16 +8,16 @@ using Unity.Entities;
 using Improbable;
 using MdgSchema.Player;
 using MDG.Common.Components;
-using MDG.Hunter.Components;
-using MDG.Hunter.Commands;
+using MDG.Invader.Components;
+using MDG.Invader.Commands;
 using UnitSchema = MdgSchema.Units;
 using MdgSchema.Common;
 using Unity.Transforms;
 using Unity.Rendering;
 using MDG.Common.Systems;
-using UnitTemplates = MDG.Hunter.Unit;
+using Templates = MDG.Templates;
 using SpawnSystems = MDG.Common.Systems.Spawn;
-using InvaderSystems =  MDG.Hunter.Systems;
+using InvaderSystems =  MDG.Invader.Systems;
 using MdgSchema.Units;
 
 namespace MDG
@@ -164,7 +164,7 @@ namespace MDG
                 if (worker.TryGetEntity(entity.SpatialOSEntityId, out unitEntity))
                 {
                     UnitSchema.Unit.Component unitComponent = entity.GetComponent<UnitSchema.Unit.Component>();
-                    UnitTemplates.Archtypes.AddUnitArchtype(worker.EntityManager, unitEntity, hasAuthority, unitComponent.Type);
+                    Templates.Archtypes.AddUnitArchtype(worker.EntityManager, unitEntity, hasAuthority, unitComponent.Type);
                 }
                 pathToEntity = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
                 pathToEntity = $"{pathToEntity}/Unit";

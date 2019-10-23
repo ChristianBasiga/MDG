@@ -11,9 +11,9 @@ using MdgSchema.Common;
 using InventorySchema = MdgSchema.Common.Inventory;
 using PointSchema = MdgSchema.Common.Point;
 
-namespace MDG.Player
+namespace MDG.Templates
 {
-    public class Templates
+    public class PlayerTemplates
     {
         public static EntityTemplate CreatePlayerEntityTemplate(string workerId, byte[] playerCreationArguments)
         {

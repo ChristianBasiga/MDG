@@ -37,17 +37,31 @@ namespace MDG.Common.Systems.Collision {
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
         }
 
-        struct GetCollisionsJob : IJobForEach<SpatialEntityId, CollisionSchema.Collision.Component, CollisionSchema.BoxCollider.Component>
+        struct GetCollisionsJob : IJobForEach<SpatialEntityId, CollisionSchema.Collision.Component, CollisionSchema.BoxCollider.Component, PositionSchema.LinearVelocity.Component>
         {
             [WriteOnly]
             public NativeHashMap<EntityId, bool>.ParallelWriter toReverse;
-            public void Execute([ReadOnly] ref SpatialEntityId c0, [ReadOnly] ref CollisionSchema.Collision.Component c1, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider)
+            public void Execute([ReadOnly] ref SpatialEntityId c0, [ReadOnly] ref CollisionSchema.Collision.Component c1, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider,
+                [ReadOnly] ref PositionSchema.LinearVelocity.Component linearVelocity)
             {
-                // Add check here for if collider is trigger.
-                // or make it it's own thing? Or add to query, physical component or something.
                 if (!boxCollider.IsTrigger && c1.Collisions.Count > 0)
                 {
-                    toReverse.TryAdd(c0.EntityId, true);
+                    bool add = false;
+                    foreach (var key in c1.Collisions.Keys)
+                    {
+                        // Check if velocity is tending same direction as distance to collision.
+                        // If it it's not, then don't undo the position update. Otherwise if does tend in same direction, then will contine collision.
+                        float dotProduct = Vector3.Dot(linearVelocity.Velocity.ToUnityVector().normalized, c1.Collisions[key].Distance.ToUnityVector().normalized);
+                        if (dotProduct > 0)
+                        {
+                            add = true;
+                            break;
+                        }
+                    }
+                    if (add)
+                    {
+                        toReverse.TryAdd(c0.EntityId, true);
+                    }
                 }
             }
         }
@@ -62,8 +76,7 @@ namespace MDG.Common.Systems.Collision {
             {
                 if (toReverse.TryGetValue(spatialEntityId.EntityId, out bool _))
                 {
-                    Debug.Log("Reversing applied velocity");
-                    entityTransformComponent.Position -= (velocityComponent.Velocity * deltaTime) * 2;
+                    entityTransformComponent.Position -= (velocityComponent.Velocity * deltaTime);
                 }
             }
         }
@@ -71,10 +84,6 @@ namespace MDG.Common.Systems.Collision {
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
             float deltaTime = Time.deltaTime;
-
-            if (toReverse.IsCreated)
-            {
-            }
             toReverse = new NativeHashMap<EntityId, bool>(authPosGroup.CalculateEntityCount(), Allocator.TempJob);
             GetCollisionsJob getCollisionsJob = new GetCollisionsJob
             {
@@ -92,62 +101,6 @@ namespace MDG.Common.Systems.Collision {
             undoPositionJobHandle = undoPositionChangeJob.Schedule(authPosGroup, inputDeps);
             undoPositionJobHandle.Complete();
             toReverse.Dispose();
-
-
-            /* Keeping here since not good use case not thinking rigt for this
-             * but perfect for soemthinf else in mind.
-            // Recieve events, then run jobs.
-            var eventsRecieved = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.OnCollision.Event>();
-
-            Queue<EntityId> idQueue = new Queue<EntityId>();
-            Queue<JobHandle> velocityUpdates = new Queue<JobHandle>();
-            LinkedList<NativeArray<Vector3f>> velocities = new LinkedList<NativeArray<Vector3f>>();
-            NativeHashMap<EntityId, Vector3f> entityIdToVelocity = new NativeHashMap<EntityId, Vector3f>(eventsRecieved.Count, Allocator.TempJob);
-            LinkedList<NativeList<CollisionSchema.CollisionPoint>> collisionPointsToDispose = new LinkedList<NativeList<CollisionSchema.CollisionPoint>>();
-
-            for (int i = 0; i < eventsRecieved.Count; i += 1)
-            {
-                ref readonly var eventRecieved = ref eventsRecieved[i];
-          
-                NativeList<CollisionSchema.CollisionPoint> collisionPoints = new NativeList<CollisionSchema.CollisionPoint>(eventRecieved.Event.Payload.CollidedWith.Count, Allocator.TempJob);
-
-                foreach(KeyValuePair<EntityId, CollisionSchema.CollisionPoint> keyValuePair in eventRecieved.Event.Payload.CollidedWith)
-                {
-                    collisionPoints.Add(keyValuePair.Value);
-                }
-                collisionPointsToDispose.AddLast(collisionPoints);
-
-                idQueue.Enqueue(eventRecieved.EntityId);
-                velocities.AddLast(new NativeArray<Vector3f>(1, Allocator.TempJob));
-
-                CalculateLinearVelocityBasedOnCollisionJob calculateLinearVelocityBasedOnCollisionJob = new CalculateLinearVelocityBasedOnCollisionJob
-                {
-                    collisions = collisionPointsToDispose.Last.Value,
-                    linearVelocity = velocities.Last.Value
-                };
-                velocityUpdates.Enqueue(calculateLinearVelocityBasedOnCollisionJob.Schedule(collisionPoints.Length, 64));
-            }
-
-            while (velocityUpdates.Count > 0)
-            {
-                JobHandle velocityUpdateJobHandle = velocityUpdates.Dequeue();
-                velocityUpdateJobHandle.Complete();
-                collisionPointsToDispose.First.Value.Dispose();
-                collisionPointsToDispose.RemoveFirst();
-                EntityId nextId = idQueue.Dequeue();
-                var updatedVelocity = velocities.First.Value;
-                velocities.RemoveFirst();
-                entityIdToVelocity.TryAdd(nextId, updatedVelocity[0]);
-                updatedVelocity.Dispose();
-            }
-
-            ApplyNewVelocity applyNewVelocityJob = new ApplyNewVelocity
-            {
-                entityIdToVelocity = entityIdToVelocity
-            };
-            applyNewVelocityJob.Schedule(authoritativeVelocityGroup).Complete();
-            entityIdToVelocity.Dispose();
-            */
             return undoPositionJobHandle;
         }
     }

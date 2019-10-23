@@ -6,7 +6,7 @@ using Improbable.Gdk.Subscriptions;
 using MDG;
 using MDG.ClientSide.UserInterface;
 using MDG.Common.Components;
-using MDG.Hunter.Components;
+using MDG.Invader.Components;
 using MdgSchema.Common;
 using MdgSchema.Units;
 using NUnit.Framework;

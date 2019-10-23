@@ -138,6 +138,11 @@ namespace MDG.Common.Systems.Collision
                             // Raise on leave event if was in previous collisions
                         }
                     }
+                   
+                }
+                if (newCollisions.Count > 0)
+                {
+                    Debug.Log("Sending events");
                     componentUpdateSystem.SendEvent(new CollisionSchema.Collision.OnCollision.Event(new CollisionSchema.CollisionEventPayload
                     {
                         CollidedWith = newCollisions
