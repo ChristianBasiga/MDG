@@ -10,6 +10,7 @@ using CollisionSchema = MdgSchema.Common.Collision;
 using Improbable;
 using MDG.Invader.Components;
 using MdgSchema.Common;
+using MDG.Common;
 
 namespace MDG.Invader.Systems
 {
@@ -34,7 +35,7 @@ namespace MDG.Invader.Systems
         }
 
         int framesSinceUpdate = 0;
-        int frameBuffer = 1;
+        int frameBuffer = 5;
 
 
         // Apply velocity towards actual destination over rerouted velocity.
@@ -78,25 +79,33 @@ namespace MDG.Invader.Systems
             [WriteOnly]
             public NativeQueue<Vector3f>.ParallelWriter potentialRoutes;
 
+
+
             [ReadOnly]
             public NativeArray<CollisionSchema.CollisionPoint> collisionPoints;
 
             public void Execute(int index)
             {
                 Vector3 collisionPointDistNormal = collisionPoints[index].Distance.ToUnityVector().normalized;
+               // CollisionSchema.BoxCollider.Component collider = colliders[index];
+
                 float magnitude = currentVelocity.ToUnityVector().magnitude;
                 float initialAngle = Mathf.Atan2(currentVelocity.Z, currentVelocity.X);
                 float deltaAngle = initialAngle;
                 float totalAngleIncrement = 0;
+                int incrementDirection = Vector3.Angle(currentVelocity.ToUnityVector(), collisionPoints[index].Distance.ToUnityVector()) > 0 ? 1 : -1;
+                Debug.Log($"Increment direction: {incrementDirection}");
+                int max = 360 * incrementDirection;
+
                 do
                 {
-                    totalAngleIncrement += 1.0f;
+                    totalAngleIncrement += incrementDirection;
                     Vector3f vectorToTryNormalized = new Vector3f(Mathf.Cos(initialAngle + totalAngleIncrement), 0, 
                         Mathf.Sin(initialAngle + totalAngleIncrement));
-                    Debug.Log("Vector positive radian direction " + vectorToTryNormalized);
                     // Check dot product to see if still tends to direction of this collision.
                     float dotProduct = Vector3.Dot(collisionPointDistNormal, vectorToTryNormalized.ToUnityVector());
-                   
+
+                    Debug.Log($"dot product in choosign reroute {dotProduct}");
                     // It works, but it's trying routes that will fail since only take into account
                     // point not size of colliders in reroute
                     if (dotProduct < 0)
@@ -104,20 +113,7 @@ namespace MDG.Invader.Systems
                         potentialRoutes.Enqueue(vectorToTryNormalized * magnitude);
                         break;
                     }
-                    vectorToTryNormalized.X = Mathf.Cos(initialAngle - totalAngleIncrement);
-                    vectorToTryNormalized.Z = Mathf.Sin(initialAngle - totalAngleIncrement);
-
-                    Debug.Log("Vector negative radian direction " + vectorToTryNormalized);
-
-                    dotProduct = Vector3.Dot(collisionPointDistNormal, vectorToTryNormalized.ToUnityVector());
-
-                    if (dotProduct < 0)
-                    {
-                        potentialRoutes.Enqueue(vectorToTryNormalized * magnitude);
-                        break;
-                    }
-
-                } while (totalAngleIncrement < 360);
+                } while (totalAngleIncrement < max);
             }
         }
 
@@ -125,7 +121,6 @@ namespace MDG.Invader.Systems
         protected override void OnCreate()
         {
             base.OnCreate();
-            Debug.Log("I happen tho right?");
             rerouteGroup = GetEntityQuery(
                 ComponentType.ReadOnly<EntityTransform.Component>(),
                 ComponentType.ReadWrite<RerouteComponent>(),
@@ -154,11 +149,9 @@ namespace MDG.Invader.Systems
             framesSinceUpdate += 1;
             if (framesSinceUpdate <= frameBuffer)
             {
-                Debug.Log("skipping");
-               // return;
+             //   return;
             }
             framesSinceUpdate = 0;
-            Debug.Log("Unit reroute system happening");
 
             #region Processing Collision Events
             var events = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.OnCollision.Event>();
@@ -168,7 +161,6 @@ namespace MDG.Invader.Systems
 
             for (int i = 0; i < events.Count; ++i)
             {
-                Debug.Log("Got events");
                 ref readonly var eventSent = ref events[i];
 
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> collidedWith = eventSent.Event.Payload.CollidedWith;
@@ -229,12 +221,6 @@ namespace MDG.Invader.Systems
                             collisionPoints[i].Distance.ToUnityVector().normalized);
                         if (dotProduct > 0.3f)
                         {
-                            // If meets this, check bounds, so essentially
-                            // see if this vector is within collider of collision poinst.
-                            CollisionSchema.BoxCollider.Component boxCollider = EntityManager.GetComponentData<CollisionSchema.BoxCollider.Component>(entity);
-                           
-                            // So compare potential route to see if ends up being inside boxCollider
-                            // of this collision. For now, final result ends up correct, so not worry about.
 
                             goodAgainstAll = false;
                             break;

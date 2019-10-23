@@ -77,7 +77,7 @@ namespace MDG.Invader.Systems
                 Vector3f direction = moveCommand.destination - entityTransform.Position;
 
                 float distance = direction.ToUnityVector().magnitude;
-                float minDistance = boxCollider.Dimensions.ToUnityVector().magnitude;
+                float minDistance = 1.0f;
                 if (distance < minDistance)
                 {
                     linearVelocityComponent.Velocity = Vector3f.Zero;

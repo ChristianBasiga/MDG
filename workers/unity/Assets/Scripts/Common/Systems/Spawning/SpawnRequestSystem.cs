@@ -64,6 +64,7 @@ namespace MDG.Common.Systems.Spawn
         protected override void OnCreate()
         {
             base.OnCreate();
+            tickingRequests = new List<SpawnRequestWithDelay>();
             spawnRequests = new Queue<SpawnRequestPayload>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();

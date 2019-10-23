@@ -118,6 +118,7 @@ namespace MDG.Common.Systems.Position
                 ref EntityTransform.Component entityTransform)
             {
                 entityTransform.Position += linearVelocityComponent.Velocity * deltaTime;
+                entityTransform.Position = new Vector3f(entityTransform.Position.X, 0, entityTransform.Position.Z);
                 entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;   
                 if (!linearVelocityComponent.Velocity.Equals(Vector3f.Zero))
                 {
