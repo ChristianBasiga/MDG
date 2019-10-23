@@ -28,10 +28,17 @@ namespace MDG.Editor
 
             AddPlayerSpawner(snapshot);
             AddSpawnManager(snapshot);
+            AddGameManager(snapshot);
             // If not do game launcher here, ma need to store lobby as scene in game.
             //down the line.
             // AddLobby(snapshot);
             return snapshot;
+        }
+
+        private static void AddGameManager(Snapshot snapshot)
+        {
+            // Okayyy, so.. Snapshot and game objects don't get along.
+            snapshot.AddEntity(Templates.GameTemplates.CreateGameManagerTemplate());
         }
 
         private static void AddSpawnManager(Snapshot snapshot)
