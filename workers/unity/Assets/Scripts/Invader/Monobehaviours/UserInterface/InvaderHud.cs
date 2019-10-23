@@ -14,8 +14,16 @@ namespace MDG.Invader.Monobehaviours
     public class InvaderHud : MonoBehaviour
     {
         [Require] PointReader pointReader;
-        Text numberOfUnits;
+        ComponentUpdateSystem componentUpdateSystem;
+
+        // Need to initialize these.
+        Text numberOfUnitsText;
         Text pointText;
+
+        // Time left should be a field of game status?
+        // Then can query game status via accessing component, to maintain keeping
+        // this pure.
+        Text timeLeft;
         EntityQuery unitQuery;
         void Start()
         {
@@ -25,11 +33,16 @@ namespace MDG.Invader.Monobehaviours
             unitQuery = linkedEntityComponent.Worker.EntityManager.CreateEntityQuery(
                 ComponentType.ReadOnly<Unit.Component>()
                 );
+
+            componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
+            numberOfUnitsText = GameObject.Find("UnitCountText").GetComponent<Text>();
+            pointText = GameObject.Find("PointText").GetComponent<Text>();
+
             UnityClientConnector unityClientConnector = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>();
             unityClientConnector.clientGameObjectCreator.OnEntityAdded += UpdateUnitCount;
             unityClientConnector.clientGameObjectCreator.OnEntityDeleted += UpdateUnitCount;
-        }
 
+        }
         private void UpdatePointText(int pointValue)
         {
             pointText.text = pointValue.ToString();
@@ -40,7 +53,7 @@ namespace MDG.Invader.Monobehaviours
         private void UpdateUnitCount(EntityId entityId)
         {
             int newUnitCount = unitQuery.CalculateEntityCount();
-            numberOfUnits.text = newUnitCount.ToString();
+            numberOfUnitsText.text = newUnitCount.ToString();
         }
     }
 }

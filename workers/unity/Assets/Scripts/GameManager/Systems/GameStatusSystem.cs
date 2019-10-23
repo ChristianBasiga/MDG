@@ -39,7 +39,7 @@ namespace MDG.Game
 
             if (startGameRequests.Count > 0)
             {
-                startedGame = true;
+                startedGame = true;     
                 workerSystem.TryGetEntity(new EntityId(3), out Unity.Entities.Entity gameManagerEntity);
                 // Strangely enough, snapshot setting this alo to 900 not working. Hmm
                 EntityManager.SetComponentData(gameManagerEntity, new GameSchema.GameStatus.Component
