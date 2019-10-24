@@ -1,6 +1,7 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
 using MDG;
+using MDG.Invader.Components;
 using MdgSchema.Common.Point;
 using MdgSchema.Units;
 using System.Collections;
@@ -16,14 +17,9 @@ namespace MDG.Invader.Monobehaviours
         [Require] PointReader pointReader;
         ComponentUpdateSystem componentUpdateSystem;
 
-        // Need to initialize these.
         Text numberOfUnitsText;
         Text pointText;
 
-        // Time left should be a field of game status?
-        // Then can query game status via accessing component, to maintain keeping
-        // this pure.
-        Text timeLeft;
         EntityQuery unitQuery;
         void Start()
         {
@@ -31,7 +27,8 @@ namespace MDG.Invader.Monobehaviours
             // Setup for updating unit count.
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             unitQuery = linkedEntityComponent.Worker.EntityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<Unit.Component>()
+                ComponentType.ReadOnly<Unit.Component>(),
+                ComponentType.ReadOnly<CommandListener>()
                 );
 
             componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
@@ -48,8 +45,6 @@ namespace MDG.Invader.Monobehaviours
             pointText.text = pointValue.ToString();
         }
 
-        // Just calculate entity count each time, should update without recreating query.
-        // Could only calculate count if the updated is of Unit type. But that's small change can make later.
         private void UpdateUnitCount(EntityId entityId)
         {
             int newUnitCount = unitQuery.CalculateEntityCount();

@@ -44,6 +44,30 @@ namespace MDG.Common
                     && center1.Z - dimensions1.Z / 2 <= center2.Z + dimensions2.Z / 2
                 );
         }
+
+
+        #region UI related helper functions.
+        public static IEnumerator UpdateHealthBar(UnityEngine.UI.Image healthbar, float pct, float timeToUpdate = 2.2f)
+        {
+            if (pct == healthbar.fillAmount)
+            {
+                yield return null;
+            }
+            {
+                float elapsed = 0;
+                float currPercentage = healthbar.fillAmount;
+
+                while (elapsed < timeToUpdate)
+                {
+                    elapsed += Time.deltaTime;
+                    healthbar.fillAmount = Mathf.Lerp(currPercentage, pct, elapsed / timeToUpdate);
+                    yield return null;
+                }
+                healthbar.fillAmount = pct;
+            }
+        }
+
+        #endregion
     }
 
 }
