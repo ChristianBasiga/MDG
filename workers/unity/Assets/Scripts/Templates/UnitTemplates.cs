@@ -17,6 +17,8 @@ using MdgSchema.Units;
 using CollisionSchema = MdgSchema.Common.Collision;
 using MdgSchema.Common.Position;
 using MDG.DTO;
+using SpawnSchema = MdgSchema.Common.Spawn;
+
 
 namespace MDG.Templates
 {
@@ -57,6 +59,18 @@ namespace MDG.Templates
                 case UnitsSchema.UnitTypes.TANK:
                     break;
             }
+
+            template.AddComponent(new SpawnSchema.RespawnMetadata.Snapshot
+            {
+                BaseRespawnPosition = Vector3f.Zero,
+                BaseRespawnTime = 60.0f
+            }, serverAttribute);
+
+            template.AddComponent(new SpawnSchema.PendingRespawn.Snapshot
+            {
+                RespawnActive = false,
+            }, serverAttribute);
+
 
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             template.AddComponent(new Position.Snapshot(), serverAttribute);

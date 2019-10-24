@@ -10,6 +10,7 @@ using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
 using InventorySchema = MdgSchema.Common.Inventory;
 using PointSchema = MdgSchema.Common.Point;
+using SpawnSchema = MdgSchema.Common.Spawn;
 
 namespace MDG.Templates
 {
@@ -31,8 +32,10 @@ namespace MDG.Templates
                 {
                     Type = creationArgs.playerType
                 }, serverAttribute);
-                template = creationArgs.playerType == GameEntityTypes.Hunter ? AddHunterComponents(template) : AddHunterComponents(template);
+                template = creationArgs.playerType == GameEntityTypes.Hunter ? AddInvaderComponents(clientAttribute,template) 
+                    : AddInvaderComponents(clientAttribute, template);
             }
+           
            
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
@@ -45,7 +48,7 @@ namespace MDG.Templates
             return template;
         }
 
-        private static EntityTemplate AddHunterComponents(EntityTemplate template)
+        private static EntityTemplate AddInvaderComponents(string clientAttribute, EntityTemplate template)
         {
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
@@ -69,9 +72,20 @@ namespace MDG.Templates
             return template;
         }
 
-        private static EntityTemplate AddDefenderComponents(EntityTemplate template)
+        private static EntityTemplate AddDefenderComponents(string clientAttribute, EntityTemplate template)
         {
             var serverAttribute = UnityGameLogicConnector.WorkerType;
+
+            template.AddComponent(new SpawnSchema.RespawnMetadata.Snapshot
+            {
+                BaseRespawnPosition = Vector3f.Zero,
+                BaseRespawnTime = 60.0f
+            }, serverAttribute);
+
+            template.AddComponent(new SpawnSchema.PendingRespawn.Snapshot
+            {
+                RespawnActive = false,
+            }, serverAttribute);
 
             template.AddComponent(new PointSchema.PointMetadata.Snapshot
             {

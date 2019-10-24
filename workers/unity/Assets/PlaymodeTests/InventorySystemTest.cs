@@ -33,7 +33,7 @@ namespace PlaymodeTests
 
             yield return new WaitUntil(() =>
             {
-                uiManager = GameObject.Find("UIManager");
+                uiManager = GameObject.Find("ClientWorker");
                 return uiManager != null;
 
             });

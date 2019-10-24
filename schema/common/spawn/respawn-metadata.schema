@@ -1,0 +1,9 @@
+package mdg_schema.common.spawn;
+import "improbable/vector3.schema";
+
+
+component RespawnMetadata{
+    id = 832;
+    float base_respawn_time = 1;
+    improbable.Vector3f base_respawn_position = 2;
+}

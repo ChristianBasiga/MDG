@@ -137,6 +137,7 @@ namespace MDG.Invader.Systems
         protected override void OnUpdate()
         {
             float deltaTime = Time.deltaTime;
+
             ResolveRerouteJob resolveRerouteJob = new ResolveRerouteJob
             {
                 deltaTime = deltaTime,
@@ -157,6 +158,7 @@ namespace MDG.Invader.Systems
             var events = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.OnCollision.Event>();
             Queue<ScheduleRedirectJobInfo> scheduledJobs = new Queue<ScheduleRedirectJobInfo>();
             Dictionary<EntityId, NativeQueue<Vector3f>> entityIdToPotentialRedirects = new Dictionary<EntityId, NativeQueue<Vector3f>>();
+            Queue<NativeQueue<Vector3f>> allPotentialReroutes = new Queue<NativeQueue<Vector3f>>();
             LinkedList<NativeArray<CollisionSchema.CollisionPoint>> toDispose = new LinkedList<NativeArray<CollisionSchema.CollisionPoint>>();
 
             for (int i = 0; i < events.Count; ++i)
@@ -166,7 +168,8 @@ namespace MDG.Invader.Systems
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> collidedWith = eventSent.Event.Payload.CollidedWith;
                 NativeArray<CollisionSchema.CollisionPoint> collisionPoints = new NativeArray<CollisionSchema.CollisionPoint>(collidedWith.Count, Allocator.TempJob);
                 int pointsAdded = 0;
-                entityIdToPotentialRedirects[eventSent.EntityId] = new NativeQueue<Vector3f>(Allocator.TempJob);
+                // Could make it a queue instead.
+                NativeQueue<Vector3f> potentialReroutes = new NativeQueue<Vector3f>(Allocator.TempJob);
                 // Perhaps some units have more specialized behaviour, will add as component later as need be.
                 // but this is basic behaviour needed for AI. Also No auto rerouting against traps unless notice them.
                 // colliding with those is interesting.
@@ -181,26 +184,27 @@ namespace MDG.Invader.Systems
                 {
                     collisionPoints = collisionPoints,
                     currentVelocity = linearVelocityComponent.Velocity,
-                    potentialRoutes = entityIdToPotentialRedirects[eventSent.EntityId].AsParallelWriter()
+                    potentialRoutes = potentialReroutes.AsParallelWriter()
                 };
                 toDispose.AddLast(collisionPoints);
 
                 ScheduleRedirectJobInfo scheduleRedirectJob = new ScheduleRedirectJobInfo
                 {
                     entityId = eventSent.EntityId,
-                    jobHandle = tryRerouteJob.Schedule(collisionPoints.Length, 32)
+                    jobHandle = tryRerouteJob.Schedule(collisionPoints.Length, 1)
                 };
+                allPotentialReroutes.Enqueue(potentialReroutes);
+               // scheduleRedirectJob.jobHandle.Complete();
                 scheduledJobs.Enqueue(scheduleRedirectJob);
             }
 
             while (scheduledJobs.Count > 0)
             {
-                ScheduleRedirectJobInfo scheduleRedirectJob = scheduledJobs.Dequeue();
-                scheduleRedirectJob.jobHandle.Complete();
+                ScheduleRedirectJobInfo scheduleRedirectJob = scheduledJobs.Peek();
 
+                scheduleRedirectJob.jobHandle.Complete();
                 // Right now thinking in terms of applying reroute as velocity, when in reality I want it sub destination.
-                NativeQueue<Vector3f> potentialReroutes = entityIdToPotentialRedirects[scheduleRedirectJob.entityId];
-                entityIdToPotentialRedirects.Remove(scheduleRedirectJob.entityId);
+                NativeQueue<Vector3f> potentialReroutes = allPotentialReroutes.Peek();
 
                 NativeArray<CollisionSchema.CollisionPoint> collisionPoints = toDispose.First.Value;
                 toDispose.RemoveFirst();
@@ -237,6 +241,9 @@ namespace MDG.Invader.Systems
                 }
                 potentialReroutes.Dispose();
                 collisionPoints.Dispose();
+
+                scheduledJobs.Dequeue();
+                allPotentialReroutes.Dequeue();
                 // If there was a valid redirect, add the redirect component, otherwise Unit cannot move.
                 // This will be non spatial component
                 if (rerouteVector.HasValue)

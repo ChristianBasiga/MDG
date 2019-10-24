@@ -27,7 +27,6 @@ namespace MDG
         {
             var connParams = CreateConnectionParameters(WorkerType);
             connParams.Network.ConnectionType = NetworkConnectionType.Kcp;
-            
             var builder = new SpatialOSConnectionHandlerBuilder()
                 .SetConnectionParameters(connParams);
 
@@ -62,11 +61,9 @@ namespace MDG
 
         protected override void HandleWorkerConnectionEstablished()
         {
-            
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
             Worker.World.GetOrCreateSystem<SpawnRequestSystem>();
-            Worker.World.GetOrCreateSystem<RespawnMonitorSystem>();
             Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
             Worker.World.GetOrCreateSystem<PointRequestSystem>();
             //Invader systems.

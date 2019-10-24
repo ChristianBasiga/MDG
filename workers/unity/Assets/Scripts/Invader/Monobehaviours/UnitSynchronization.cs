@@ -5,17 +5,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-
+using SpawnSchema = MdgSchema.Common.Spawn;
 //For non authoritative client Units to update position accordingly.
-public class UnitMovementSynchronization : MonoBehaviour
+public class UnitSynchronization : MonoBehaviour
 {
 
     [Require] EntityTransformReader positionReader;
+    [Require] SpawnSchema.PendingRespawnReader pendingRespawnReader;
 
     private void Start()
     {
         positionReader.OnPositionUpdate += PositionReader_OnPositionUpdate;
+        pendingRespawnReader.OnRespawnActiveUpdate += OnRespawnActiveChange;
         
+    }
+
+    private void OnRespawnActiveChange(bool respawning)
+    {
+        gameObject.SetActive(!respawning);
     }
 
     private void PositionReader_OnPositionUpdate(Vector3f newPos)

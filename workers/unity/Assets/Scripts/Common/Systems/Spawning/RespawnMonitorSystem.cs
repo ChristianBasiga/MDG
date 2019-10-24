@@ -12,13 +12,14 @@ using Improbable;
 
 namespace MDG.Common.Systems.Spawn
 {
+    // Shold make this sit in server instead.
+    // With that said, maybe not actually delete / create. Just request position change. Then mono
+    // can simply make it inactive for the moment by checking for pending respawn.
+
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class RespawnMonitorSystem : ComponentSystem
     {
-        // This also needs event to update timer in UI before respawn happens.
-        // Can't reuse delay in spawn request as also does deletion at end of ticker.
-        // Can just query PendingRespawn for that actually.
         public struct RespawnPayload
         {
             public EntityId entityIdToDespawn;
@@ -41,8 +42,14 @@ namespace MDG.Common.Systems.Spawn
             // Don't care about authority on this as noly really in client side.
             // Main reason spatialOS component is just to react to pending respawn with correct UI on each client side.
             pendingRespawnGroup = GetEntityQuery(
-                ComponentType.ReadOnly<SpawnSchema.PendingRespawn.Component>()
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadWrite<SpawnSchema.PendingRespawn.Component>(),
+                ComponentType.ReadOnly<SpawnSchema.PendingRespawn.ComponentAuthority>(),
+                ComponentType.ReadOnly<CommonSchema.GameMetadata.Component>()
             );
+            pendingRespawnGroup.SetFilter(SpawnSchema.PendingRespawn.ComponentAuthority.Authoritative);
+            pendingRespawnGroup.SetFilterChanged(ComponentType.ReadWrite<SpawnSchema.PendingRespawn.Component>());
+
             commandSystem = World.GetExistingSystem<CommandSystem>();
             spawnRequestSystem = World.GetExistingSystem<SpawnRequestSystem>();
             pendingRespawnRequests = new Dictionary<long, RespawnPayload>();
@@ -62,8 +69,9 @@ namespace MDG.Common.Systems.Spawn
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public float deltaTime;
             public void Execute(Unity.Entities.Entity entity, int index, [ReadOnly] ref SpatialEntityId spatialEntityId, 
-                ref SpawnSchema.PendingRespawn.Component pendingRespawn, ref CommonSchema.GameMetadata.Component gameMetaData)
+                ref SpawnSchema.PendingRespawn.Component pendingRespawn, [ReadOnly] ref CommonSchema.GameMetadata.Component gameMetaData)
             {
+                if (!pendingRespawn.RespawnActive) return;
 
                 if (pendingRespawn.TimeTillRespawn > 0)
                 {
@@ -71,6 +79,12 @@ namespace MDG.Common.Systems.Spawn
                 }
                 else
                 {
+
+                    UnityEngine.Debug.Log("Triggering respawn");
+
+                    // Triggers respawn.
+                    pendingRespawn.RespawnActive = false;
+
                     queuedRespawns.Enqueue(new RespawnPayload
                     {
                         entityIdToDespawn = spatialEntityId.EntityId,
@@ -78,7 +92,6 @@ namespace MDG.Common.Systems.Spawn
                         position = pendingRespawn.PositionToRespawn,
                         typeId = gameMetaData.TypeId
                     });
-                    entityCommandBuffer.RemoveComponent<SpawnSchema.PendingRespawn.Component>(index, entity);
                 }
             }
         }
@@ -87,20 +100,6 @@ namespace MDG.Common.Systems.Spawn
 
         protected override void OnUpdate()
         {
-            int respawnCount = pendingRespawnGroup.CalculateEntityCount();
-
-            if (respawnCount == 0)
-            {
-                return;
-            }
-
-            // Complete rest of unfinished respawns form last frame to keep things in sync.
-            while (queuedRespawns.Count > 0)
-            {
-                SendRespawnRequest();
-            }
-
-            // Might just make persisent and allow it to finish process over athe course of few frames instead of single frame.
 
             TickPendingRespawnJob tickPendingRespawnJob = new TickPendingRespawnJob
             {
@@ -109,17 +108,21 @@ namespace MDG.Common.Systems.Spawn
                 deltaTime = UnityEngine.Time.deltaTime
             };
 
-            tickPendingRespawnJob.Schedule(this).Complete();
+            tickPendingRespawnJob.Schedule(pendingRespawnGroup).Complete();
+
+            /*
             // Send spawn requsts.
             int respawnRequestsSent = 0;
             while (queuedRespawns.Count > 0 && respawnRequestsSent < maxRespawnsPerFrame)
             {
                 SendRespawnRequest();
                 respawnRequestsSent += 1;
-            }
+            }*/
         }
+        // Deprecated... Ahh refactor
         private void SendRespawnRequest()
         {
+            // This needs to change. Not deleting, simply set respawn active to false.
             if (queuedRespawns.TryDequeue(out RespawnPayload payload))
             {
                 var deleteEntityRequest = new WorldCommands.DeleteEntity.Request(payload.entityIdToDespawn);

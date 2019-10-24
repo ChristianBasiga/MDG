@@ -382,7 +382,7 @@ GameObject:
   - component: {fileID: 1239168726090287047}
   - component: {fileID: 1248523019526991339}
   - component: {fileID: 2116650204}
-  - component: {fileID: 1765887144393693405}
+  - component: {fileID: 4329414754885199901}
   m_Layer: 0
   m_Name: Unit
   m_TagString: Untagged
@@ -485,7 +485,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   InventoryPanel: {fileID: 676020363}
---- !u!114 &1765887144393693405
+--- !u!114 &4329414754885199901
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

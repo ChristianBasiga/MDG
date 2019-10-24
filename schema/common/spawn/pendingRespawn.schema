@@ -1,0 +1,12 @@
+package mdg_schema.common.spawn;
+import "improbable/vector3.schema";
+
+
+
+// Spawning will be 830-840
+component PendingRespawn {
+    id = 830;
+    bool respawn_active = 1;
+    float time_till_respawn = 2;
+    improbable.Vector3f position_to_respawn = 3;
+}
