@@ -15,6 +15,7 @@ using MDG.Common.Components;
 using MDG.Invader.Components;
 using MdgSchema.Units;
 using CollisionSchema = MdgSchema.Common.Collision;
+using StatSchema = MdgSchema.Common.Stats;
 using MdgSchema.Common.Position;
 using MDG.DTO;
 
@@ -83,7 +84,12 @@ namespace MDG.Templates
                 InventorySize = 6
             }, serverAttribute);
 
-            template.AddComponent(new Stats.Snapshot {
+            template.AddComponent(new StatSchema.StatsMetadata.Snapshot
+            {
+                Health = 5
+            }, serverAttribute);
+
+            template.AddComponent(new StatSchema.Stats.Snapshot {
                 Health = 5
             }
             , clientAttribute);
@@ -94,7 +100,8 @@ namespace MDG.Templates
         {
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
-            template.AddComponent(new Stats.Snapshot
+
+            template.AddComponent(new StatSchema.Stats.Snapshot
             {
                 Health = 10
             }

@@ -39,7 +39,7 @@ namespace MDG
         public event EntityChangeEventHandler OnEntityAdded;
         public event EntityChangeEventHandler OnEntityDeleted;
         // Storing here prob fine actually.
-        public Dictionary<EntityId, List<GameObject>> EntityToGameObjects { private set; get; }
+        public Dictionary<EntityId,GameObject> EntityToGameObjects { private set; get; }
         // Get from pool down line.
         private Dictionary<GameEntityTypes, Dictionary<bool, GameObject>> keyToPrefabs;
         private readonly IEntityGameObjectCreator _default;
@@ -82,7 +82,7 @@ namespace MDG
             this._default = _default;
             this._world = world;
             this._workerType = workerType;
-            EntityToGameObjects = new Dictionary<EntityId, List<GameObject>>();
+            EntityToGameObjects = new Dictionary<EntityId, GameObject>();
             ComponentUpdateSystem = _world.GetExistingSystem<ComponentUpdateSystem>();
             spawnReqSystem = _world.GetExistingSystem<SpawnSystems.SpawnRequestSystem>();
         }
@@ -201,15 +201,11 @@ namespace MDG
         public void OnEntityRemoved(EntityId entityId)
         {
             _default.OnEntityRemoved(entityId);
-            List<GameObject> linkedGameObjects;
+            GameObject linkedGameObject;
 
-            if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObjects))
+            if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObject))
             {
-                // Destroy GameObject represnting it and remove from mappings.
-                foreach (GameObject gameObject in linkedGameObjects)
-                {
-                    gameObject.SetActive(false);
-                }
+                linkedGameObject.SetActive(false);
             }
             EntityToGameObjects.Remove(entityId);
             OnEntityDeleted?.Invoke(entityId);
@@ -235,22 +231,17 @@ namespace MDG
                 linker.LinkGameObjectToSpatialOSEntity(entity.SpatialOSEntityId, gameObject);
             }
 
-            if (!EntityToGameObjects.ContainsKey(entity.SpatialOSEntityId))
-            {
-                EntityToGameObjects[entity.SpatialOSEntityId] = new List<GameObject>();
-            }
-
-            EntityToGameObjects[entity.SpatialOSEntityId].Add(gameObject);
+            EntityToGameObjects[entity.SpatialOSEntityId] = gameObject;
             return gameObject;
         }
 
-        public List<GameObject> GetLinkedGameObjectById(EntityId entityId)
+        public GameObject GetLinkedGameObjectById(EntityId entityId)
         {
-            List<GameObject> gameObjects;
-            if (!EntityToGameObjects.TryGetValue(entityId, out gameObjects))
+            GameObject linkedObject = null;
+            if (!EntityToGameObjects.TryGetValue(entityId, out linkedObject))
             {
             }
-            return gameObjects;
+            return linkedObject;
         }
     }
 }

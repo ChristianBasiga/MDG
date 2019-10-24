@@ -1,5 +1,5 @@
 // Should think about this more.    
-package mdg_schema.common;
+package mdg_schema.common.stats;
 type DamageRequest{
     int32 damage = 1;
     EntityId to_damage = 2;
