@@ -7,6 +7,8 @@ using CommonSchema = MdgSchema.Common;
 using UnityEngine.UI;
 using MDG.Common;
 using Improbable.Gdk.Core;
+using MdgSchema.Common;
+using Unity.Entities;
 
 namespace MDG.Common.MonoBehaviours
 {
@@ -14,42 +16,45 @@ namespace MDG.Common.MonoBehaviours
     public interface IStatPanel
     {
         void SetEntityTracking(EntityId entityId);
+        void Disable();
     }
 
     /// <summary>
     /// Panel that shows up upon clicking on a game entity with stats.
     /// </summary>
-    public class StatPanel : MonoBehaviour, IStatPanel
+    public class StatPanel : MonoBehaviour
     {
-        Image healthbar;
-
         Dictionary<CommonSchema.GameEntityTypes, IStatPanel> typeToPanel;
+        UnityClientConnector unityClientConnector;
 
-        //Other UI objects for stats, whatever.
+        IStatPanel active;
 
-        // Start is called before the first frame update
         void Start()
         {
+            // Getting to point injection is needed.
+            unityClientConnector = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>();
             typeToPanel = new Dictionary<CommonSchema.GameEntityTypes, IStatPanel>();
         }
 
-
         public void UpdatePanel(CommonSchema.GameEntityTypes gameEntityType, IStatPanel panel)
         {
-            // Do this tomorrow.
+            // Do this tomorrow
+            typeToPanel[gameEntityType] = panel;
         }
 
-        // So they click on entity, or whatever to see stats. All we do is pass in entityId of component
-        // from that we get the metadata, then from that we load in the specific stat panel.
-        // Then that specific stat panel queries all neccessarry data needed to fill out panel.
+        // Recursively sets entity tracking to panel matching metadata.
         public void SetEntityTracking(EntityId entityId)
         {
-            this.gameObject.SetActive(true);
-        }
-
-        public void SetPayload(StatSchema.Stats.Component currentStats, StatSchema.StatsMetadata.Component statMetaData)
-        {
-
+            if (active != null)
+            {
+                active.Disable();
+            }
+            WorkerSystem workerSystem = unityClientConnector.Worker.World.GetExistingSystem<WorkerSystem>();
+            workerSystem.TryGetEntity(entityId, out Entity entity);
+            GameMetadata.Component gameMetadataComponent = workerSystem.EntityManager.GetComponentData<GameMetadata.Component>(entity);
+            IStatPanel statPanel = typeToPanel[gameMetadataComponent.Type];
+            active = statPanel;
+            statPanel.SetEntityTracking(entityId);
         }
     }
 }

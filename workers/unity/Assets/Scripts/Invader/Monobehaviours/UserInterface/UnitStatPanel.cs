@@ -15,10 +15,8 @@ public class UnitStatPanel : MonoBehaviour, IStatPanel
     ClientGameObjectCreator clientGameObjectCreator;
     LinkedEntityComponent currentlyLinkedEntity;
     ComponentUpdateSystem componentUpdateSystem;
-    EntityManager entityManager;
     #region UI objects for this panel
     Image healthbar;
-
     #endregion
 
 
@@ -34,28 +32,22 @@ public class UnitStatPanel : MonoBehaviour, IStatPanel
         this.gameObject.SetActive(true);
         GameObject linkedObject = clientGameObjectCreator.GetLinkedGameObjectById(entityId);
         currentlyLinkedEntity = linkedObject.GetComponent<LinkedEntityComponent>();
-
         componentUpdateSystem = currentlyLinkedEntity.World.GetExistingSystem<ComponentUpdateSystem>();
-
-        // Attach to its synchronization component, or stat sync component. event to event.
-        // so either that, all extend from synchronization, then attach to those events.
-        // either that or every frame check for component updates
-        currentlyLinkedEntity.Worker.TryGetEntity(entityId, out Entity entity);
-        entityManager = currentlyLinkedEntity.World.EntityManager;
-
-        // Then extract needed data to dislay
     }
 
     private void Update()
     {
-        var statComponentUpdates = componentUpdateSystem.GetEntityComponentUpdatesReceived<StatSchema.Stats.Update>(currentlyLinkedEntity.EntityId);
-        if (statComponentUpdates.Count > 0)
+        if (gameObject.activeInHierarchy)
         {
-            ref readonly var update = ref statComponentUpdates[0];
+            var statComponentUpdates = componentUpdateSystem.GetEntityComponentUpdatesReceived<StatSchema.Stats.Update>(currentlyLinkedEntity.EntityId);
+            if (statComponentUpdates.Count > 0)
+            {
+                ref readonly var update = ref statComponentUpdates[0];
 
-            UpdateHealthUI(update.Update.Health);
-            // Other updates
+                UpdateHealthUI(update.Update.Health);
+                // Other updates
 
+            }
         }
     }
 
@@ -63,10 +55,14 @@ public class UnitStatPanel : MonoBehaviour, IStatPanel
     {
         currentlyLinkedEntity.Worker.TryGetEntity(currentlyLinkedEntity.EntityId, out Entity entity);
 
-        StatSchema.StatsMetadata.Component statsMetadata = entityManager.GetComponentData<StatSchema.StatsMetadata.Component>(entity);
+        StatSchema.StatsMetadata.Component statsMetadata = componentUpdateSystem.EntityManager.GetComponentData<StatSchema.StatsMetadata.Component>(entity);
 
         float percentageHealth = newHealth / (float)statsMetadata.Health;
         StartCoroutine(HelperFunctions.UpdateHealthBar(healthbar, percentageHealth));
     }
 
+    public void Disable()
+    {
+        this.gameObject.SetActive(false);
+    }
 }
