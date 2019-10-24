@@ -30,15 +30,38 @@ namespace PlaymodeTests
 
         public void Setup()
         {
-            clientWorker = new GameObject("ClientWorker");
+          /*  clientWorker = new GameObject("ClientWorker");
             clientWorker.AddComponent<UnityClientConnector>();
 
             serverWorker = new GameObject("GameLogicWorker");
             serverWorker.AddComponent<UnityGameLogicConnector>();
-
+            */
         }
 
-        [UnityTest, Order(40)]
+        [UnityTest, Order(1)]
+        public IEnumerator SceneValidation()
+        {
+            SceneManager.LoadScene("DevelopmentScene");
+            GameObject uiManager = null;
+
+            yield return new WaitUntil(() =>
+            {
+                uiManager = GameObject.Find("ClientWorker");
+                return uiManager != null;
+
+            });
+            yield return new WaitForSeconds(2.0f);
+            /*
+            uiManager.GetComponent<UIManager>().SelectRole("Hunter");
+            yield return new WaitUntil(() =>
+            {
+                return GameObject.Find("Hunter_Spawned") != null && GameObject.FindGameObjectWithTag("Unit") != null;
+            });
+            linkedEntityComponent = GameObject.FindGameObjectWithTag("Unit").GetComponent<LinkedEntityComponent>();
+            */
+        }
+
+        [UnityTest, Order(2)]
         public IEnumerator SpawnInvaderTest()
         {
             WorkerInWorld workerInWorld = null;
@@ -68,7 +91,8 @@ namespace PlaymodeTests
             Assert.True(GameObject.FindGameObjectsWithTag("Unit").Length == 3, "Initial Invader units failed to spawn");
         }
 
-        [UnityTest, Order(41)]
+
+        [UnityTest, Order(3)]
         public IEnumerator SpawnAuthoritativeUnitTest()
         {
             WorkerInWorld workerInWorld = null;
@@ -115,7 +139,7 @@ namespace PlaymodeTests
             }
         }
 
-        [UnityTest, Order(42)]
+        [UnityTest, Order(4)]
         public IEnumerator RespawnTest()
         {
 
@@ -132,19 +156,22 @@ namespace PlaymodeTests
             });
 
             workerSystem = clientWorker.GetComponent<UnityClientConnector>().Worker.World.GetExistingSystem<WorkerSystem>();
-
-            if (workerSystem.TryGetEntity(linkedUnit.EntityId, out Entity entity))
+            serverWorker = GameObject.Find("GameLogicWorker");
+            WorkerSystem serverWorkerSystem = serverWorker.GetComponent<UnityGameLogicConnector>().Worker.World.GetExistingSystem<WorkerSystem>();
+            if (serverWorkerSystem.TryGetEntity(linkedUnit.EntityId, out Unity.Entities.Entity entity))
             {
-                workerSystem.EntityManager.AddComponentData(entity, new SpawnSchema.PendingRespawn.Component
+                serverWorkerSystem.EntityManager.SetComponentData(entity, new SpawnSchema.PendingRespawn.Component
                 {
+                    RespawnActive = true,
                     PositionToRespawn = respawnPosition,
                     TimeTillRespawn = 5.0f,
                 });
-                yield return new WaitForSeconds(5.2f);
                 yield return new WaitForEndOfFrame();
-                int amountOfUnitsInSceneBeforeRespawn = GameObject.FindGameObjectsWithTag("Unit").Length;
-                List<GameObject> removedLinkedObject = clientWorker.GetComponent<UnityClientConnector>().clientGameObjectCreator.GetLinkedGameObjectById(linkedUnit.EntityId);
-                Assert.Null(removedLinkedObject, "Failed to delete object");
+                yield return new WaitForEndOfFrame();
+
+                Assert.False(linkedUnit.gameObject.activeInHierarchy, "Failed to delete object");
+                yield return new WaitForSeconds(5.0f);
+                yield return new WaitForEndOfFrame();
                 int amountOfUnitsAfterRespawn = GameObject.FindGameObjectsWithTag("Unit").Length;
                 Assert.AreEqual(initialAmountOfUnitsInScene, amountOfUnitsAfterRespawn, "Object not respawned");
             }

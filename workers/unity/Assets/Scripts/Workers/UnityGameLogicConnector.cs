@@ -57,6 +57,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<Game.GameStatusSystem>();
+            Worker.World.GetOrCreateSystem<RespawnMonitorSystem>();
             Worker.World.GetOrCreateSystem<PointSystem>();
             Worker.World.GetOrCreateSystem<PositionSystem>();
             Worker.World.GetOrCreateSystem<MDG.Common.Systems.Collision.CollisionDetectionSystem>();
