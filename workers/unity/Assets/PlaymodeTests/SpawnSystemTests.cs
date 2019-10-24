@@ -160,10 +160,6 @@ namespace PlaymodeTests
             WorkerSystem serverWorkerSystem = serverWorker.GetComponent<UnityGameLogicConnector>().Worker.World.GetExistingSystem<WorkerSystem>();
             if (serverWorkerSystem.TryGetEntity(linkedUnit.EntityId, out Unity.Entities.Entity entity))
             {
-
-                // This doesn't add it to all entities.
-                // Instead of pendign respawn, could have respawn information.
-                // then simply query that. Also avoids changing archtypes in memory.
                 serverWorkerSystem.EntityManager.SetComponentData(entity, new SpawnSchema.PendingRespawn.Component
                 {
                     RespawnActive = true,
