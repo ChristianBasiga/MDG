@@ -1,0 +1,11 @@
+package mdg_schema.common.structure;
+
+
+
+component StructureMetadata{
+    id = 950;
+    int32 minimum_worker_units = 1;
+    int32 post_cost = 2;
+    float base_construction_time = 3;
+    int32 maximum_active = 4;
+}

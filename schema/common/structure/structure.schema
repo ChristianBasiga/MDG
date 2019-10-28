@@ -1,0 +1,23 @@
+package mdg_schema.common.structure;
+
+
+
+type BuildEventPayload{
+    float build_progress = 1;
+    float estimated_build_time = 2;
+}
+
+type JobRunEventPayload{
+    // Actual enums will be in C# side, then cased from enum to this and back accordingly.
+    int32 job_type = 1;
+    float job_progress = 2;
+    float estimated_job_completion = 3;
+}
+
+component Structure{
+    id = 951;
+    bool constructing = 1;
+    int32 health = 2;
+    event BuildEventPayload build;
+    event JobRunEventPayload run_job;
+}
