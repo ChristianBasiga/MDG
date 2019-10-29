@@ -31,7 +31,7 @@ namespace MDG.Invader.Monobehaviours
         {
             // Gotta update these so that health goes down fully before gets fully deleted.
             float percentageHealth = newHealth / (float)statsMetadataReader.Data.Health;
-            StartCoroutine(HelperFunctions.UpdateHealthBar(healthbar, percentageHealth, updateSpeedInSeconds));
+            StartCoroutine(HelperFunctions.UpdateFill(healthbar, percentageHealth, updateSpeedInSeconds));
         }
     }
 }

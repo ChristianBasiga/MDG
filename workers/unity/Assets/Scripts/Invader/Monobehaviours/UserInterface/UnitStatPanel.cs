@@ -9,60 +9,68 @@ using Improbable.Gdk.Subscriptions;
 using MDG.Common;
 using Unity.Entities;
 using StatSchema = MdgSchema.Common.Stats;
+using MdgSchema.Common;
 
-public class UnitStatPanel : MonoBehaviour, IStatPanel
+namespace MDG.Invader.Monobehaviours
 {
-    ClientGameObjectCreator clientGameObjectCreator;
-    LinkedEntityComponent currentlyLinkedEntity;
-    ComponentUpdateSystem componentUpdateSystem;
-    #region UI objects for this panel
-    Image healthbar;
-    #endregion
-
-
-    
-    // Start is called before the first frame update
-    void Start()
+    public class UnitStatPanel : MonoBehaviour, IStatPanel
     {
-        clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().clientGameObjectCreator;
-    }
+        ClientGameObjectCreator clientGameObjectCreator;
+        LinkedEntityComponent currentlyLinkedEntity;
+        ComponentUpdateSystem componentUpdateSystem;
+        #region UI objects for this panel
+        Image healthbar;
 
-    public void SetEntityTracking(EntityId entityId)
-    {
-        this.gameObject.SetActive(true);
-        GameObject linkedObject = clientGameObjectCreator.GetLinkedGameObjectById(entityId);
-        currentlyLinkedEntity = linkedObject.GetComponent<LinkedEntityComponent>();
-        componentUpdateSystem = currentlyLinkedEntity.World.GetExistingSystem<ComponentUpdateSystem>();
-    }
+        public GameEntityTypes GetGameEntityType() {
+            return GameEntityTypes.Unit;
+        }
+        #endregion
 
-    private void Update()
-    {
-        if (gameObject.activeInHierarchy)
+
+
+        // Start is called before the first frame update
+        void Start()
         {
-            var statComponentUpdates = componentUpdateSystem.GetEntityComponentUpdatesReceived<StatSchema.Stats.Update>(currentlyLinkedEntity.EntityId);
-            if (statComponentUpdates.Count > 0)
+            clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().clientGameObjectCreator;
+        }
+
+        public void SetEntityTracking(EntityId entityId)
+        {
+            this.gameObject.SetActive(true);
+            GameObject linkedObject = clientGameObjectCreator.GetLinkedGameObjectById(entityId);
+            currentlyLinkedEntity = linkedObject.GetComponent<LinkedEntityComponent>();
+            componentUpdateSystem = currentlyLinkedEntity.World.GetExistingSystem<ComponentUpdateSystem>();
+        }
+
+        private void Update()
+        {
+            if (gameObject.activeInHierarchy)
             {
-                ref readonly var update = ref statComponentUpdates[0];
+                var statComponentUpdates = componentUpdateSystem.GetEntityComponentUpdatesReceived<StatSchema.Stats.Update>(currentlyLinkedEntity.EntityId);
+                if (statComponentUpdates.Count > 0)
+                {
+                    ref readonly var update = ref statComponentUpdates[0];
 
-                UpdateHealthUI(update.Update.Health);
-                // Other updates
+                    UpdateHealthUI(update.Update.Health);
+                    // Other updates
 
+                }
             }
         }
-    }
 
-    private void UpdateHealthUI(int newHealth)
-    {
-        currentlyLinkedEntity.Worker.TryGetEntity(currentlyLinkedEntity.EntityId, out Entity entity);
+        private void UpdateHealthUI(int newHealth)
+        {
+            currentlyLinkedEntity.Worker.TryGetEntity(currentlyLinkedEntity.EntityId, out Entity entity);
 
-        StatSchema.StatsMetadata.Component statsMetadata = componentUpdateSystem.EntityManager.GetComponentData<StatSchema.StatsMetadata.Component>(entity);
+            StatSchema.StatsMetadata.Component statsMetadata = componentUpdateSystem.EntityManager.GetComponentData<StatSchema.StatsMetadata.Component>(entity);
 
-        float percentageHealth = newHealth / (float)statsMetadata.Health;
-        StartCoroutine(HelperFunctions.UpdateHealthBar(healthbar, percentageHealth));
-    }
+            float percentageHealth = newHealth / (float)statsMetadata.Health;
+            StartCoroutine(HelperFunctions.UpdateFill(healthbar, percentageHealth));
+        }
 
-    public void Disable()
-    {
-        this.gameObject.SetActive(false);
+        public void Disable()
+        {
+            this.gameObject.SetActive(false);
+        }
     }
 }
