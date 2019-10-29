@@ -166,8 +166,7 @@ namespace MDG.Common.Systems.Structure
                     EstimatedBuildTime = constructionPayloadHeader.buildInfo.estimatedBuildCompletion
                 }), constructionPayloadHeader.entityId);
             }
-            constructionsToSendEventsFor.Dequeue();
+            constructionsToSendEventsFor.Dispose();
         }
-
     }
 }

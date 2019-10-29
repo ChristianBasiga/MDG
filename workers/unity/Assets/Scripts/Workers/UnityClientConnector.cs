@@ -15,7 +15,7 @@ using MDG.Common.Systems.Inventory;
 using MDG.Common.Systems.Spawn;
 using MDG.Common.Systems.Point;
 using MDG.Common.Systems.Weapon;
-
+using MDG.Common.Systems.Structure;
 namespace MDG
 {
     //Need to figure out spawnign stuff on server side and not.
@@ -68,6 +68,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
             Worker.World.GetOrCreateSystem<PointRequestSystem>();
             Worker.World.GetOrCreateSystem<WeaponSystem>();
+            Worker.World.GetOrCreateSystem<StructureMonitorSystem>();
             //Invader systems.
             Worker.World.GetOrCreateSystem<SelectionSystem>();
             Worker.World.GetOrCreateSystem<CommandGiveSystem>();
