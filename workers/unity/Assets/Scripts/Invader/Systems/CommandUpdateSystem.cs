@@ -32,6 +32,7 @@ namespace MDG.Invader.Systems
     ///  But I suppose the process and acting accorindgly could become a behaviour tree.
     /// </summary>
     [DisableAutoCreation]
+    [AlwaysUpdateSystem]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class CommandUpdateSystem : ComponentSystem
     {
@@ -57,48 +58,46 @@ namespace MDG.Invader.Systems
         private WorkerSystem workerSystem;
         private Dictionary<EntityId, List<EntityId>> unitCollisionMappings;
         private ComponentType[] authVelocityGroup;
+
+        private EntityQuery commandListenerResetQuery;
         private EntityQuery interruptedGroup;
         private EntityQuery enemyQuery;
         private EntityQuery friendlyQuery;
         public JobHandle CommandExecuteJobHandle { get; private set; }
 
-        private NativeList<CollectResponse> collectResponses;
 
 
         public struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component, PositionSchema.LinearVelocity.Component,
-            CollisionSchema.BoxCollider.Component>
+            CollisionSchema.BoxCollider.Component, CommandListener>
         {
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public float deltaTime;
             public void Execute(Entity entity, int jobIndex, [ReadOnly] ref MoveCommand moveCommand, [ReadOnly] ref EntityTransform.Component entityTransform,
-                ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider)
+                ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider,
+                ref CommandListener commandListener)
             {
                 float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
-                Vector3f direction = moveCommand.destination - entityTransform.Position;
 
-                float distance = direction.ToUnityVector().magnitude;
-                float minDistance = 1.0f;
-                if (distance < minDistance)
+                Vector3f direction = moveCommand.destination - entityTransform.Position;
+                float distance = HelperFunctions.Distance(moveCommand.destination, entityTransform.Position);
+
+                if (!moveCommand.applied)
                 {
-                    linearVelocityComponent.Velocity = Vector3f.Zero;
-                    entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(MoveCommand));
-                }
-                else
-                {
-                    //All commands overwrite any other effect on velocity
                     linearVelocityComponent.Velocity = direction;
+                    moveCommand.applied = true;
+                }
+                else if (distance <= boxCollider.Dimensions.ToUnityVector().magnitude)
+                {
+                    Debug.Log("Finished moving");
+                    linearVelocityComponent.Velocity = Vector3f.Zero;
+                    commandListener.CommandType = Commands.CommandType.None;
+                    entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(MoveCommand));
                 }
             }
         }
 
-
-        // Collect could still use move like before.
-        // then adds to map, for actual collecting to take place
-        // but that's onl if has both. Which I could query on command meta data, but not as clean.
-        // that will iterate on all resources.
-        // Update this to change velocity instead. How this rolls out needs to be reworked a little.
         public struct MoveToResourceJob : IJobForEachWithEntity<SpatialEntityId, CollectCommand, EntityTransform.Component, 
-            PositionSchema.LinearVelocity.Component, CollisionSchema.BoxCollider.Component>
+            PositionSchema.LinearVelocity.Component, CollisionSchema.BoxCollider.Component, CommandListener>
         {
             // There is chance that the resource moving to is gone before get there.
             // In that case collect command needs to removed on not just those ready to collect but on all.
@@ -109,7 +108,7 @@ namespace MDG.Invader.Systems
 
             public void Execute(Entity entity, int jobIndex, ref SpatialEntityId spatialEntityId, ref CollectCommand collectCommand, 
                 ref EntityTransform.Component entityTransform, ref PositionSchema.LinearVelocity.Component linearVelocityComponent,
-                [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider)
+                [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider, ref CommandListener commandListener)
             {
                 Vector3f direction = collectCommand.destination - entityTransform.Position;
                 // Min distance should take really take into account collider, for now I'll fudg vaue
@@ -134,12 +133,6 @@ namespace MDG.Invader.Systems
                 }
                 else
                 {
-                    // So once this happens, it will start sending collect requests form payload.
-                    // For trigger animation.
-                    // Maybe could add transient components to better do these in sync.
-                    // TryingOccupy, TryingCollect, etc. For now it's fine just check isCollecting
-                    // Former thought would be cleanest.
-
                     collectCommand.IsCollecting = true;
                     // Otherwise we can begin collecting.
                     occupyPayloads.Enqueue(new CollectPayload { requestingOccupant = spatialEntityId.EntityId, resourceId = collectCommand.resourceId });
@@ -147,26 +140,13 @@ namespace MDG.Invader.Systems
             }
         }
 
-
-        public struct FindNearbyResourceJob : IJobParallelFor
-        {
-            [ReadOnly]
-            public NativeArray<QuadNode> potentialResources;
-
-            public void Execute(int index)
-            {
-                throw new System.NotImplementedException();
-            }
-        }
-
         protected override void OnCreate()
         {
             base.OnCreate();
-            
-         
+
             authVelocityGroup = new ComponentType[7]
             {
-                ComponentType.ReadOnly<CommandListener>(),
+                ComponentType.ReadWrite<CommandListener>(),
                 ComponentType.ReadWrite<PositionSchema.LinearVelocity.Component>(),
                 ComponentType.ReadOnly<PositionSchema.LinearVelocity.ComponentAuthority>(),
                 ComponentType.ReadOnly<EntityTransform.Component>(),
@@ -177,8 +157,6 @@ namespace MDG.Invader.Systems
 
             pendingCollects = new NativeQueue<CollectPayload>(Allocator.Persistent);
             pendingOccupy = new NativeQueue<CollectPayload>(Allocator.Persistent);
-            collectResponses = new NativeList<CollectResponse>();
-
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             positionSystem = World.GetExistingSystem<PositionSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
@@ -187,7 +165,7 @@ namespace MDG.Invader.Systems
 
             unitCollisionMappings = new Dictionary<EntityId, List<EntityId>>();
             interruptedGroup = GetEntityQuery(ComponentType.ReadOnly<CommandInterrupt>(), ComponentType.ReadOnly<SpatialEntityId>());
-            enemyQuery = GetEntityQuery(ComponentType.ReadOnly<EnemyComponent>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
+           // enemyQuery = GetEntityQuery(ComponentType.ReadOnly<EnemyComponent>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
             friendlyQuery = GetEntityQuery(ComponentType.ReadOnly<CommandListener>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
         }
 
@@ -196,6 +174,13 @@ namespace MDG.Invader.Systems
             base.OnDestroy();
             pendingCollects.Dispose();
             pendingOccupy.Dispose();
+        }
+
+        protected override void OnUpdate()
+        {
+            RunCommandJobs();
+            RunCommandRequests();
+            ProcessInterruptedCommands();
         }
 
         private void HandleCollectCommandResponse(ResourceRequestSystem.ResourceRequestReponse receivedResponse)
@@ -335,12 +320,7 @@ namespace MDG.Invader.Systems
         }
 
 
-        protected override void OnUpdate()
-        {
-            RunCommandJobs();
-            RunCommandRequests();
-            ProcessInterruptedCommands();
-        }
+     
 
         private void RunCommandJobs()
         {

@@ -8,6 +8,7 @@ using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
 using InventorySchema = MdgSchema.Common.Inventory;
+using PointSchema = MdgSchema.Common.Point;
 using UnitsSchema = MdgSchema.Units;
 using UnitComponents = MDG.Invader.Components;
 using Unity.Entities;
@@ -19,7 +20,7 @@ using StatSchema = MdgSchema.Common.Stats;
 using MdgSchema.Common.Position;
 using MDG.DTO;
 using SpawnSchema = MdgSchema.Common.Spawn;
-
+using MDG.Common;
 
 namespace MDG.Templates
 {
@@ -35,6 +36,11 @@ namespace MDG.Templates
             template.AddComponent(new EntityTransform.Snapshot { Position = spawnPositon }, serverAttribute);
             template.AddComponent(new LinearVelocity.Snapshot { Velocity = Vector3f.Zero }, clientAttribute);
             template.AddComponent(new AngularVelocity.Snapshot { AngularVelocity = Vector3f.Zero }, clientAttribute);
+
+            template.AddComponent(new PointSchema.Point.Snapshot
+            {
+                Value = 10000
+            }, serverAttribute);
 
             template.AddComponent(new CollisionSchema.Collision.Snapshot
             {
@@ -106,7 +112,7 @@ namespace MDG.Templates
             template.AddComponent(new StatSchema.Stats.Snapshot {
                 Health = 5
             }
-            , clientAttribute);
+            , serverAttribute);
 
         }
 
@@ -129,13 +135,17 @@ namespace MDG.Templates
     }
     // For adding componetns to entities that don't need to be synced with server.
     // Do this for all entities.
-    public class Archtypes
+    public class UnitArchtypes
     {
         public static void AddUnitArchtype(EntityManager  entityManager, Entity entity, bool authoritative, UnitsSchema.UnitTypes type)
         {
             if (authoritative)
             {
                 entityManager.AddComponentData(entity, new CommandListener { CommandType = MDG.Invader.Commands.CommandType.None });
+            }
+            else
+            {
+                entityManager.AddComponentData(entity, new Enemy());
             }
             entityManager.AddComponent<Clickable>(entity);
         }

@@ -10,6 +10,7 @@ namespace MDG.Invader.Components
     public struct MoveCommand : IComponentData
     {
         public Vector3f destination;
+        public bool applied;
     }
 
     // Will get positon of target each time to follow.

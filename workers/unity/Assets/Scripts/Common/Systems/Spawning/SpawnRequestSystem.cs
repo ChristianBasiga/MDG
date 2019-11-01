@@ -12,6 +12,8 @@ using Unity.Jobs;
 using System;
 using MdgSchema.Units;
 using EntityTemplates = MDG.Templates;
+using MDG.Templates;
+using MDG.DTO;
 
 namespace MDG.Common.Systems.Spawn
 {
@@ -40,6 +42,8 @@ namespace MDG.Common.Systems.Spawn
         public class SpawnRequestPayload
         {
             public SpawnSchema.SpawnRequest payload;
+            public byte[] spawnMetaData;
+            public byte[] spawnData;
             public Action<EntityId> callback;
         }
 
@@ -73,11 +77,15 @@ namespace MDG.Common.Systems.Spawn
             requestIdToPayload = new Dictionary<long, SpawnRequestHeader>();
         }
 
-        public void RequestSpawn(SpawnSchema.SpawnRequest spawnRequest, Action<EntityId> spawnFulfilledCallback = null, float delay = 0)
+
+        public void RequestSpawn(SpawnSchema.SpawnRequest spawnRequest, Action<EntityId> spawnFulfilledCallback = null, 
+            byte[] spawnMetadata = null, byte[] extraSpawnArgs = null, float delay = 0)
         {
             var payload = new SpawnRequestPayload
             {
                 payload = spawnRequest,
+                spawnMetaData = spawnMetadata,
+                spawnData = extraSpawnArgs,
                 callback = spawnFulfilledCallback,
             };
             // Don't want to enqueue this, so need to put in other list first for ticking them, then 
@@ -193,6 +201,16 @@ namespace MDG.Common.Systems.Spawn
                                 MDG.Templates.WorldTemplates.GetResourceTemplate()
                             ));
                         break;
+                    case CommonSchema.GameEntityTypes.Weapon:
+                        WeaponMetadata weaponMetadata = Converters.DeserializeArguments<WeaponMetadata>(request.spawnMetaData);
+                        requestId = commandSystem.SendCommand(
+                            new WorldCommands.CreateEntity.Request(
+                                WeaponTemplates.GetWeaponEntityTemplate(workerSystem.WorkerId, weaponMetadata.weaponType,
+                                new EntityId(weaponMetadata.wielderId), request.spawnData
+                                )
+                            ));
+                        break;
+                        
                 }
                 if (requestId != -1)
                 {

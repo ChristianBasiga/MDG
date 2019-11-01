@@ -179,7 +179,7 @@ namespace MDG.Common.Systems.Position
                 ref EntityTransform.Component entityTransform)
             {
                 entityTransform.Position += linearVelocityComponent.Velocity * deltaTime;
-                entityTransform.Position = new Vector3f(entityTransform.Position.X, 0, entityTransform.Position.Z);
+               // entityTransform.Position = new Vector3f(entityTransform.Position.X, 0, entityTransform.Position.Z);
                 entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;   
                 if (!linearVelocityComponent.Velocity.Equals(Vector3f.Zero))
                 {
@@ -216,7 +216,6 @@ namespace MDG.Common.Systems.Position
             List<EntityId> removedEntities = entitySystem.GetEntitiesRemoved();
             foreach (EntityId removedEntity in removedEntities)
             {
-                Debug.Log($"Removed entity {removedEntity}");
                 toPruneOff.Enqueue(removedEntity);
             }
             ShakeQuadTree();
@@ -247,10 +246,13 @@ namespace MDG.Common.Systems.Position
         // Main issue here, is position not updated yet. So will be adding the entity, then immediemtly moving it next frame.
         private void AddNewEntitiesToQuadTree()
         {
+            // For jobifying this system later, move this to job then dequeue.
             Entities.With(toAddToTreeQuery).ForEach((ref SpatialEntityId spatialEntityId, ref EntityTransform.Component entityTransform) =>
             {
-                Debug.Log($"spatial entityId adding to tree {spatialEntityId.EntityId}");
-                spatialPartitioning.Insert(spatialEntityId.EntityId, entityTransform.Position);
+                if (!spatialPartitioning.FindEntity(spatialEntityId.EntityId).HasValue)
+                {
+                    spatialPartitioning.Insert(spatialEntityId.EntityId, entityTransform.Position);
+                }
             });
         }
 
@@ -258,7 +260,6 @@ namespace MDG.Common.Systems.Position
         // over a couple frames is fine.
         private void UpdateEntitiesInTree()
         {
-            
             // For each entityId to update, first check using the position to update to if still within region.
             while (updateQueue.IsCreated && updateQueue.TryDequeue(out UpdatePayload updatePayload))
             {

@@ -55,7 +55,8 @@ namespace MDG.Common.Systems.Point
                     long requestId = commandSystem.SendCommand(new PointSchema.Point.UpdatePoints.Request
                     {
                         TargetEntityId = entityId,
-                        Payload = requestPayload.payload
+                        Payload = requestPayload.payload,
+                        AllowShortCircuiting = true
                     });
                     requestIdToPayload[requestId] = requestPayload;
                 }
@@ -80,6 +81,7 @@ namespace MDG.Common.Systems.Point
                                 break;
                             case Improbable.Worker.CInterop.StatusCode.Timeout:
                                 // Requeue.
+                                UnityEngine.Debug.Log("Timed out");
                                 pointRequests.Add(pointRequest);
                                 break;
                             default:

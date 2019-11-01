@@ -1,10 +1,8 @@
 ﻿using Improbable;
 using Improbable.Gdk.Core;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using MDG.Common;
 using Unity.Collections;
+using UnityEngine;
 
 namespace MDG.Common.Datastructures
 {
@@ -47,6 +45,9 @@ namespace MDG.Common.Datastructures
         QuadTree northEast;
         QuadTree southWest;
         QuadTree southEast;
+
+        public delegate void QuadTreeEventHandler(QuadNode quadNode);
+        public event QuadTreeEventHandler OnMovedRegions;
 
         Dictionary<EntityId, Vector3f> entitiesInThisRegion;
         #region Interfacing code
@@ -143,8 +144,10 @@ namespace MDG.Common.Datastructures
         // Unless I have it be own
         public void MoveEntity(EntityId entityId, Vector3f originalPosition, Vector3f newPosition)
         {
-            Remove(entityId, originalPosition);
-            Insert(entityId, newPosition);
+            if (Remove(entityId, originalPosition))
+            {
+                Insert(entityId, newPosition);
+            }
         }
 
         public void MoveEntity(EntityId entityId, Vector3f newPosition)
@@ -161,6 +164,16 @@ namespace MDG.Common.Datastructures
             if (!HelperFunctions.IsWithinRegion(quadNode.Value.center, quadNode.Value.dimensions, newPosition))
             {
                 MoveEntity(entityId, quadNode.Value.position, newPosition);
+                QuadNode newNode = new QuadNode
+                {
+                    entityId = entityId,
+                    position = newPosition
+                };
+                OnMovedRegions?.Invoke(newNode);
+            }
+            else
+            {
+                entitiesInThisRegion[entityId] = newPosition;
             }
         }
 
@@ -176,8 +189,8 @@ namespace MDG.Common.Datastructures
             {
                 if (entitiesInThisRegion.ContainsKey(entityId))
                 {
-                    throw new System.Exception($" The entity with id {entityId} is already in this quadtree. " +
-                        $"Please use MoveEntity insted");
+                    entitiesInThisRegion[entityId] = position;
+                    return true;
                 }
                 if (entitiesInThisRegion.Count + 1 > capacity)
                 {
@@ -197,7 +210,7 @@ namespace MDG.Common.Datastructures
                     || southEast.Insert(entityId, position);
             }
             entitiesInThisRegion.Add(entityId, position);
-            return false;
+            return true;
         }
 
         // Maybe should create private try remove.
@@ -214,11 +227,10 @@ namespace MDG.Common.Datastructures
                     || southEast.Remove(entityId, position)
                     || southWest.Remove(entityId, position);
             }
-            else
-            {
-                entitiesInThisRegion.Remove(entityId);
-                return true;
-            }
+
+            Debug.Log("Remvoing entity");
+            entitiesInThisRegion.Remove(entityId);
+            return true;
         }
 
         public bool Remove(EntityId entityId)
@@ -251,6 +263,7 @@ namespace MDG.Common.Datastructures
         {
             if (entitiesInThisRegion.TryGetValue(id, out Vector3f currPos))
             {
+                Debug.Log($"Found entity {id}");
                 node.position = currPos;
                 node.center = center;
                 node.dimensions = dimensions;
@@ -265,12 +278,6 @@ namespace MDG.Common.Datastructures
                     || southWest.FindEntityUtil(id, node);
             }
 
-            return false;
-        }
-
-        // Just keeping it in interface functions fine, them returning bools NOT huge deal.
-        private bool TryRemove(EntityId entityId, Vector3f position)
-        {
             return false;
         }
 

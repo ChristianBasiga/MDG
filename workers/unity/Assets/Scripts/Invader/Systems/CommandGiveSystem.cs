@@ -85,6 +85,9 @@ namespace MDG.Invader.Systems
                         interrupting = commandListener.CommandType,
                         target = commandGiven.TargetId
                     });
+                    commandListener.CommandType = commandGiven.CommandType;
+                    commandListener.TargetPosition = commandGiven.TargetPosition;
+                    commandListener.TargetId = commandGiven.TargetId;
                     switch (commandGiven.CommandType)
                     {
                         case CommandType.Move:
@@ -136,7 +139,7 @@ namespace MDG.Invader.Systems
             // If right click did not overlap with any clickable, then it is a move command.
             if (commandMetadata.CommandType == CommandType.None)
             {
-                Vector3f convertedMousePos = new Vector3f(mousePos.x, mousePos.y, mousePos.z);
+                Vector3f convertedMousePos = new Vector3f(mousePos.x, 0, mousePos.z);
                 commandMetadata = new CommandListener { TargetPosition = convertedMousePos, CommandType = CommandType.Move };
             }
             CommandGiveJob commandGiveJob = new CommandGiveJob

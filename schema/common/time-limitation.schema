@@ -1,0 +1,9 @@
+package mdg_schema.common;
+
+
+// For example projectiles.
+// Replace this id with appropriate one later.
+component TimeLimitation{
+    id = 961;
+    float time_left = 1;
+}

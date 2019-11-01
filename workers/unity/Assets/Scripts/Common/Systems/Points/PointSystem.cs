@@ -73,6 +73,8 @@ namespace MDG.Common.Systems.Point
                 }); 
             }
 
+
+            // May refactor this later.
             if (timeSinceIdleGain <= 0)
             {
                 Entities.With(pointGroup).ForEach((ref SpatialEntityId spatialEntityId, ref PointSchema.PointMetadata.Component pointMetaData, ref PointSchema.Point.Component point) =>

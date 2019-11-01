@@ -28,9 +28,5 @@ namespace MDG.Invader.Components {
     }*/
 
 
-    //Add more to later.
-    public struct EnemyComponent: IComponentData
-    {
-        GameEntityTypes enemyType;
-    }
+    
 }

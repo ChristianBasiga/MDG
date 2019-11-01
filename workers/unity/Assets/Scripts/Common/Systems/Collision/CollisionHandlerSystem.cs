@@ -15,6 +15,7 @@ namespace MDG.Common.Systems.Collision {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     [UpdateAfter(typeof(CollisionDetectionSystem))]
+    [AlwaysUpdateSystem]
     public class CollisionHandlerSystem : JobComponentSystem
     {
         EntityQuery authoritativeVelocityGroup;
@@ -50,6 +51,7 @@ namespace MDG.Common.Systems.Collision {
                     foreach (var key in c1.Collisions.Keys)
                     {
                         // Check if velocity is tending same direction as distance to collision.
+                        // Replace all normalized with unitisdes
                         // If it it's not, then don't undo the position update. Otherwise if does tend in same direction, then will contine collision.
                         float dotProduct = Vector3.Dot(linearVelocity.Velocity.ToUnityVector().normalized, c1.Collisions[key].Distance.ToUnityVector().normalized);
                         if (dotProduct > 0)

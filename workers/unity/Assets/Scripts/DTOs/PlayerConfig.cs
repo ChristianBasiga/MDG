@@ -5,6 +5,7 @@ using UnityEngine;
 using MdgSchema.Player;
 using System;
 using MdgSchema.Common;
+using Improbable;
 
 namespace MDG.DTO
 {
@@ -12,5 +13,6 @@ namespace MDG.DTO
     public class PlayerConfig
     {
         public GameEntityTypes playerType;
+        public Vector3f position;
     }
 }

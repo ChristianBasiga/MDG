@@ -116,6 +116,7 @@ namespace MDG.Common.Systems
             }
 
 
+
             var collectRequests = commandSystem.GetRequests<ResourceSchema.Resource.Collect.ReceivedRequest>();
 
             for (int i = 0; i < collectRequests.Count; ++i)

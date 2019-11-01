@@ -1,8 +1,0 @@
-package mdg_schema.player;
-import "improbable/vector3.schema";
-
-component PlayerTransform{
-    id = 201;
-    improbable.Vector3f position = 1;
-    improbable.Vector3f rotation = 2;
-}

@@ -1,18 +1,21 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Improbable.Gdk.Subscriptions;
+using MDG.Common;
 using UnityEngine;
-
-namespace MDG {
+using PositionSchema = MdgSchema.Common.Position;
+namespace MDG.Defender.Monobehaviours {
     
+    /* Todo
+     * Add Writer to Velocity component.
+     * 
+     * */
     public class PlayerMove : MonoBehaviour
     {
-
         public delegate void PlayerMoveHandler(Vector3 position, Vector3 rotation);
         public event PlayerMoveHandler OnPlayerMove;
 
         [SerializeField] private string horizInputName, vertInputName;
         [SerializeField] private float speed = 20;
-        CharacterController controller;
+        [Require] PositionSchema.LinearVelocityWriter linearVelocityWriter;
         // Start is called before the first frame update
 
 
@@ -26,8 +29,8 @@ namespace MDG {
         //This will have reference to the reader and writer of component.
         void Start()
         {
-            controller = GetComponent<CharacterController>();
         }
+       
 
         // Update is called once per frame
         void Update()
@@ -44,9 +47,12 @@ namespace MDG {
 
             Vector3 forwardMovement = transform.forward * vertInput;
             Vector3 rightMovement = transform.right * horizInput;
-
-            //Applies transform.transalte & scales it by delta time.
-            controller.SimpleMove(forwardMovement + rightMovement);
+            // Hmm, it does apply velocity, but tbh, it dies out literally right after sooo lol.
+            // Well this is true though if send update every frame cause axis would be 0.
+            linearVelocityWriter.SendUpdate(new PositionSchema.LinearVelocity.Update
+            {
+                Velocity = HelperFunctions.Vector3fFromUnityVector(forwardMovement + rightMovement)
+            });
 
             if (horizInput != 0 || vertInput != 0)
             {
@@ -59,44 +65,12 @@ namespace MDG {
         void InputJump()
         {
 
-            if (Input.GetKey(KeyCode.Space) && !isJumping)
-            {
-                StartCoroutine(PerformJump());
-
-            }
+           
         }
-
-        IEnumerator PerformJump()
-        {
-
-
-            timeInAir = 0;
-            isJumping = true;
-
-            //To prevent clipping with camera, move camera down to 0.9, and make clipping plane 0.1 to fill up that space.
-            do
-            {
-                OnPlayerMoveHandler();
-                float jumpForce = jumpFallOff.Evaluate(timeInAir);
-
-                //Move doesn't applie time delta time like simple move does.
-                controller.Move(Vector3.up * jumpForce * jumpSpeed * Time.deltaTime);
-
-                timeInAir += Time.deltaTime;
-                yield return null;
-
-            } while (controller.collisionFlags != CollisionFlags.Below && controller.collisionFlags != CollisionFlags.Above);
-
-            isJumping = false;
-
-        }
-
 
         private void OnPlayerMoveHandler()
         {
             OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
         }
     }
-
-
 }
