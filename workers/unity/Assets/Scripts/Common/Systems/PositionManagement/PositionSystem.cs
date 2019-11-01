@@ -21,6 +21,7 @@ namespace MDG.Common.Systems.Position
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     [UpdateBefore(typeof(CollisionDetectionSystem))]
+    [AlwaysUpdateSystem]
     public class PositionSystem : ComponentSystem
     {
         struct UpdatePayload
@@ -36,23 +37,32 @@ namespace MDG.Common.Systems.Position
             public int updatesPending;
         }
 
+        JobHandle? spatialPosUpdateJobHandle;
+
         EntitySystem entitySystem;
         WorkerSystem worker;
         CommandSystem commandSystem;
+
+        EntityQuery updateSpatialPositionQuery;
         EntityQuery toAddToTreeQuery;
         EntityQuery applyVelocityQuery;
+
         public Vector3f RootDimensions { get; } = new Vector3f(1000, 0, 1000);
         public int RegionCapacity { get; } = 5;
 
         QuadTree spatialPartitioning;
         // For batch updating tree.
         NativeQueue<UpdatePayload> updateQueue;
+       
 
         Queue<EntityId> toPruneOff;
 
-        readonly int shakesPerFrame;
+        // For updating spatialOS position component.
+        NativeHashMap<EntityId, Vector3f> entitiesThatMovedRegions;
 
+        readonly int shakesPerFrame = 5;
 
+        #region Interfacing methods
         public int GetRegionCount()
         {
             return spatialPartitioning.GetNumberRegions();
@@ -73,21 +83,38 @@ namespace MDG.Common.Systems.Position
         {
             return spatialPartitioning.FindEntity(entityId);
         }
+
+        #endregion
         protected override void OnCreate()
         {
             base.OnCreate();
             worker = World.GetExistingSystem<WorkerSystem>();
+
+            entitiesThatMovedRegions = new NativeHashMap<EntityId, Vector3f>(1000, Allocator.Persistent);
             updateQueue = new NativeQueue<UpdatePayload>(Allocator.Persistent);
+
             commandSystem = World.GetExistingSystem<CommandSystem>();
             entitySystem = World.GetExistingSystem<EntitySystem>();
+
             toPruneOff = new Queue<EntityId>();
             spatialPartitioning = new QuadTree(RegionCapacity, RootDimensions, new Vector3f(0,0,0));
+            spatialPartitioning.OnMovedRegions += OnMovedRegion;
+
+
+            updateSpatialPositionQuery = GetEntityQuery(
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadOnly<Improbable.Position.ComponentAuthority>(),
+                ComponentType.ReadWrite<Improbable.Position.Component>()
+                );
+            updateSpatialPositionQuery.SetFilter(Improbable.Position.ComponentAuthority.Authoritative);
+
             toAddToTreeQuery = GetEntityQuery(
                 ComponentType.ReadOnly<NewlyAddedSpatialOSEntity>(),
                 ComponentType.ReadOnly<EntityTransform.Component>(),
                 ComponentType.ReadOnly<SpatialEntityId>()
                 );
             applyVelocityQuery = GetEntityQuery(
+                ComponentType.Exclude<NewlyAddedSpatialOSEntity>(),
                 ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<PositionSchema.LinearVelocity.Component>(),
                 ComponentType.ReadOnly<PositionSchema.AngularVelocity.Component>(),
@@ -104,7 +131,41 @@ namespace MDG.Common.Systems.Position
                 updateQueue.Dispose();
             }
             base.OnDestroy();
+
+            entitiesThatMovedRegions.Dispose();
         }
+
+        #region Event Handlers
+        private void OnMovedRegion(QuadNode quadNode)
+        {
+            if (entitiesThatMovedRegions.TryGetValue(quadNode.entityId, out Vector3f updatedPosition))
+            {
+                entitiesThatMovedRegions[quadNode.entityId] = quadNode.position;
+            }
+            entitiesThatMovedRegions.TryAdd(quadNode.entityId, quadNode.position);
+        }
+
+
+        #endregion
+
+
+        #region Jobs
+
+        // Only update if enters new region, etc.
+        struct UpdateSpatialPositionJob : IJobForEach<SpatialEntityId, Improbable.Position.Component>
+        {
+            [ReadOnly]
+            public NativeHashMap<EntityId, Vector3f> toUpdate;
+            // Only run this job every few frames. Make when run more later. maybe if update queue above certain size, etc.
+            public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, ref Improbable.Position.Component positionComponent)
+            {
+                if (toUpdate.TryGetValue(spatialEntityId.EntityId, out Vector3f newPos))
+                {
+                    positionComponent.Coords = new Coordinates(newPos.X, newPos.Y, newPos.Z);
+                }
+            }
+        }
+
 
         struct ApplyVelocityJob : IJobForEach<SpatialEntityId, PositionSchema.LinearVelocity.Component, PositionSchema.AngularVelocity.Component,
             EntityTransform.Component> {
@@ -130,54 +191,56 @@ namespace MDG.Common.Systems.Position
                 }
             }
         }
-        /* 
-        struct UpdatePartitionJob : IJobParallelFor
-        {
-            [ReadOnly]
-            public NativeList<UpdatePayload> updatePayload;
-            public QuadTree quadTree;
 
-            public void Execute(int index)
-            {
-                quadTree.MoveEntity(updatePayload[index].EntityUpdating, updatePayload[index].NewPosition);
-            }
-        }
-        */
+        #endregion
 
+        #region Internal Methods
         protected override void OnUpdate()
         {
-            // This should handle all requests for updates to position.
-            // as well as running job to update position via velocity.
-
-            #region Running Jobs
             float deltaTime = Time.deltaTime;
             ApplyVelocityJob applyVelocityJob = new ApplyVelocityJob
             {
                 deltaTime = deltaTime,
                 updateQueue = updateQueue.AsParallelWriter()
             };
-            applyVelocityJob.Schedule(applyVelocityQuery).Complete();
 
-           /* UpdatePartitionJob updatePartitionJob = new UpdatePartitionJob
+            if (spatialPosUpdateJobHandle.HasValue)
             {
-                quadTree = quadTree,
-                updatePayload = updateQueue
-            };
-            updatePartitionJob.Schedule(updateQueue.Length, 1).Complete();*/
+                spatialPosUpdateJobHandle.Value.Complete();
+                entitiesThatMovedRegions.Clear();
+            }
 
-            #endregion
+            JobHandle applyVelocityHandle = applyVelocityJob.Schedule(applyVelocityQuery);
 
-            #region Quad Tree operations
-            UpdateEntitiesInTree();
-            AddNewEntitiesToQuadTree();
-            // Prepping shake queueing up entities removed this frame.
+            // Getting entities removed to queue up to prune off of quad tree.
             List<EntityId> removedEntities = entitySystem.GetEntitiesRemoved();
             foreach (EntityId removedEntity in removedEntities)
             {
+                Debug.Log($"Removed entity {removedEntity}");
                 toPruneOff.Enqueue(removedEntity);
             }
             ShakeQuadTree();
-            #endregion
+
+            AddNewEntitiesToQuadTree();
+
+            applyVelocityHandle.Complete();
+            UpdateEntitiesInTree();
+
+
+            // Update may cause updates to hash map at same time as job.. ACTUALLY that is fine cause job only read read only.
+            if (entitiesThatMovedRegions.Length > 0)
+            {
+                UpdateSpatialPositionJob updateSpatialPositionJob = new UpdateSpatialPositionJob
+                {
+                    toUpdate = entitiesThatMovedRegions 
+                };
+                spatialPosUpdateJobHandle = updateSpatialPositionJob.Schedule(updateSpatialPositionQuery);
+                spatialPosUpdateJobHandle.Value.Complete();
+                spatialPosUpdateJobHandle = null;
+            }
+
+
+
         }
 
         // Iterates through newly added entities and inserts into quad tree.
@@ -186,6 +249,7 @@ namespace MDG.Common.Systems.Position
         {
             Entities.With(toAddToTreeQuery).ForEach((ref SpatialEntityId spatialEntityId, ref EntityTransform.Component entityTransform) =>
             {
+                Debug.Log($"spatial entityId adding to tree {spatialEntityId.EntityId}");
                 spatialPartitioning.Insert(spatialEntityId.EntityId, entityTransform.Position);
             });
         }
@@ -226,5 +290,6 @@ namespace MDG.Common.Systems.Position
                 shakesThisFrame += 1;
             }
         }
+        #endregion
     }
 }
