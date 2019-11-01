@@ -234,6 +234,7 @@ namespace MDG.Common.Systems.Weapon
                                 WeaponSchema.Weapon.Component weaponComponent = requestSent.weaponComponent;
                                 workerSystem.TryGetEntity(requestSent.request.TargetEntityId, out Entity killedEntity);
                                 PointSchema.Point.Component pointComponent = EntityManager.GetComponentData<PointSchema.Point.Component>(killedEntity);
+                                UnityEngine.Debug.Log($"point value adding {pointComponent.Value}");
                                 pointRequestSystem.AddPointRequest(new PointSchema.PointRequest
                                 {
                                     EntityUpdating = weaponComponent.WielderId,

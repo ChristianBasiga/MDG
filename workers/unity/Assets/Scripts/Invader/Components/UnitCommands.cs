@@ -17,6 +17,7 @@ namespace MDG.Invader.Components
     public struct AttackCommand : IComponentData
     {
         public EntityId target;
+        public bool attacking;
     }
 
     // resource location won't change, so won't be checking position each frame

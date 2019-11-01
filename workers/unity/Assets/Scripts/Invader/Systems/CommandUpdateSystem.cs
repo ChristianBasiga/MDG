@@ -16,12 +16,15 @@ using MDG.Common.Components;
 using MDG.Logging;
 using PositionSchema = MdgSchema.Common.Position;
 using CollisionSchema = MdgSchema.Common.Collision;
+using SpawnSchema = MdgSchema.Common.Spawn;
 using PointSchema = MdgSchema.Common.Point;
 using MDG.Common.Systems.Point;
 using Improbable.Gdk.Subscriptions;
 using MDG.Common.Systems.Position;
 using MDG.Common.Datastructures;
 using MDG.Common;
+using MDG.Common.Systems.Spawn;
+using MDG.DTO;
 
 namespace MDG.Invader.Systems
 {
@@ -43,6 +46,13 @@ namespace MDG.Invader.Systems
             public EntityId requestingOccupant;
         }
 
+        public struct AttackPayload
+        {
+            public EntityId attackerId;
+            public Vector3f startingPosition;
+            public Vector3f positionToAttack;
+        }
+
         private EntityQuery collectorGroup;
 
         private bool assignedJobHandle = false;
@@ -53,6 +63,7 @@ namespace MDG.Invader.Systems
 
         private PositionSystem positionSystem;
         private CommandSystem commandSystem;
+        private SpawnRequestSystem spawnRequestSystem;
         private ResourceRequestSystem resourceRequestSystem;
         private ComponentUpdateSystem componentUpdateSystem;
         private WorkerSystem workerSystem;
@@ -63,6 +74,7 @@ namespace MDG.Invader.Systems
         private EntityQuery interruptedGroup;
         private EntityQuery enemyQuery;
         private EntityQuery friendlyQuery;
+        private EntityQuery attackQuery;
         public JobHandle CommandExecuteJobHandle { get; private set; }
 
 
@@ -140,10 +152,80 @@ namespace MDG.Invader.Systems
             }
         }
 
+
+        // Also need attack meta data for specifying attack range. Add later.
+        #region Attack Command Jobs
+
+        public struct GetTargetPositionsJob : IJobForEach<SpatialEntityId, Enemy, EntityTransform.Component>
+        {
+            public NativeHashMap<EntityId, Vector3f>.ParallelWriter attackerToAttackeePosition;
+
+            public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Enemy enemy, 
+                [ReadOnly] ref EntityTransform.Component entityTransform)
+            {
+                attackerToAttackeePosition.TryAdd(spatialEntityId.EntityId, entityTransform.Position);
+            }
+        }
+
+        public struct MoveToAttackTargetJob : IJobForEachWithEntity<SpatialEntityId, AttackCommand, PositionSchema.LinearVelocity.Component,
+            EntityTransform.Component, CollisionSchema.BoxCollider.Component>
+        {
+            [ReadOnly]
+            public NativeHashMap<EntityId, Vector3f> attackerToAttackeePosition;
+            public float deltaTime;
+
+            public NativeList<AttackPayload> attackPayloads;
+
+            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref SpatialEntityId spatialEntityId, ref AttackCommand attackCommand, 
+                ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref EntityTransform.Component entityTransform, 
+                [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider)
+            {
+                // First see if attacker is close enough to target.
+                float minDistanceForAttack = HelperFunctions.Magnitude(boxCollider.Dimensions) * 2;
+                if (attackerToAttackeePosition.TryGetValue(spatialEntityId.EntityId, out Vector3f targetPosition))
+                {
+                    float distance = HelperFunctions.Distance(targetPosition, entityTransform.Position);
+                    if (distance <= minDistanceForAttack)
+                    {
+                        attackPayloads.Add(new AttackPayload
+                        {
+                            attackerId = spatialEntityId.EntityId,
+                            positionToAttack = targetPosition,
+                            startingPosition = entityTransform.Position
+                        });
+
+                        attackCommand.attacking = true;
+                        linearVelocityComponent.Velocity = Vector3f.Zero;
+                    }
+                    else
+                    {
+                        // If no longer in range, stop attacking, start following again.
+                        attackCommand.attacking = false;
+                        Vector3f velocity = targetPosition - entityTransform.Position;
+                        linearVelocityComponent.Velocity = velocity;
+                    }
+                }
+            }
+        }
+        #endregion
+
         protected override void OnCreate()
         {
             base.OnCreate();
 
+            attackQuery = GetEntityQuery(
+                ComponentType.ReadWrite<AttackCommand>(),
+                ComponentType.ReadWrite<PositionSchema.LinearVelocity.Component>(),
+                ComponentType.ReadOnly<PositionSchema.LinearVelocity.ComponentAuthority>(),
+                ComponentType.ReadOnly<SpatialEntityId>()
+                );
+            attackQuery.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
+
+            enemyQuery = GetEntityQuery(
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadOnly<Enemy>(),
+                ComponentType.ReadOnly<EntityTransform>()
+                );
             authVelocityGroup = new ComponentType[7]
             {
                 ComponentType.ReadWrite<CommandListener>(),
@@ -157,6 +239,8 @@ namespace MDG.Invader.Systems
 
             pendingCollects = new NativeQueue<CollectPayload>(Allocator.Persistent);
             pendingOccupy = new NativeQueue<CollectPayload>(Allocator.Persistent);
+
+            spawnRequestSystem = World.GetExistingSystem<SpawnRequestSystem>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             positionSystem = World.GetExistingSystem<PositionSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
@@ -325,6 +409,15 @@ namespace MDG.Invader.Systems
         private void RunCommandJobs()
         {
             float deltaTime = Time.deltaTime;
+
+            NativeHashMap<EntityId, Vector3f> attackerToAttackees = new NativeHashMap<EntityId, Vector3f>(attackQuery.CalculateEntityCount(), Allocator.TempJob);
+            GetTargetPositionsJob getTargetPositionsJob = new GetTargetPositionsJob
+            {
+                attackerToAttackeePosition = attackerToAttackees.AsParallelWriter()
+            };
+
+            JobHandle getTargetPositionsHandle = getTargetPositionsJob.Schedule(enemyQuery);
+
             MoveCommandJob moveCommandJob = new MoveCommandJob
             {
                 deltaTime = deltaTime,
@@ -339,6 +432,7 @@ namespace MDG.Invader.Systems
             EntityQuery entityQuery = GetEntityQuery(entityQueryDesc);
             entityQuery.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
             moveCommandJob.Schedule(entityQuery).Complete();
+
             authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<CollectCommand>();
             authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
 
@@ -350,6 +444,58 @@ namespace MDG.Invader.Systems
             entityQuery = GetEntityQuery(entityQueryDesc);
             // For each pending collect, send Collect request.
             moveToResourceJob.Schedule(entityQuery).Complete();
+            getTargetPositionsHandle.Complete();
+
+            // Maybe make this a member variale instead of local. For now it's fine.
+            NativeList<AttackPayload> attackPayloads = new NativeList<AttackPayload>(attackerToAttackees.Length, Allocator.TempJob);
+
+            MoveToAttackTargetJob moveToAttackTargetJob = new MoveToAttackTargetJob
+            {
+                deltaTime = deltaTime,
+                attackerToAttackeePosition = attackerToAttackees,
+                attackPayloads = attackPayloads
+            };
+
+            moveToAttackTargetJob.Schedule(attackQuery).Complete();
+            attackerToAttackees.Dispose();
+
+            // Later check range or melee
+            for (int i = 0; i < attackPayloads.Length; ++i)
+            {
+                AttackPayload attackPayload = attackPayloads[i];
+
+                ProjectileConfig projectileConfig = new ProjectileConfig
+                {
+                    startingPosition = attackPayload.startingPosition,
+                    linearVelocity = attackPayload.positionToAttack - attackPayload.startingPosition,
+                    maximumHits = 1,
+                    damage = 1,
+                    projectileId = 1,
+                    dimensions = new Vector3f(5, 0, 5),
+                    lifeTime = 20.0f
+                };
+
+                byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
+               
+                // Actual wielderId will should be The invader. Will keep to unit.
+                // Then make check if unit, then add points to owner.
+                // This way it's open for extension doing something extra for units that land killing blows.
+                WeaponMetadata weaponMetadata = new WeaponMetadata
+                {
+                    weaponType = MdgSchema.Common.Weapon.WeaponType.Projectile,
+                    wielderId = attackPayload.attackerId.Id
+                };
+                byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
+
+                spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
+                {
+                    Position = attackPayload.startingPosition,
+                    TypeToSpawn = MdgSchema.Common.GameEntityTypes.Weapon,
+                    TypeId = 1,
+                    Count = 1
+                }, null, serializedWeaponMetadata, serializedWeapondata);
+            }
+            // Need to do attack commands.
         }
 
         private void RunCommandRequests()

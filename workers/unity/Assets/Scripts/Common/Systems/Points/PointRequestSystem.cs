@@ -76,7 +76,8 @@ namespace MDG.Common.Systems.Point
                         switch (response.StatusCode)
                         {
                             case Improbable.Worker.CInterop.StatusCode.Success:
-                                UnityEngine.Debug.Log($"Points updated to {response.ResponsePayload.GetValueOrDefault()}");
+                                UnityEngine.Debug.Log($"Points updated to {response.ResponsePayload.GetValueOrDefault().EntityUpdated} " +
+                                    $"having {response.ResponsePayload.GetValueOrDefault().TotalPoints}");
                                 pointRequest.callback.Invoke(response.ResponsePayload.GetValueOrDefault());
                                 break;
                             case Improbable.Worker.CInterop.StatusCode.Timeout:
