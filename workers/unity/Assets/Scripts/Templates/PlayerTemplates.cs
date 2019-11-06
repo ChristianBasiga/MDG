@@ -11,11 +11,13 @@ using MdgSchema.Common;
 using PositionSchema = MdgSchema.Common.Position;
 using InventorySchema = MdgSchema.Common.Inventory;
 using CollisionSchema = MdgSchema.Common.Collision;
+using StatSchema = MdgSchema.Common.Stats;
 using PointSchema = MdgSchema.Common.Point;
 using SpawnSchema = MdgSchema.Common.Spawn;
 using Unity.Entities;
 using MDG.Invader.Components;
 using MDG.Common;
+using MDG.Common.Components;
 
 namespace MDG.Templates
 {
@@ -90,7 +92,7 @@ namespace MDG.Templates
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {
                 Position = new Vector3f(0, 0, 0),
-                Dimensions = new Vector3f(15, 0, 15)
+                Dimensions = new Vector3f(30, 0, 30)
             }, serverAttribute);
 
             template.AddComponent(new CollisionSchema.Collision.Snapshot
@@ -137,6 +139,17 @@ namespace MDG.Templates
                 AngularVelocity = Vector3f.Zero
             }, clientAttribute);
 
+
+            template.AddComponent(new StatSchema.StatsMetadata.Snapshot
+            {
+                Health = 10
+            }, serverAttribute);
+
+            template.AddComponent(new StatSchema.Stats.Snapshot
+            {
+                Health = 10
+            }, serverAttribute);
+        
             return template;
         }
              
@@ -155,9 +168,20 @@ namespace MDG.Templates
             if (!authoritative)
             {
                 entityManager.AddComponent<Enemy>(entity);
+                entityManager.AddComponent<Clickable>(entity);
+            }
+            else
+            {
+                entityManager.AddComponentData(entity, new CombatMetadata
+                {
+                    attackCooldown = 2.0f
+                });
+
+                entityManager.AddComponentData(entity, new CombatStats
+                {
+                    attackCooldown = 0
+                });
             }
         }
-
     }
-
 }

@@ -172,7 +172,17 @@ namespace MDG.Common.Systems.Weapon
             {
                 int currentHits = damageComponent.Hits;
                 foreach (KeyValuePair<EntityId, CollisionPoint> entityIdToCollision in collisionComponent.Collisions)
-                { 
+                {
+                    // Bullets of one ally may hit another ally on other person's end
+                    // since on their end the entity manager has enemy.
+
+                    //
+
+                    if (weaponComponent.WielderId.Equals(entityIdToCollision.Value.CollidingWith))
+                    {
+                        UnityEngine.Debug.Log("I ever happen?");
+                        continue;
+                    }
                     if (workerSystem.TryGetEntity(entityIdToCollision.Value.CollidingWith, out Entity collidedEntity))
                     {
                         if (EntityManager.HasComponent<Enemy>(collidedEntity))

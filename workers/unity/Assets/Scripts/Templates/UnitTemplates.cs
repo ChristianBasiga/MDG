@@ -113,7 +113,6 @@ namespace MDG.Templates
                 Health = 5
             }
             , serverAttribute);
-
         }
 
         private static void MakeTankUnit(EntityTemplate template, string clientAttribute)
@@ -142,17 +141,36 @@ namespace MDG.Templates
             if (authoritative)
             {
                 entityManager.AddComponentData(entity, new CommandListener { CommandType = MDG.Invader.Commands.CommandType.None });
+               
             }
             else
             {
                 entityManager.AddComponentData(entity, new Enemy());
             }
             entityManager.AddComponent<Clickable>(entity);
+
+            switch (type)
+            {
+                case UnitTypes.WORKER:
+                    AddWorkerUnitArchtype(entityManager, entity, authoritative);
+                    break;
+            }
         }
 
-        public static void AddWorkerUnitArchtype(EntityManager entityManager, Entity entity, bool authoritative)
+        private static void AddWorkerUnitArchtype(EntityManager entityManager, Entity entity, bool authoritative)
         {
+            if (authoritative)
+            {
+                entityManager.AddComponentData(entity, new CombatMetadata
+                {
+                    attackCooldown = 2.0f
+                });
 
+                entityManager.AddComponentData(entity, new CombatStats
+                {
+                    attackCooldown = 0
+                });
+            }
         }
     }
 }

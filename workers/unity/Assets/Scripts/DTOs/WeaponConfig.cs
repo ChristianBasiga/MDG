@@ -11,6 +11,8 @@ namespace MDG.DTO
     {
         public WeaponSchema.WeaponType weaponType;
         public long wielderId;
+        public float attackCooldown;
+
     }
 
     [Serializable]

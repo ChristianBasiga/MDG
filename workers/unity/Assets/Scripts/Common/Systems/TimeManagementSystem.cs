@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Collections;
+using MDG.Common.Components;
 using CommonSchema = MdgSchema.Common;
+using StatSchema = MdgSchema.Common.Stats;
 using Improbable.Gdk.Core;
 using Improbable.Gdk.Core.Commands;
 
@@ -14,6 +16,7 @@ namespace MDG.Common.Systems
     {
         CommandSystem commandSystem;
         EntityQuery timeLimitedAuth;
+        EntityQuery combatStatsQuery;
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -39,15 +42,23 @@ namespace MDG.Common.Systems
             }
         }
 
+
+
+
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
+            float deltaTime = UnityEngine.Time.deltaTime;
             NativeArray<EntityId> toRemove = new NativeArray<EntityId>(timeLimitedAuth.CalculateEntityCount(), Allocator.TempJob);
             TickTimeLimitedComponentsJob tickTimeLimitedComponentsJob = new TickTimeLimitedComponentsJob
             {
-                deltaTime = UnityEngine.Time.deltaTime,
+                deltaTime = deltaTime,
                 toRemove = toRemove
             };
             JobHandle tickTimeLimitedHandle = tickTimeLimitedComponentsJob.Schedule(timeLimitedAuth);
+
+
+
+
             // Since queues stuff in buffer must complete this frame so in sync.
             tickTimeLimitedHandle.Complete();
             for (int i = 0; i < toRemove.Length; ++i)

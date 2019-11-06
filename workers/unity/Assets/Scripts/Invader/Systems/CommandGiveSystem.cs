@@ -40,9 +40,14 @@ namespace MDG.Invader.Systems
             {
                 if (commandMetadata[0].CommandType != CommandType.None) return;
 
-                if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.y
-                    && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.y)
+                Debug.Log($" Looking at entity {gameMetadata.Type.ToString()}");
+                Debug.Log($"position {entityTransform.Position.ToString()}");
+                Debug.Log($"botleft {botLeft.ToString()} topright {topRight.ToString()}");
+
+                if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.z
+                    && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.z)
                 {
+                    Debug.Log("Within bounds...");
                     CommandListener command = new CommandListener { TargetId = spatialEntityId.EntityId, TargetPosition = entityTransform.Position };
                     switch (gameMetadata.Type)
                     {
@@ -56,6 +61,7 @@ namespace MDG.Invader.Systems
                             break;
                         case GameEntityTypes.Hunted:
                             command.CommandType = CommandType.Attack;
+                            Debug.Log("Creting attack command listener");
                             break;
                     }
                     commandMetadata[0] = command;
@@ -94,6 +100,7 @@ namespace MDG.Invader.Systems
                             entityCommandBuffer.AddComponent(index, entity, new MoveCommand { destination = commandGiven.TargetPosition});    
                             break;
                         case CommandType.Attack:
+                            Debug.Log("adding attack command");
                             entityCommandBuffer.AddComponent(index, entity, new AttackCommand { target = commandGiven.TargetId });
                             break;
                         case CommandType.Collect:
@@ -123,9 +130,12 @@ namespace MDG.Invader.Systems
             EntityId hunterId = linkedEntityComponent.EntityId;
             float3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
+            Debug.Log("mouse pos " + mousePos);
             // Creates bounding box for right click big enough to sense the click.
-            float3 botLeft = mousePos + new float3(-10, -10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
-            float3 topRight = mousePos + new float3(+10, +10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
+            // Maybe create alot of these / include botLeft and botRight in the NativeArray.
+            float3 botLeft = mousePos + new float3(-10, 0, -10);// * (10 - Input.mousePosition.magnitude) * .5f;
+            float3 topRight = mousePos + new float3(+10, 0, +10);// * (10 - Input.mousePosition.magnitude) * .5f;
+
             NativeArray<CommandListener> commandGiven = new NativeArray<CommandListener>(1, Allocator.TempJob);
             commandGiven[0] = new CommandListener { CommandType = CommandType.None };
             CommandProcessJob commandProcessJob = new CommandProcessJob

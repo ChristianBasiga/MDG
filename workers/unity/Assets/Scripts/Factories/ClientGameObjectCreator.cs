@@ -173,6 +173,7 @@ namespace MDG
                 }
                 else
                 {
+
                 }
                 pathToEntity = $"{pathToEntity}/{type.ToString()}";
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);

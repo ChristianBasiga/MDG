@@ -117,18 +117,16 @@ namespace MDG.Invader.Systems
                 float velocityMagnitude = currentVelocity.ToUnityVector().magnitude;
                 float initialAngle = Vector3.Angle(convertedVelocity, collisionPointDistNormalized);
                 int incrementDirection = HelperFunctions.IsLeftOfVector(collisionPointDistNormalized, convertedVelocity) ? 1 : -1;
-                Debug.Log("increment direction " + incrementDirection);
                 float totalAngleIncrement = 0;
                 int max = 180 * incrementDirection;
                 do
                 {
                     totalAngleIncrement += incrementDirection;
                     float newAngle = initialAngle + totalAngleIncrement;
-                    Debug.Log($" angle checking {newAngle}");
+
                     Vector3f newVelocity = new Vector3f(Mathf.Cos(newAngle), 0, Mathf.Sin(newAngle));
                     // Check dot product to see if still tends to direction of this collision.
                     float dotProduct = Vector3.Dot(collisionPointDistNormalized, newVelocity.ToUnityVector());
-                    Debug.Log("dot product " + dotProduct);
                     // It works, but it's trying routes that will fail since only take into account
                     // point not size of colliders in reroute
                     if (dotProduct < 0.5f)

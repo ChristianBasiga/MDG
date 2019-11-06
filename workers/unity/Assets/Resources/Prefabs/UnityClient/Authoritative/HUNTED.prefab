@@ -2728,6 +2728,7 @@ GameObject:
   - component: {fileID: 529765478}
   - component: {fileID: 6877471733964613111}
   - component: {fileID: 5594383856079982212}
+  - component: {fileID: 320547446535399665}
   m_Layer: 0
   m_Name: HUNTED
   m_TagString: Player
@@ -2974,6 +2975,18 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 203b57e74ea1fba40af0b42cd3f4718a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &320547446535399665
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7233340446756876164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45f5808b00677774fbc8b47cc36fb519, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &7270536602653809441
