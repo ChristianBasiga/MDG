@@ -40,8 +40,8 @@ namespace MDG.Invader.Systems
             {
                 if (commandMetadata[0].CommandType != CommandType.None) return;
 
-                if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.y
-                    && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.y)
+                if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.z
+                    && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.z)
                 {
                     CommandListener command = new CommandListener { TargetId = spatialEntityId.EntityId, TargetPosition = entityTransform.Position };
                     switch (gameMetadata.Type)
@@ -85,6 +85,9 @@ namespace MDG.Invader.Systems
                         interrupting = commandListener.CommandType,
                         target = commandGiven.TargetId
                     });
+                    commandListener.CommandType = commandGiven.CommandType;
+                    commandListener.TargetPosition = commandGiven.TargetPosition;
+                    commandListener.TargetId = commandGiven.TargetId;
                     switch (commandGiven.CommandType)
                     {
                         case CommandType.Move:
@@ -120,9 +123,12 @@ namespace MDG.Invader.Systems
             EntityId hunterId = linkedEntityComponent.EntityId;
             float3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
+            Debug.Log("mouse pos " + mousePos);
             // Creates bounding box for right click big enough to sense the click.
-            float3 botLeft = mousePos + new float3(-10, -10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
-            float3 topRight = mousePos + new float3(+10, +10, 0) * (10 - Input.mousePosition.magnitude) * .5f;
+            // Maybe create alot of these / include botLeft and botRight in the NativeArray.
+            float3 botLeft = mousePos + new float3(-10, 0, -10);// * (10 - Input.mousePosition.magnitude) * .5f;
+            float3 topRight = mousePos + new float3(+10, 0, +10);// * (10 - Input.mousePosition.magnitude) * .5f;
+
             NativeArray<CommandListener> commandGiven = new NativeArray<CommandListener>(1, Allocator.TempJob);
             commandGiven[0] = new CommandListener { CommandType = CommandType.None };
             CommandProcessJob commandProcessJob = new CommandProcessJob
@@ -136,7 +142,7 @@ namespace MDG.Invader.Systems
             // If right click did not overlap with any clickable, then it is a move command.
             if (commandMetadata.CommandType == CommandType.None)
             {
-                Vector3f convertedMousePos = new Vector3f(mousePos.x, mousePos.y, mousePos.z);
+                Vector3f convertedMousePos = new Vector3f(mousePos.x, 0, mousePos.z);
                 commandMetadata = new CommandListener { TargetPosition = convertedMousePos, CommandType = CommandType.Move };
             }
             CommandGiveJob commandGiveJob = new CommandGiveJob

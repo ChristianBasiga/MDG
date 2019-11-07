@@ -8,9 +8,16 @@ using MdgSchema.Player;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
+using PositionSchema = MdgSchema.Common.Position;
 using InventorySchema = MdgSchema.Common.Inventory;
+using CollisionSchema = MdgSchema.Common.Collision;
+using StatSchema = MdgSchema.Common.Stats;
 using PointSchema = MdgSchema.Common.Point;
 using SpawnSchema = MdgSchema.Common.Spawn;
+using Unity.Entities;
+using MDG.Invader.Components;
+using MDG.Common;
+using MDG.Common.Components;
 
 namespace MDG.Templates
 {
@@ -33,14 +40,19 @@ namespace MDG.Templates
                     Type = creationArgs.playerType
                 }, serverAttribute);
                 template = creationArgs.playerType == GameEntityTypes.Hunter ? AddInvaderComponents(clientAttribute,template) 
-                    : AddInvaderComponents(clientAttribute, template);
+                    : AddDefenderComponents(clientAttribute, template);
+
+                template.AddComponent(new EntityTransform.Snapshot
+                {
+                    Position = creationArgs.position
+                }, serverAttribute);
             }
            
            
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
             // No need for player transform, enttiy transform, etc. is enough now.
-            template.AddComponent(new PlayerTransform.Snapshot(), clientAttribute);
+           
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             TransformSynchronizationHelper.AddTransformSynchronizationComponents(template, clientAttribute);
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
@@ -76,6 +88,19 @@ namespace MDG.Templates
         {
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
+
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                Position = new Vector3f(0, 0, 0),
+                Dimensions = new Vector3f(30, 0, 30)
+            }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.Collision.Snapshot
+            {
+                Collisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>()
+            }, serverAttribute);
+
+
             template.AddComponent(new SpawnSchema.RespawnMetadata.Snapshot
             {
                 BaseRespawnPosition = Vector3f.Zero,
@@ -104,10 +129,59 @@ namespace MDG.Templates
                 InventorySize = 10
             }, serverAttribute);
 
+            template.AddComponent(new PositionSchema.LinearVelocity.Snapshot
+            {
+                Velocity = Vector3f.Zero
+            }, clientAttribute);
+
+            template.AddComponent(new PositionSchema.AngularVelocity.Snapshot
+            {
+                AngularVelocity = Vector3f.Zero
+            }, clientAttribute);
+
+
+            template.AddComponent(new StatSchema.StatsMetadata.Snapshot
+            {
+                Health = 10
+            }, serverAttribute);
+
+            template.AddComponent(new StatSchema.Stats.Snapshot
+            {
+                Health = 10
+            }, serverAttribute);
+        
             return template;
         }
              
 
 
+    }
+
+    public class PlayerArchtypes
+    {
+        public static void AddInvaderArchtype(EntityManager entityManager, Entity entity, bool authoritative)
+        {
+            
+        }
+        public static void AddDefenderArchtype(EntityManager entityManager, Entity entity, bool authoritative)
+        {
+            if (!authoritative)
+            {
+                entityManager.AddComponent<Enemy>(entity);
+                entityManager.AddComponent<Clickable>(entity);
+            }
+            else
+            {
+                entityManager.AddComponentData(entity, new CombatMetadata
+                {
+                    attackCooldown = 2.0f
+                });
+
+                entityManager.AddComponentData(entity, new CombatStats
+                {
+                    attackCooldown = 0
+                });
+            }
+        }
     }
 }

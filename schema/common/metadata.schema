@@ -9,6 +9,7 @@ enum GameEntityTypes{
     Invalid = 5;
     Resource = 6;
     Building = 7;
+    Weapon = 8;
 }
 
 component GameMetadata{

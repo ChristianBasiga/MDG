@@ -30,6 +30,29 @@ namespace MDG.Common
                 && (position.Z >= center.Z - height / 2);
         }
 
+        public static Vector3f Vector3fFromUnityVector(Vector3 unityVector)
+        {
+            return new Vector3f(unityVector.x, unityVector.y, unityVector.z);
+        }
+
+        public static bool IsLeftOfVector(Vector3 lhs, Vector3 rhs)
+        {
+            float angleOfCollisionPoint = Mathf.Atan2(lhs.z, lhs.x);
+            angleOfCollisionPoint -= 90.0f;
+            Vector3 normal = new Vector3(Mathf.Cos(angleOfCollisionPoint), 0, Mathf.Sign(angleOfCollisionPoint));
+            return Vector3.Dot(normal, rhs) < 0;
+        }
+
+        public static float Magnitude(Vector3f vector)
+        {
+            float sumProduct = vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z;
+            return Mathf.Sqrt(sumProduct);
+        }
+        public static Vector3f Normalize(Vector3f vector)
+        {
+            return vector / Magnitude(vector);
+        }
+
         public static float Distance(Vector3f pos1, Vector3f pos2)
         {
             return (pos1 - pos2).ToUnityVector().magnitude;
@@ -51,7 +74,7 @@ namespace MDG.Common
         {
             if (pct == healthbar.fillAmount)
             {
-                yield return null;
+                yield return new WaitForEndOfFrame();
             }
             {
                 float elapsed = 0;
@@ -61,7 +84,7 @@ namespace MDG.Common
                 {
                     elapsed += Time.deltaTime;
                     healthbar.fillAmount = Mathf.Lerp(currPercentage, pct, elapsed / timeToUpdate);
-                    yield return null;
+                    yield return new WaitForEndOfFrame();
                 }
                 healthbar.fillAmount = pct;
             }

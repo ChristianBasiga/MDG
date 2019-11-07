@@ -37,7 +37,7 @@ namespace MDG.Game
 
             var startGameRequests = commandSystem.GetRequests<GameSchema.GameStatus.StartGame.ReceivedRequest>(new EntityId(3));
 
-            if (startGameRequests.Count > 0)
+            if (!startedGame && startGameRequests.Count > 0)
             {
                 startedGame = true;     
                 workerSystem.TryGetEntity(new EntityId(3), out Unity.Entities.Entity gameManagerEntity);

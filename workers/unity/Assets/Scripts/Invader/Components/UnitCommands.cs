@@ -10,12 +10,14 @@ namespace MDG.Invader.Components
     public struct MoveCommand : IComponentData
     {
         public Vector3f destination;
+        public bool applied;
     }
 
     // Will get positon of target each time to follow.
     public struct AttackCommand : IComponentData
     {
         public EntityId target;
+        public bool attacking;
     }
 
     // resource location won't change, so won't be checking position each frame

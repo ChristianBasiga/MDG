@@ -1,10 +1,8 @@
 ﻿using Improbable;
 using Improbable.Gdk.Core;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using MDG.Common;
 using Unity.Collections;
+using UnityEngine;
 
 namespace MDG.Common.Datastructures
 {
@@ -47,6 +45,9 @@ namespace MDG.Common.Datastructures
         QuadTree northEast;
         QuadTree southWest;
         QuadTree southEast;
+
+        public delegate void QuadTreeEventHandler(QuadNode quadNode);
+        public event QuadTreeEventHandler OnMovedRegions;
 
         Dictionary<EntityId, Vector3f> entitiesInThisRegion;
         #region Interfacing code
@@ -143,8 +144,10 @@ namespace MDG.Common.Datastructures
         // Unless I have it be own
         public void MoveEntity(EntityId entityId, Vector3f originalPosition, Vector3f newPosition)
         {
-            Remove(entityId, originalPosition);
-            Insert(entityId, newPosition);
+            if (Remove(entityId, originalPosition))
+            {
+                Insert(entityId, newPosition);
+            }
         }
 
         public void MoveEntity(EntityId entityId, Vector3f newPosition)
@@ -161,6 +164,16 @@ namespace MDG.Common.Datastructures
             if (!HelperFunctions.IsWithinRegion(quadNode.Value.center, quadNode.Value.dimensions, newPosition))
             {
                 MoveEntity(entityId, quadNode.Value.position, newPosition);
+                QuadNode newNode = new QuadNode
+                {
+                    entityId = entityId,
+                    position = newPosition
+                };
+                OnMovedRegions?.Invoke(newNode);
+            }
+            else
+            {
+                entitiesInThisRegion[entityId] = newPosition;
             }
         }
 
@@ -176,8 +189,8 @@ namespace MDG.Common.Datastructures
             {
                 if (entitiesInThisRegion.ContainsKey(entityId))
                 {
-                    throw new System.Exception($" The entity with id {entityId} is already in this quadtree. " +
-                        $"Please use MoveEntity insted");
+                    entitiesInThisRegion[entityId] = position;
+                    return true;
                 }
                 if (entitiesInThisRegion.Count + 1 > capacity)
                 {
@@ -197,7 +210,7 @@ namespace MDG.Common.Datastructures
                     || southEast.Insert(entityId, position);
             }
             entitiesInThisRegion.Add(entityId, position);
-            return false;
+            return true;
         }
 
         // Maybe should create private try remove.
@@ -214,11 +227,9 @@ namespace MDG.Common.Datastructures
                     || southEast.Remove(entityId, position)
                     || southWest.Remove(entityId, position);
             }
-            else
-            {
-                entitiesInThisRegion.Remove(entityId);
-                return true;
-            }
+
+            entitiesInThisRegion.Remove(entityId);
+            return true;
         }
 
         public bool Remove(EntityId entityId)
@@ -268,12 +279,6 @@ namespace MDG.Common.Datastructures
             return false;
         }
 
-        // Just keeping it in interface functions fine, them returning bools NOT huge deal.
-        private bool TryRemove(EntityId entityId, Vector3f position)
-        {
-            return false;
-        }
-
         // Insantiates 4 children to create inner regions.
         // Here is peace I'm forgetting.
         // When I subdivide, they need to move to divisions.
@@ -282,11 +287,6 @@ namespace MDG.Common.Datastructures
             float width = dimensions.X;
             float height = dimensions.Z;
             // Technically can subdivide indefinitely, but no need.
-            if (width <= 1 || height <= 1)
-            {
-                // Replace with my custom logger.
-                UnityEngine.Debug.Log("At unit size, cannot subdivide further");
-            }
             Vector3f newDimensions = new Vector3f(width / 2, 0, height / 2);
             //Dimensions also needs to be halved.
             //Subdividing all at once, makes  pruning a little harder, but reduces duplicate code.

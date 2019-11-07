@@ -55,7 +55,8 @@ namespace MDG.Common.Systems.Point
                     long requestId = commandSystem.SendCommand(new PointSchema.Point.UpdatePoints.Request
                     {
                         TargetEntityId = entityId,
-                        Payload = requestPayload.payload
+                        Payload = requestPayload.payload,
+                        AllowShortCircuiting = true
                     });
                     requestIdToPayload[requestId] = requestPayload;
                 }
@@ -75,11 +76,13 @@ namespace MDG.Common.Systems.Point
                         switch (response.StatusCode)
                         {
                             case Improbable.Worker.CInterop.StatusCode.Success:
-                                UnityEngine.Debug.Log($"Points updated to {response.ResponsePayload.GetValueOrDefault()}");
+                                UnityEngine.Debug.Log($"Points updated to {response.ResponsePayload.GetValueOrDefault().EntityUpdated} " +
+                                    $"having {response.ResponsePayload.GetValueOrDefault().TotalPoints}");
                                 pointRequest.callback.Invoke(response.ResponsePayload.GetValueOrDefault());
                                 break;
                             case Improbable.Worker.CInterop.StatusCode.Timeout:
                                 // Requeue.
+                                UnityEngine.Debug.Log("Timed out");
                                 pointRequests.Add(pointRequest);
                                 break;
                             default:

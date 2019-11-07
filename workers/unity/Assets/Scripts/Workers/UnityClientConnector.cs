@@ -14,6 +14,7 @@ using MDG.Templates;
 using MDG.Common.Systems.Inventory;
 using MDG.Common.Systems.Spawn;
 using MDG.Common.Systems.Point;
+using MDG.Common.Systems.Weapon;
 
 namespace MDG
 {
@@ -66,6 +67,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<SpawnRequestSystem>();
             Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
             Worker.World.GetOrCreateSystem<PointRequestSystem>();
+            Worker.World.GetOrCreateSystem<WeaponSystem>();
             //Invader systems.
             Worker.World.GetOrCreateSystem<SelectionSystem>();
             Worker.World.GetOrCreateSystem<CommandGiveSystem>();

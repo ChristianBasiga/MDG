@@ -8,6 +8,7 @@ type PointRequest{
 
 type PointResponse{
     int32 total_points = 1;
+    EntityId entity_updated = 2;
 }
 
 

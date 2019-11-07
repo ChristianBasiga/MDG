@@ -34,6 +34,7 @@ namespace MDG.ClientSide.UserInterface
             }), OnCreatePlayerResponse);
 
 
+            // Here, what I COULD do is add the respective defender and invader systems instead of in client connector.
             var commandSystem = clientConnector.Worker.World.GetOrCreateSystem<CommandSystem>();
             commandSystem.SendCommand(new MdgSchema.Game.GameStatus.StartGame.Request
             {

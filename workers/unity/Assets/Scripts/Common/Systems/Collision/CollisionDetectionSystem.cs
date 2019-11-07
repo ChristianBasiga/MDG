@@ -21,6 +21,7 @@ namespace MDG.Common.Systems.Collision
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     [UpdateBefore(typeof(CollisionHandlerSystem))]
     [UpdateAfter(typeof(PositionSystem))]
+    [AlwaysUpdateSystem]
     public class CollisionDetectionSystem : ComponentSystem
     {
 
@@ -47,6 +48,7 @@ namespace MDG.Common.Systems.Collision
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
 
             updateCollisionGroup = GetEntityQuery(
+                ComponentType.Exclude<NewlyAddedSpatialOSEntity>(),
                 ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<CollisionSchema.BoxCollider.Component>(),
                 ComponentType.ReadWrite<CollisionSchema.Collision.Component>(),
@@ -56,6 +58,7 @@ namespace MDG.Common.Systems.Collision
             updateCollisionGroup.SetFilter(CollisionSchema.Collision.ComponentAuthority.Authoritative);
 
             checkCollisionGroup = GetEntityQuery(
+                    ComponentType.Exclude<NewlyAddedSpatialOSEntity>(),
                     ComponentType.ReadOnly<SpatialEntityId>(),
                     ComponentType.ReadOnly<EntityTransform.Component>(),
                     ComponentType.ReadOnly<CollisionSchema.BoxCollider.Component>()
@@ -110,49 +113,44 @@ namespace MDG.Common.Systems.Collision
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> previousCollisions = collisionComponent.Collisions;
                 foreach(var key in previousCollisions.Keys)
                 {
-                    Debug.Log("initial collisions " + key);
 
                 }
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> newCollisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>();
                 List<QuadNode> potentialCollisions = positionSystem.querySpatialPartition(entityTransform.Position);
                 foreach (QuadNode potentialCollision in potentialCollisions)
                 {
-
-                    workerSystem.TryGetEntity(potentialCollision.entityId, out Entity entity);
-                    CollisionSchema.BoxCollider.Component otherBoxCollider = EntityManager.GetComponentData<CollisionSchema.BoxCollider.Component>(entity);
-
-                    if (!potentialCollision.entityId.Equals(spatialEntityId.EntityId))
+                    if (workerSystem.TryGetEntity(potentialCollision.entityId, out Entity entity) && EntityManager.HasComponent<CollisionSchema.BoxCollider.Component>(entity))
                     {
-
-                        if (HelperFunctions.Intersect(potentialCollision.position - otherBoxCollider.Position, otherBoxCollider.Dimensions,
-                            entityTransform.Position - boxCollider.Position, boxCollider.Dimensions))
+                        CollisionSchema.BoxCollider.Component otherBoxCollider = EntityManager.GetComponentData<CollisionSchema.BoxCollider.Component>(entity);
+                        if (!potentialCollision.entityId.Equals(spatialEntityId.EntityId))
                         {
-                            newCollisions[potentialCollision.entityId] = new CollisionSchema.CollisionPoint
+
+                            if (HelperFunctions.Intersect(potentialCollision.position - otherBoxCollider.Position, otherBoxCollider.Dimensions,
+                                entityTransform.Position - boxCollider.Position, boxCollider.Dimensions))
                             {
-                                CollidingWith = potentialCollision.entityId,
-                                Distance = potentialCollision.position - entityTransform.Position
-                            };
+                                newCollisions[potentialCollision.entityId] = new CollisionSchema.CollisionPoint
+                                {
+                                    CollidingWith = potentialCollision.entityId,
+                                    Distance = potentialCollision.position - entityTransform.Position
+                                };
+                            }
+                            else
+                            {
+                                // Raise on leave event if was in previous collisions
+                            }
                         }
-                        else
+
+
+                        if (newCollisions.Count > 0)
                         {
-                            // Raise on leave event if was in previous collisions
+                            componentUpdateSystem.SendEvent(new CollisionSchema.Collision.OnCollision.Event(new CollisionSchema.CollisionEventPayload
+                            {
+                                CollidedWith = newCollisions
+                            }), spatialEntityId.EntityId);
                         }
+                        collisionComponent.Collisions = newCollisions;
                     }
-                   
                 }
-                if (newCollisions.Count > 0)
-                {
-                    Debug.Log("Sending events");
-                    componentUpdateSystem.SendEvent(new CollisionSchema.Collision.OnCollision.Event(new CollisionSchema.CollisionEventPayload
-                    {
-                        CollidedWith = newCollisions
-                    }), spatialEntityId.EntityId);
-                }
-                foreach (var key in newCollisions.Keys)
-                {
-                    Debug.Log("updated collisions " + key);
-                }
-                collisionComponent.Collisions = newCollisions;
             });
 
             /* My approach to this wasn't the best, should've stayed using the AABB tree.

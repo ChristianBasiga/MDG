@@ -23,6 +23,8 @@ namespace MDG.Invader.Systems
     /// </summary>
     [DisableAutoCreation]
     [AlwaysUpdateSystem]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
+    [UpdateAfter(typeof(CommandUpdateSystem))]
     public class UnitRerouteSystem : ComponentSystem
     {
         ComponentUpdateSystem componentUpdateSystem;
@@ -39,32 +41,58 @@ namespace MDG.Invader.Systems
 
 
         // Apply velocity towards actual destination over rerouted velocity.
-        struct ResolveRerouteJob : IJobForEachWithEntity<RerouteComponent, PositionSchema.LinearVelocity.Component, EntityTransform.Component>
+        // Auto cancel reroute if no command given.
+        struct ResolveRerouteJob : IJobForEachWithEntity<RerouteComponent, PositionSchema.LinearVelocity.Component, EntityTransform.Component,
+            CollisionSchema.BoxCollider.Component, CommandListener>
         {
             public float deltaTime;
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
 
             public void Execute(Entity entity, int index, ref RerouteComponent rerouteComponent, ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
-                [ReadOnly] ref EntityTransform.Component entityTransform)
+                [ReadOnly] ref EntityTransform.Component entityTransform, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider,
+                [ReadOnly] ref CommandListener commandListener)
             {
-                if (!rerouteComponent.applied)
+
+                if (commandListener.CommandType == Commands.CommandType.None)
                 {
-                    linearVelocityComponent.Velocity = rerouteComponent.subDestination;
-                    rerouteComponent.applied = true;
+                    entityCommandBuffer.RemoveComponent(index, entity, typeof(RerouteComponent));
+                    linearVelocityComponent.Velocity = Vector3f.Zero;
                 }
                 else
                 {
-                    Vector3f velocityTowardsDestination = rerouteComponent.destination - entityTransform.Position;
-                    linearVelocityComponent.Velocity += velocityTowardsDestination * deltaTime;
-
-                    float dotProduct = Vector3.Dot(linearVelocityComponent.Velocity.ToUnityVector().normalized,
-                        velocityTowardsDestination.ToUnityVector().normalized);
-                    // Then it's velocity is targeting destination likely.
-                    if (dotProduct > 0.8f)
+                    if (!rerouteComponent.applied)
                     {
-                        Debug.Log("Stopping reroute");
+                        // Add.
+                        linearVelocityComponent.Velocity = rerouteComponent.subDestination;
+                        rerouteComponent.applied = true;
+                    }
+                    else
+                    {
+                        Vector3f velocityTowardsDestination = rerouteComponent.destination - entityTransform.Position;
                         linearVelocityComponent.Velocity = velocityTowardsDestination;
-                        entityCommandBuffer.RemoveComponent(index, entity, typeof(RerouteComponent));
+                        float distance = HelperFunctions.Distance(rerouteComponent.destination, entityTransform.Position);
+
+                        if (distance < boxCollider.Dimensions.ToUnityVector().magnitude)
+                        {
+                            Debug.Log("Finished moving");
+                            linearVelocityComponent.Velocity = Vector3f.Zero;
+                            entityCommandBuffer.RemoveComponent(index, entity, typeof(RerouteComponent));
+                        }
+
+                        /*
+                        // I need let reroute just happen.
+                        Vector3f velocityTowardsDestination = rerouteComponent.destination - entityTransform.Position;
+                        linearVelocityComponent.Velocity += velocityTowardsDestination * deltaTime;
+
+                        float dotProduct = Vector3.Dot(linearVelocityComponent.Velocity.ToUnityVector().normalized,
+                            velocityTowardsDestination.ToUnityVector().normalized);
+                        // Then it's velocity is targeting destination likely.
+                        if (dotProduct > 0.5f)
+                        {
+                            Debug.Log("Stopping reroute");
+                            linearVelocityComponent.Velocity = velocityTowardsDestination;
+                            entityCommandBuffer.RemoveComponent(index, entity, typeof(RerouteComponent));
+                        }*/
                     }
                 }
             }
@@ -79,38 +107,31 @@ namespace MDG.Invader.Systems
             [WriteOnly]
             public NativeQueue<Vector3f>.ParallelWriter potentialRoutes;
 
-
-
             [ReadOnly]
             public NativeArray<CollisionSchema.CollisionPoint> collisionPoints;
 
             public void Execute(int index)
             {
-                Vector3 collisionPointDistNormal = collisionPoints[index].Distance.ToUnityVector().normalized;
-               // CollisionSchema.BoxCollider.Component collider = colliders[index];
-
-                float magnitude = currentVelocity.ToUnityVector().magnitude;
-                float initialAngle = Mathf.Atan2(currentVelocity.Z, currentVelocity.X);
-                float deltaAngle = initialAngle;
+                Vector3 collisionPointDistNormalized = collisionPoints[index].Distance.ToUnityVector().normalized;
+                Vector3 convertedVelocity = currentVelocity.ToUnityVector().normalized;
+                float velocityMagnitude = currentVelocity.ToUnityVector().magnitude;
+                float initialAngle = Vector3.Angle(convertedVelocity, collisionPointDistNormalized);
+                int incrementDirection = HelperFunctions.IsLeftOfVector(collisionPointDistNormalized, convertedVelocity) ? 1 : -1;
                 float totalAngleIncrement = 0;
-                int incrementDirection = Vector3.Angle(currentVelocity.ToUnityVector(), collisionPoints[index].Distance.ToUnityVector()) > 0 ? 1 : -1;
-                Debug.Log($"Increment direction: {incrementDirection}");
-                int max = 360 * incrementDirection;
-
+                int max = 180 * incrementDirection;
                 do
                 {
                     totalAngleIncrement += incrementDirection;
-                    Vector3f vectorToTryNormalized = new Vector3f(Mathf.Cos(initialAngle + totalAngleIncrement), 0, 
-                        Mathf.Sin(initialAngle + totalAngleIncrement));
-                    // Check dot product to see if still tends to direction of this collision.
-                    float dotProduct = Vector3.Dot(collisionPointDistNormal, vectorToTryNormalized.ToUnityVector());
+                    float newAngle = initialAngle + totalAngleIncrement;
 
-                    Debug.Log($"dot product in choosign reroute {dotProduct}");
+                    Vector3f newVelocity = new Vector3f(Mathf.Cos(newAngle), 0, Mathf.Sin(newAngle));
+                    // Check dot product to see if still tends to direction of this collision.
+                    float dotProduct = Vector3.Dot(collisionPointDistNormalized, newVelocity.ToUnityVector());
                     // It works, but it's trying routes that will fail since only take into account
                     // point not size of colliders in reroute
-                    if (dotProduct < 0)
+                    if (dotProduct < 0.5f)
                     {
-                        potentialRoutes.Enqueue(vectorToTryNormalized * magnitude);
+                        potentialRoutes.Enqueue(newVelocity * velocityMagnitude);
                         break;
                     }
                 } while (totalAngleIncrement < max);
@@ -125,7 +146,9 @@ namespace MDG.Invader.Systems
                 ComponentType.ReadOnly<EntityTransform.Component>(),
                 ComponentType.ReadWrite<RerouteComponent>(),
                 ComponentType.ReadWrite<PositionSchema.LinearVelocity.Component>(),
-                ComponentType.ReadOnly<PositionSchema.LinearVelocity.ComponentAuthority>()
+                ComponentType.ReadOnly<PositionSchema.LinearVelocity.ComponentAuthority>(),
+                ComponentType.ReadOnly<CollisionSchema.BoxCollider.Component>(),
+                ComponentType.ReadOnly<CommandListener>()
                 );
 
             rerouteGroup.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
@@ -158,12 +181,22 @@ namespace MDG.Invader.Systems
             var events = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.OnCollision.Event>();
             Queue<ScheduleRedirectJobInfo> scheduledJobs = new Queue<ScheduleRedirectJobInfo>();
             Dictionary<EntityId, NativeQueue<Vector3f>> entityIdToPotentialRedirects = new Dictionary<EntityId, NativeQueue<Vector3f>>();
-            Queue<NativeQueue<Vector3f>> allPotentialReroutes = new Queue<NativeQueue<Vector3f>>();
+            Dictionary<EntityId, NativeQueue<Vector3f>> allPotentialReroutes = new Dictionary<EntityId, NativeQueue<Vector3f>>();
             LinkedList<NativeArray<CollisionSchema.CollisionPoint>> toDispose = new LinkedList<NativeArray<CollisionSchema.CollisionPoint>>();
 
             for (int i = 0; i < events.Count; ++i)
             {
                 ref readonly var eventSent = ref events[i];
+                workerSystem.TryGetEntity(eventSent.EntityId, out Entity entity);
+                if (!EntityManager.HasComponent<CommandListener>(entity) || EntityManager.GetComponentData<CommandListener>(entity).CommandType == Commands.CommandType.None)
+                {
+                    continue;
+                }
+
+                if (allPotentialReroutes.ContainsKey(eventSent.EntityId))
+                {
+                    continue;
+                }
 
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> collidedWith = eventSent.Event.Payload.CollidedWith;
                 NativeArray<CollisionSchema.CollisionPoint> collisionPoints = new NativeArray<CollisionSchema.CollisionPoint>(collidedWith.Count, Allocator.TempJob);
@@ -178,7 +211,7 @@ namespace MDG.Invader.Systems
                     collisionPoints[pointsAdded++] = keyValuePair.Value;
                 }
 
-                workerSystem.TryGetEntity(eventSent.EntityId, out Entity entity);
+               
                 PositionSchema.LinearVelocity.Component linearVelocityComponent = EntityManager.GetComponentData<PositionSchema.LinearVelocity.Component>(entity);
                 TryRerouteJob tryRerouteJob = new TryRerouteJob
                 {
@@ -193,8 +226,7 @@ namespace MDG.Invader.Systems
                     entityId = eventSent.EntityId,
                     jobHandle = tryRerouteJob.Schedule(collisionPoints.Length, 1)
                 };
-                allPotentialReroutes.Enqueue(potentialReroutes);
-               // scheduleRedirectJob.jobHandle.Complete();
+                allPotentialReroutes[eventSent.EntityId] = (potentialReroutes);
                 scheduledJobs.Enqueue(scheduleRedirectJob);
             }
 
@@ -204,7 +236,7 @@ namespace MDG.Invader.Systems
 
                 scheduleRedirectJob.jobHandle.Complete();
                 // Right now thinking in terms of applying reroute as velocity, when in reality I want it sub destination.
-                NativeQueue<Vector3f> potentialReroutes = allPotentialReroutes.Peek();
+                NativeQueue<Vector3f> potentialReroutes = allPotentialReroutes[scheduleRedirectJob.entityId];
 
                 NativeArray<CollisionSchema.CollisionPoint> collisionPoints = toDispose.First.Value;
                 toDispose.RemoveFirst();
@@ -243,17 +275,18 @@ namespace MDG.Invader.Systems
                 collisionPoints.Dispose();
 
                 scheduledJobs.Dequeue();
-                allPotentialReroutes.Dequeue();
+                allPotentialReroutes.Remove(scheduleRedirectJob.entityId);
                 // If there was a valid redirect, add the redirect component, otherwise Unit cannot move.
                 // This will be non spatial component
-                if (rerouteVector.HasValue)
+                if (rerouteVector.HasValue && rerouteVector.Value != Vector3f.Zero)
                 {
                     PositionSchema.LinearVelocity.Component linearVelocityComponent = EntityManager.GetComponentData<PositionSchema.LinearVelocity.Component>(entity);
                     EntityTransform.Component entityTransform = EntityManager.GetComponentData<EntityTransform.Component>(entity);
 
+                    CommandListener commandListener = EntityManager.GetComponentData<CommandListener>(entity);
                     RerouteComponent rerouteComponent = new RerouteComponent
                     {
-                        destination = linearVelocityComponent.Velocity + entityTransform.Position,
+                        destination = commandListener.TargetPosition,
                         subDestination = rerouteVector.Value,
                         applied = false
                     };

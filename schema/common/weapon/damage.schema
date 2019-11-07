@@ -1,0 +1,7 @@
+package mdg_schema.common.weapon;
+
+component Damage{
+    id = 963;
+    int32 damage_dealt = 1;
+    int32 hits = 2;
+}

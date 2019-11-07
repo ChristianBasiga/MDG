@@ -15,6 +15,8 @@ using MDG.Common.Systems.Inventory;
 using MDG.Common.Systems.Spawn;
 using MDG.Common.Systems.Point;
 using MDG.Common.Systems.Position;
+using MDG.Common.Systems.Stat;
+using MDG.Common.Systems.Weapon;
 
 namespace MDG
 {
@@ -54,12 +56,17 @@ namespace MDG
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>(); 
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
+            Worker.World.GetOrCreateSystem<PositionSystem>();
+            //Worker.World.GetOrCreateSystem<PointRequestSystem>();
             Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
+            Worker.World.GetOrCreateSystem<StatMonitorSystem>();
+            //Worker.World.GetOrCreateSystem<WeaponSystem>();
+
             Worker.World.GetOrCreateSystem<Game.GameStatusSystem>();
             Worker.World.GetOrCreateSystem<RespawnMonitorSystem>();
             Worker.World.GetOrCreateSystem<PointSystem>();
-            Worker.World.GetOrCreateSystem<PositionSystem>();
+            Worker.World.GetOrCreateSystem<TimeManagementSystem>();
             Worker.World.GetOrCreateSystem<MDG.Common.Systems.Collision.CollisionDetectionSystem>();
             Worker.World.GetOrCreateSystem<MDG.Common.Systems.Collision.CollisionHandlerSystem>();
 

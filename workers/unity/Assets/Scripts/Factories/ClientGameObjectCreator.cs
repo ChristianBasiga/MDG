@@ -11,6 +11,7 @@ using MDG.Common.Components;
 using MDG.Invader.Components;
 using MDG.Invader.Commands;
 using UnitSchema = MdgSchema.Units;
+using WeaponSchema = MdgSchema.Common.Weapon;
 using MdgSchema.Common;
 using Unity.Transforms;
 using Unity.Rendering;
@@ -19,6 +20,7 @@ using Templates = MDG.Templates;
 using SpawnSystems = MDG.Common.Systems.Spawn;
 using InvaderSystems =  MDG.Invader.Systems;
 using MdgSchema.Units;
+using MDG.Templates;
 
 namespace MDG
 {
@@ -33,6 +35,19 @@ namespace MDG
     // Use zenject to install stuff here.
     public class ClientGameObjectCreator : IEntityGameObjectCreator
     {
+        #region Prefab Mappings
+        // type, and id to get specific name, later on will be set via injection
+        private Dictionary<WeaponSchema.WeaponType, Dictionary<int, string>> weaponPrefabNames = new Dictionary<WeaponSchema.WeaponType, Dictionary<int, string>>
+        {
+            {
+                WeaponSchema.WeaponType.Projectile, new Dictionary<int, string>{
+                    { 1, "Bullet"}
+                }
+            }
+        };
+        #endregion
+
+
         public delegate void EntityChangeEventHandler(EntityId entityId);
 
         // For others to know when thish happens.
@@ -103,29 +118,42 @@ namespace MDG
                     return;
                 }
                 GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
+                WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
+                worker.TryGetEntity(entity.SpatialOSEntityId, out Entity ecsEntity);
                 GameEntityTypes type = gameMetaData.Type;
+                if (type == GameEntityTypes.Hunter)
+                {
+                    PlayerArchtypes.AddInvaderArchtype(worker.EntityManager, ecsEntity, hasAuthority);
+
+                }
+                else
+                {
+                   
+                    PlayerArchtypes.AddDefenderArchtype(worker.EntityManager, ecsEntity, hasAuthority);
+                }
+
                 if (hasAuthority)
                 {
-                    WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
+                    pathToEntity = $"{pathToEntity}/Authoritative";
+
+                    if (GameObject.FindGameObjectWithTag("MainCamera"))
+                    {
+                        GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
+                    }
                     if (type == GameEntityTypes.Hunter)
                     {
-                        Entity hunterEntity;
-                        if (worker.TryGetEntity(entity.SpatialOSEntityId, out hunterEntity))
+
+
+                        int multiplier = startingPointsUsed == 1 ? 1 : -1;
+
+                        for (int i = 0; i < initialUnitCoordinates.Count; ++i)
                         {
-                            //Add Authoritative Invader Components.
-
-                            int multiplier = startingPointsUsed == 1 ? 1 : -1;
-
-
-                            for (int i = 0; i < initialUnitCoordinates.Count; ++i)
+                            spawnReqSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                             {
-                                spawnReqSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
-                                {
-                                    TypeToSpawn = GameEntityTypes.Unit,
-                                    Position = initialUnitCoordinates[i],
-                                    TypeId = (int)UnitTypes.WORKER
-                                });
-                            }
+                                TypeToSpawn = GameEntityTypes.Unit,
+                                Position = initialUnitCoordinates[i],
+                                TypeId = (int)UnitTypes.WORKER
+                            });
                         }
                         /* systems not being added during here. Hmm.
                         spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.SelectionSystem>();
@@ -137,25 +165,20 @@ namespace MDG
                     {
                         // Add Defender specific systems.
                     }
-                   
 
-                    pathToEntity = $"{pathToEntity}/Authoritative";
                 }
                 else if (gameMetaData.Type == GameEntityTypes.Hunter)
                 {
                     return;
                 }
-
-                pathToEntity = $"{pathToEntity}/{type.ToString()}";
-                if (GameObject.FindGameObjectWithTag("MainCamera"))
+                else
                 {
-                    GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
+
                 }
+                pathToEntity = $"{pathToEntity}/{type.ToString()}";
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 Vector3 startingPoint = startingPoints[startingPointsUsed].ToUnityVector();
                 created.transform.position = startingPoint;
-                created.name = "Hunter_Spawned";
-                created.tag = "MainCamera";
             }
             else if (metaData.EntityType.Equals("Unit"))
             {
@@ -164,7 +187,7 @@ namespace MDG
                 if (worker.TryGetEntity(entity.SpatialOSEntityId, out unitEntity))
                 {
                     UnitSchema.Unit.Component unitComponent = entity.GetComponent<UnitSchema.Unit.Component>();
-                    Templates.Archtypes.AddUnitArchtype(worker.EntityManager, unitEntity, hasAuthority, unitComponent.Type);
+                    Templates.UnitArchtypes.AddUnitArchtype(worker.EntityManager, unitEntity, hasAuthority, unitComponent.Type);
                 }
                 pathToEntity = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
                 pathToEntity = $"{pathToEntity}/Unit";
@@ -172,6 +195,7 @@ namespace MDG
                 GameObject gameObject = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 gameObject.tag = "Unit";
                 gameObject.name = $"{gameObject.name} {(hasAuthority? "authoritative" : "")}";
+
             }
             else if (metaData.EntityType.Equals("Resource"))
             {
@@ -184,6 +208,17 @@ namespace MDG
             {
                 pathToEntity = $"{pathToEntity}/GameManager";
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
+            }
+            else if (metaData.EntityType.Equals("Weapon"))
+            {
+                WeaponSchema.Weapon.Component weaponComponent = entity.GetComponent<WeaponSchema.Weapon.Component>();
+                WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
+                worker.TryGetEntity(entity.SpatialOSEntityId, out Entity weaponEntity);
+                WeaponArchtypes.AddWeaponArchtype(_world.EntityManager, weaponEntity, hasAuthority);
+                string prefabName = weaponPrefabNames[weaponComponent.WeaponType][weaponComponent.WeaponId];
+                pathToEntity = $"{pathToEntity}/Weapons/{prefabName}";
+                GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
+                created.tag = weaponComponent.  WeaponType.ToString();
             }
             else
             {
@@ -230,7 +265,6 @@ namespace MDG
             {
                 linker.LinkGameObjectToSpatialOSEntity(entity.SpatialOSEntityId, gameObject);
             }
-
             EntityToGameObjects[entity.SpatialOSEntityId] = gameObject;
             return gameObject;
         }
