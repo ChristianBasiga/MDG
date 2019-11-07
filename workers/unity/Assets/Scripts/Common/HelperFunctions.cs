@@ -35,6 +35,12 @@ namespace MDG.Common
             return new Vector3f(unityVector.x, unityVector.y, unityVector.z);
         }
 
+        // returns dot product of normalized vectors.
+        public static float DotProduct(Vector3f lhs, Vector3f rhs)
+        {
+            return Vector3.Dot(Normalize(lhs).ToUnityVector(), Normalize(rhs).ToUnityVector());
+        }
+
         public static bool IsLeftOfVector(Vector3 lhs, Vector3 rhs)
         {
             float angleOfCollisionPoint = Mathf.Atan2(lhs.z, lhs.x);

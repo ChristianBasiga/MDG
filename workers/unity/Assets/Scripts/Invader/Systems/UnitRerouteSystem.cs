@@ -129,7 +129,7 @@ namespace MDG.Invader.Systems
                     float dotProduct = Vector3.Dot(collisionPointDistNormalized, newVelocity.ToUnityVector());
                     // It works, but it's trying routes that will fail since only take into account
                     // point not size of colliders in reroute
-                    if (dotProduct < 0.5f)
+                    if (dotProduct < 0.8f)
                     {
                         potentialRoutes.Enqueue(newVelocity * velocityMagnitude);
                         break;

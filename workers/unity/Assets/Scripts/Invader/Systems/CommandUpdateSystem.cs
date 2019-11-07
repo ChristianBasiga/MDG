@@ -175,9 +175,14 @@ namespace MDG.Invader.Systems
             }
         }
 
+        // Maybe diff job to check line of sight.
+
         public struct MoveToAttackTargetJob : IJobForEachWithEntity<SpatialEntityId, AttackCommand, PositionSchema.LinearVelocity.Component,
             EntityTransform.Component, CollisionSchema.BoxCollider.Component, CombatStats>
         {
+
+            public -EntityCommandBuffer.Concurrent entityCommandBuffer;
+
             [ReadOnly]
             public NativeHashMap<EntityId, Vector3f> attackerToAttackeePosition;
             public float deltaTime;
@@ -191,30 +196,43 @@ namespace MDG.Invader.Systems
 
                 // First see if attacker is close enough to target.
                 float minDistanceForAttack = HelperFunctions.Magnitude(boxCollider.Dimensions) * 2;
+
+
                 if (attackerToAttackeePosition.TryGetValue(attackCommand.target, out Vector3f targetPosition))
                 {
-                    float distance = HelperFunctions.Distance(targetPosition, entityTransform.Position);
-                    if (distance <= minDistanceForAttack)
+                    //Check if target is in line of sight and doesn't hit anything else. I need raycasts for these.
+                    bool inLineOfAttack = HelperFunctions.DotProduct(entityTransform.Position, targetPosition) > 0.9f;
+
+                    if (inLineOfAttack)
                     {
-                        if (combatStats.attackCooldown == 0)
+                        float distance = HelperFunctions.Distance(targetPosition, entityTransform.Position);
+                        if (distance <= minDistanceForAttack)
                         {
-                            attackPayloads.Enqueue(new AttackPayload
+                            if (combatStats.attackCooldown == 0)
                             {
-                                attackerId = spatialEntityId.EntityId,
-                                positionToAttack = targetPosition,
-                                startingPosition = entityTransform.Position
-                            });
-                            attackCommand.attacking = true;
-                            linearVelocityComponent.Velocity = Vector3f.Zero;
+                                attackPayloads.Enqueue(new AttackPayload
+                                {
+                                    attackerId = spatialEntityId.EntityId,
+                                    positionToAttack = targetPosition,
+                                    startingPosition = entityTransform.Position
+                                });
+                                attackCommand.attacking = true;
+                                linearVelocityComponent.Velocity = Vector3f.Zero;
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log("Moving to target");
+                            // If no longer in range, stop attacking, start following again.
+                            attackCommand.attacking = false;
+                            Vector3f velocity = targetPosition - entityTransform.Position;
+                            linearVelocityComponent.Velocity = velocity;
                         }
                     }
                     else
                     {
-                        Debug.Log("Moving to target");
-                        // If no longer in range, stop attacking, start following again.
-                        attackCommand.attacking = false;
-                        Vector3f velocity = targetPosition - entityTransform.Position;
-                        linearVelocityComponent.Velocity = velocity;
+                        // Then get new direction and add reroute component.
+
                     }
                 }
             }
@@ -236,7 +254,8 @@ namespace MDG.Invader.Systems
                 ComponentType.ReadOnly<CollisionSchema.BoxCollider.Component>(),
                 ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<EntityTransform.Component>(),
-                ComponentType.ReadOnly<CombatStats>()
+                ComponentType.ReadOnly<CombatStats>(),
+                ComponentType.Exclude<RerouteComponent>()
                 );
             attackQuery.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
 

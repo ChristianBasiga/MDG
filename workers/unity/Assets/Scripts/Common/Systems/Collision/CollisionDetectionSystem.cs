@@ -106,17 +106,14 @@ namespace MDG.Common.Systems.Collision
       
         protected override void OnUpdate()
         {
-            // Quick collision detection, zero optimization/
+            // Quick collision detection, zero optimization apart from continous broadphase
             Entities.With(updateCollisionGroup).ForEach((ref SpatialEntityId spatialEntityId, ref EntityTransform.Component entityTransform, 
                 ref CollisionSchema.BoxCollider.Component boxCollider, ref CollisionSchema.Collision.Component collisionComponent) =>
             {
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> previousCollisions = collisionComponent.Collisions;
-                foreach(var key in previousCollisions.Keys)
-                {
-
-                }
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> newCollisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>();
                 List<QuadNode> potentialCollisions = positionSystem.querySpatialPartition(entityTransform.Position);
+                //Theoritically could jobify this loop I think.
                 foreach (QuadNode potentialCollision in potentialCollisions)
                 {
                     if (workerSystem.TryGetEntity(potentialCollision.entityId, out Entity entity) && EntityManager.HasComponent<CollisionSchema.BoxCollider.Component>(entity))
@@ -152,100 +149,6 @@ namespace MDG.Common.Systems.Collision
                     }
                 }
             });
-
-            /* My approach to this wasn't the best, should've stayed using the AABB tree.
-             * It is what it is.
-            #region Broadphase, getting potential collisions
-
-            NativeHashMap<EntityId, int> entityIdToRegionIndex = new NativeHashMap<EntityId, int>(updateCollisionGroup.CalculateEntityCount(), Allocator.TempJob);
-
-            // region index to colliders within that region.
-            // Nested native containers not possible.
-            NativeHashMap<int, NativeList<ColliderCheck>> regionIndexToColliders = new NativeHashMap<int, NativeList<ColliderCheck>>(positionSystem.GetRegionCount(), Allocator.TempJob);
-
-            /*
-
-            // This rigt here is disgusting there HAS to be a better way. I'm essentially taking from spatial partition.
-            // then partitioning it further but with storing colliders.
-            // might as well just store colliders directly in quad nodes.
-            // I'll still need to do loop. One solution is to make the spatialPartioning structure globally accessible and static.
-            // They must access it from position system. It initself cannot be singleton as will reuse the structure, but hmm.
-            // maybe through decorator pattern over quad tree it can be single ton.
-            // but yeah, this block of disgustingness is temporary.
-            Entities.With(checkCollisionGroup).ForEach((ref SpatialEntityId spatialEntityId, ref EntityTransform.Component entityTransform, ref CollisionSchema.BoxCollider.Component collider) =>
-            {
-                bool mappedPrepulledRegion = false;
-
-                for (int regionIndex = 0; regionIndex < regionsChecked.Count; ++regionIndex)
-                {
-                    QuadNode regionChecking = regionsChecked[regionIndex];
-                    // Then reuse this region.
-                    if (HelperFunctions.IsWithinRegion(regionChecking.center, regionChecking.dimensions, entityTransform.Position))
-                    {
-                        mappedPrepulledRegion = true;
-                        regionIndexToColliders[regionIndex].Add(new ColliderCheck
-                        {
-                            entityId = spatialEntityId.EntityId,
-                            center = collider.Position,
-                            dimensions = collider.Dimensions
-                        });
-                    }
-                }
-                // Otherwise query the quad tree.
-                if (!mappedPrepulledRegion)
-                {
-                    List<QuadNode> quadNodes = positionSystem.querySpatialPartition(entityTransform.Position);
-                    regionsChecked.Add(quadNodes[0]);
-                    regionIndexToColliders[regionsChecked.Count - 1] = new NativeList<ColliderCheck>(quadNodes.Count, Allocator.TempJob);
-                    // Could add all in quad notes to this, then let above loop just not add anything. But would mean
-                    // fetching again when this outer loop has already fetched the data. This is better approach.
-                    regionIndexToColliders[regionsChecked.Count - 1].Add(new ColliderCheck
-                    {
-                        entityId = spatialEntityId.EntityId,
-                        center = collider.Position,
-                        dimensions = collider.Dimensions
-                    });
-
-                }
-            });
-            #endregion
-
-
-            #region Narrow phase
-            NativeHashMap<EntityId, NativeList<CollisionSchema.CollisionPoint>> entityIdToCollisionPoints = new NativeHashMap<EntityId, NativeList<CollisionSchema.CollisionPoint>>(entityIdToRegionIndex.Length, Allocator.TempJob);
-            CheckCollisionJob checkCollisionJob = new CheckCollisionJob
-            {
-                entityIdToRegionIndex = entityIdToRegionIndex,
-                regionIndexToColliders = regionIndexToColliders,
-                entityIdToCollisions = entityIdToCollisionPoints.AsParallelWriter()
-            };
-            checkCollisionJob.Schedule(checkCollisionGroup).Complete();
-            entityIdToRegionIndex.Dispose();
-            regionIndexToColliders.Dispose();
-            #endregion
-
-            #region Update Collision Components
-            Entities.With(updateCollisionGroup).ForEach((ref SpatialEntityId spatialEntityId, ref EntityTransform.Component entityTransform, ref CollisionSchema.Collision.Component collisionComponent) =>
-            {
-                if (entityIdToCollisionPoints.TryGetValue(spatialEntityId.EntityId, out NativeList<CollisionSchema.CollisionPoint> collisionsToAdd))
-                {
-                    Dictionary<EntityId, CollisionSchema.CollisionPoint> currentCollisions = collisionComponent.Collisions;
-
-                    foreach (CollisionSchema.CollisionPoint collisionPoint in collisionsToAdd)
-                    {
-                        currentCollisions[collisionPoint.CollidingWith] = collisionPoint;
-                    }
-
-                    collisionComponent.Collisions = currentCollisions;
-                    collisionsToAdd.Dispose();
-
-                }
-            });
-
-            entityIdToCollisionPoints.Dispose();
-            #endregion
-            
-             */
 
         }
     }
