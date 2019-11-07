@@ -167,25 +167,19 @@ namespace MDG.Common.Systems.Weapon
                     WeaponSchema.Damage.Component damageComponent = EntityManager.GetComponentData<WeaponSchema.Damage.Component>(entity);
                     UpdateDurability updateDurability;
          */
-            Entities.With(weaponCollisionQuery).ForEach((ref SpatialEntityId spatialEntityId, ref WeaponSchema.Weapon.Component weaponComponent, ref WeaponSchema.Damage.Component damageComponent,
+            Entities.With(weaponCollisionQuery).ForEach((Entity entity, ref SpatialEntityId spatialEntityId, ref WeaponSchema.Weapon.Component weaponComponent, ref WeaponSchema.Damage.Component damageComponent,
                 ref CollisionSchema.Collision.Component collisionComponent) =>
             {
                 int currentHits = damageComponent.Hits;
                 foreach (KeyValuePair<EntityId, CollisionPoint> entityIdToCollision in collisionComponent.Collisions)
                 {
-                    // Bullets of one ally may hit another ally on other person's end
-                    // since on their end the entity manager has enemy.
-
-                    //
-
-                    if (weaponComponent.WielderId.Equals(entityIdToCollision.Value.CollidingWith))
-                    {
-                        UnityEngine.Debug.Log("I ever happen?");
-                        continue;
-                    }
                     if (workerSystem.TryGetEntity(entityIdToCollision.Value.CollidingWith, out Entity collidedEntity))
                     {
-                        if (EntityManager.HasComponent<Enemy>(collidedEntity))
+                        UnityEngine.Debug.Log($"colliding with {entityIdToCollision.Value.CollidingWith}");
+                        // If collidee not enemy, and what collision hit is enemy on respective client. This makes it so enemies not hitting each other 
+                        // on other clients.
+                        UnityEngine.Debug.Log($"Weapon has enemy component {EntityManager.HasComponent<Enemy>(entity)}");
+                        if (!EntityManager.HasComponent<Enemy>(entity) && EntityManager.HasComponent<Enemy>(collidedEntity))
                         {
                             currentHits += 1;
                             // Send damage request to entity hit.
@@ -238,13 +232,14 @@ namespace MDG.Common.Systems.Weapon
                             }
                             else if (responsePayload.Killed)
                             {
-                                UnityEngine.Debug.Log("I did not kill the deputee");
-                                // Tbh. Storing thne doing all at once is prob in general slower
-                                // then me simply queueing point requests to send. So ye.
                                 WeaponSchema.Weapon.Component weaponComponent = requestSent.weaponComponent;
                                 workerSystem.TryGetEntity(requestSent.request.TargetEntityId, out Entity killedEntity);
                                 PointSchema.Point.Component pointComponent = EntityManager.GetComponentData<PointSchema.Point.Component>(killedEntity);
-                                UnityEngine.Debug.Log($"point value adding {pointComponent.Value}");
+
+                                // So 2 ways. Add points to unit, then that gets sent to invader
+                                // or invader points is sum of all points of units?
+                                // Or maybe instead make the wielder the invader.
+
                                 pointRequestSystem.AddPointRequest(new PointSchema.PointRequest
                                 {
                                     EntityUpdating = weaponComponent.WielderId,

@@ -207,10 +207,6 @@ namespace MDG.Invader.Systems
                             attackCommand.attacking = true;
                             linearVelocityComponent.Velocity = Vector3f.Zero;
                         }
-                        else
-                        {
-                            Debug.Log($"attack on cooldown {combatStats.attackCooldown}");
-                        }
                     }
                     else
                     {
@@ -397,7 +393,7 @@ namespace MDG.Invader.Systems
                         EntityManager entityManager = workerSystem.EntityManager;
                         PointSchema.PointMetadata.Component pointMetadata = entityManager.GetComponentData<PointSchema.PointMetadata.Component>(entity);
                         // Replace this with getting from zenject store.
-                        GameObject invaderObject = GameObject.Find("Hunter_Spawned");
+                        GameObject invaderObject = GameObject.FindGameObjectWithTag("MainCamera");
                         PointRequestSystem pointRequestSystem = World.GetExistingSystem<PointRequestSystem>();
 
                         // Could I use call back here for something?
@@ -439,7 +435,6 @@ namespace MDG.Invader.Systems
             };
             JobHandle tickAttackCoolDownHandle = tickAttackCooldownJob.Schedule(this);
 
-            Debug.Log("Enemy count " + enemyQuery.CalculateEntityCount());
             NativeHashMap<EntityId, Vector3f> attackerToAttackees = new NativeHashMap<EntityId, Vector3f>(enemyQuery.CalculateEntityCount() , Allocator.TempJob);
             GetTargetPositionsJob getTargetPositionsJob = new GetTargetPositionsJob
             {
@@ -504,7 +499,7 @@ namespace MDG.Invader.Systems
                 });
                 
                 // WOO them magic nums. Gotta update this.
-                // will retrieve this from scriptable object.
+                // will retrieve this from scriptable object instead of hardcoding the nums here.
                 ProjectileConfig projectileConfig = new ProjectileConfig
                 {
                     startingPosition = attackPayload.startingPosition,
@@ -518,9 +513,6 @@ namespace MDG.Invader.Systems
 
                 byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
 
-                // Actual wielderId will should be The invader. Will keep to unit.
-                // Then make check if unit, then add points to owner.
-                // This way it's open for extension doing something extra for units that land killing blows.
                 WeaponMetadata weaponMetadata = new WeaponMetadata
                 {
                     weaponType = MdgSchema.Common.Weapon.WeaponType.Projectile,

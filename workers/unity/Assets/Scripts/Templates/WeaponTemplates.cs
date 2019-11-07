@@ -5,6 +5,10 @@ using PositionSchema = MdgSchema.Common.Position;
 using CollisionSchema = MdgSchema.Common.Collision;
 using CommonSchema = MdgSchema.Common;
 using MDG.DTO;
+using Unity.Entities;
+using MDG.Common;
+using Improbable.Gdk.PlayerLifecycle;
+
 namespace MDG.Templates
 {
     public class WeaponTemplates
@@ -15,6 +19,7 @@ namespace MDG.Templates
             byte[] specificArguments)
         {
             string clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
+            string serverAttribute = UnityGameLogicConnector.WorkerType;
 
             EntityTemplate template = new EntityTemplate();
             CommonTemplates.AddRequiredSpatialComponents(template, "Weapon");
@@ -32,10 +37,13 @@ namespace MDG.Templates
                 Hits = 0
             }, clientAttribute);
 
+            PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
+
+
             return template;
         }
 
-        private static void AddProjectileComponents(string clientAttribute, EntityTemplate template, 
+        private static void AddProjectileComponents(string clientAttribute, EntityTemplate template,
             EntityId wielder, ProjectileConfig projectileConfig)
         {
             CommonTemplates.AddRequiredGameEntityComponents(template, projectileConfig.startingPosition,
@@ -67,7 +75,7 @@ namespace MDG.Templates
 
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {
-                Dimensions= projectileConfig.dimensions,
+                Dimensions = projectileConfig.dimensions,
                 IsTrigger = true,
                 Position = Vector3f.Zero
             }, UnityGameLogicConnector.WorkerType);
@@ -78,4 +86,21 @@ namespace MDG.Templates
             }, UnityGameLogicConnector.WorkerType);
         }
     }
+
+    public class WeaponArchtypes
+    {
+        public static void AddWeaponArchtype(EntityManager entityManager, Entity entity, bool authoritative)
+        {
+            if (!authoritative)
+            {
+                
+                entityManager.AddComponent<Enemy>(entity);
+            }
+            else
+            {
+                UnityEngine.Debug.Log("I have authority over this weapon");
+            }
+        }
+    }
+
 }

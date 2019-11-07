@@ -40,14 +40,9 @@ namespace MDG.Invader.Systems
             {
                 if (commandMetadata[0].CommandType != CommandType.None) return;
 
-                Debug.Log($" Looking at entity {gameMetadata.Type.ToString()}");
-                Debug.Log($"position {entityTransform.Position.ToString()}");
-                Debug.Log($"botleft {botLeft.ToString()} topright {topRight.ToString()}");
-
                 if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.z
                     && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.z)
                 {
-                    Debug.Log("Within bounds...");
                     CommandListener command = new CommandListener { TargetId = spatialEntityId.EntityId, TargetPosition = entityTransform.Position };
                     switch (gameMetadata.Type)
                     {
@@ -61,7 +56,6 @@ namespace MDG.Invader.Systems
                             break;
                         case GameEntityTypes.Hunted:
                             command.CommandType = CommandType.Attack;
-                            Debug.Log("Creting attack command listener");
                             break;
                     }
                     commandMetadata[0] = command;
@@ -100,7 +94,6 @@ namespace MDG.Invader.Systems
                             entityCommandBuffer.AddComponent(index, entity, new MoveCommand { destination = commandGiven.TargetPosition});    
                             break;
                         case CommandType.Attack:
-                            Debug.Log("adding attack command");
                             entityCommandBuffer.AddComponent(index, entity, new AttackCommand { target = commandGiven.TargetId });
                             break;
                         case CommandType.Collect:

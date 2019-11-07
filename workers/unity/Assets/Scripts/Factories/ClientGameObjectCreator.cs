@@ -212,6 +212,9 @@ namespace MDG
             else if (metaData.EntityType.Equals("Weapon"))
             {
                 WeaponSchema.Weapon.Component weaponComponent = entity.GetComponent<WeaponSchema.Weapon.Component>();
+                WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
+                worker.TryGetEntity(entity.SpatialOSEntityId, out Entity weaponEntity);
+                WeaponArchtypes.AddWeaponArchtype(_world.EntityManager, weaponEntity, hasAuthority);
                 string prefabName = weaponPrefabNames[weaponComponent.WeaponType][weaponComponent.WeaponId];
                 pathToEntity = $"{pathToEntity}/Weapons/{prefabName}";
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);

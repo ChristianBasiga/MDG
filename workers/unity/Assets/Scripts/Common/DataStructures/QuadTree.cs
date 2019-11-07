@@ -228,7 +228,6 @@ namespace MDG.Common.Datastructures
                     || southWest.Remove(entityId, position);
             }
 
-            Debug.Log("Remvoing entity");
             entitiesInThisRegion.Remove(entityId);
             return true;
         }
@@ -263,7 +262,6 @@ namespace MDG.Common.Datastructures
         {
             if (entitiesInThisRegion.TryGetValue(id, out Vector3f currPos))
             {
-                Debug.Log($"Found entity {id}");
                 node.position = currPos;
                 node.center = center;
                 node.dimensions = dimensions;
@@ -289,11 +287,6 @@ namespace MDG.Common.Datastructures
             float width = dimensions.X;
             float height = dimensions.Z;
             // Technically can subdivide indefinitely, but no need.
-            if (width <= 1 || height <= 1)
-            {
-                // Replace with my custom logger.
-                UnityEngine.Debug.Log("At unit size, cannot subdivide further");
-            }
             Vector3f newDimensions = new Vector3f(width / 2, 0, height / 2);
             //Dimensions also needs to be halved.
             //Subdividing all at once, makes  pruning a little harder, but reduces duplicate code.
