@@ -12,6 +12,9 @@ namespace MDG.Common
     public class HelperFunctions
     {
 
+
+        #region Vector Operations
+
         /// <summary>
         /// Checks if witin region of bonding 2D box
         /// </summary>
@@ -33,6 +36,11 @@ namespace MDG.Common
         public static Vector3f Vector3fFromUnityVector(Vector3 unityVector)
         {
             return new Vector3f(unityVector.x, unityVector.y, unityVector.z);
+        }
+
+        public static float Slope(Vector3f p1, Vector3f p2)
+        {
+            return (p2.Z - p1.Z) / (p2.X - p1.X);
         }
 
         // returns dot product of normalized vectors.
@@ -74,7 +82,8 @@ namespace MDG.Common
                 );
         }
 
-
+        #endregion
+       
         #region UI related helper functions.
         public static IEnumerator UpdateHealthBar(UnityEngine.UI.Image healthbar, float pct, float timeToUpdate = 2.2f)
         {

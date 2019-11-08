@@ -153,10 +153,8 @@ namespace MDG.Common.Systems.Weapon
                 {
                     if (workerSystem.TryGetEntity(entityIdToCollision.Value.CollidingWith, out Entity collidedEntity))
                     {
-                        UnityEngine.Debug.Log($"colliding with {entityIdToCollision.Value.CollidingWith}");
                         // If collidee not enemy, and what collision hit is enemy on respective client. This makes it so enemies not hitting each other 
                         // on other clients.
-                        UnityEngine.Debug.Log($"Weapon has enemy component {EntityManager.HasComponent<Enemy>(entity)}");
                         if (!EntityManager.HasComponent<Enemy>(entity) && EntityManager.HasComponent<Enemy>(collidedEntity))
                         {
                             currentHits += 1;
@@ -201,7 +199,6 @@ namespace MDG.Common.Systems.Weapon
                             pendingDamageRequests.Remove(damageResponse.RequestId);
                             if (responsePayload.AlreadyDead)
                             {
-                                UnityEngine.Debug.Log("Already dead");
                                 // If was already dead before hit. Decrease amount of hits
                                 if (weaponIdToHitsThisFrame.TryGetValue(requestSent.weapon_id, out int calculatedHits))
                                 {

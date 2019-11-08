@@ -6,6 +6,8 @@ using Unity.Entities;
 using Unity.Collections;
 using Unity.Jobs;
 using SpawnSchema = MdgSchema.Common.Spawn;
+using PositionSchema = MdgSchema.Common.Position;
+using StatSchema = MdgSchema.Common.Stats;
 using CommonSchema = MdgSchema.Common;
 using Unity.Mathematics;
 using Improbable;
@@ -18,6 +20,7 @@ namespace MDG.Common.Systems.Spawn
 
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
+    [UpdateAfter(typeof(Stat.StatMonitorSystem))]
     public class RespawnMonitorSystem : ComponentSystem
     {
         public struct RespawnPayload
@@ -35,6 +38,8 @@ namespace MDG.Common.Systems.Spawn
         EntityQuery pendingRespawnGroup;
         SpawnRequestSystem spawnRequestSystem;
         CommandSystem commandSystem;
+        ComponentUpdateSystem componentUpdateSystem;
+        WorkerSystem workerSystem;
 
         protected override void OnCreate()
         {
@@ -49,6 +54,10 @@ namespace MDG.Common.Systems.Spawn
             );
             pendingRespawnGroup.SetFilter(SpawnSchema.PendingRespawn.ComponentAuthority.Authoritative);
             pendingRespawnGroup.SetFilterChanged(ComponentType.ReadWrite<SpawnSchema.PendingRespawn.Component>());
+
+            componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
+            workerSystem = World.GetExistingSystem<WorkerSystem>();
+
 
             commandSystem = World.GetExistingSystem<CommandSystem>();
             spawnRequestSystem = World.GetExistingSystem<SpawnRequestSystem>();
@@ -73,8 +82,10 @@ namespace MDG.Common.Systems.Spawn
             {
                 if (!pendingRespawn.RespawnActive) return;
 
+
                 if (pendingRespawn.TimeTillRespawn > 0)
                 {
+                    UnityEngine.Debug.Log($"Ticking respawn {pendingRespawn.TimeTillRespawn}");
                     pendingRespawn.TimeTillRespawn = pendingRespawn.TimeTillRespawn - deltaTime;
                 }
                 else
@@ -109,6 +120,26 @@ namespace MDG.Common.Systems.Spawn
             };
 
             tickPendingRespawnJob.Schedule(pendingRespawnGroup).Complete();
+
+            while (queuedRespawns.Count > 0)
+            {
+                RespawnPayload respawnPayload = queuedRespawns.Dequeue();
+                componentUpdateSystem.SendUpdate(new CommonSchema.EntityTransform.Update
+                {
+                    Position = respawnPayload.position
+                }, respawnPayload.entityIdToDespawn);
+
+                workerSystem.TryGetEntity(respawnPayload.entityIdToDespawn, out Unity.Entities.Entity respawnedEntity);
+
+                // I should abuse queries more. Not fuly utilizing spatialOS tools.
+                StatSchema.StatsMetadata.Component statsMetadata = EntityManager.GetComponentData<StatSchema.StatsMetadata.Component>(respawnedEntity);
+
+                componentUpdateSystem.SendUpdate(new StatSchema.Stats.Update
+                {
+                    Health = statsMetadata.Health
+                }, respawnPayload.entityIdToDespawn);
+            }
+
 
             /*
             // Send spawn requsts.

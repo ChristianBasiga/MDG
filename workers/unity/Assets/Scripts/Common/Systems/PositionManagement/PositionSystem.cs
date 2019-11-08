@@ -48,7 +48,7 @@ namespace MDG.Common.Systems.Position
         EntityQuery applyVelocityQuery;
 
         public Vector3f RootDimensions { get; } = new Vector3f(1000, 0, 1000);
-        public int RegionCapacity { get; } = 5;
+        public int RegionCapacity { get; } = 50;
 
         QuadTree spatialPartitioning;
         // For batch updating tree.

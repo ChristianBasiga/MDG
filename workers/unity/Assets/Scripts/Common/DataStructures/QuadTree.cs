@@ -194,14 +194,12 @@ namespace MDG.Common.Datastructures
                 }
                 if (entitiesInThisRegion.Count + 1 > capacity)
                 {
-                    Debug.Log("Sub dividing");
                     SubDivide();
                 }
             }
             // This is if we already subdivided before, or subdivided within this stack frame.
             if (northEast != null)
             {
-                Debug.Log("recursively inserting");
                 // Recursively call insert in children, until one of the calls results in true
                 // short circuiting the rest.
                 return northWest.Insert(entityId, position)

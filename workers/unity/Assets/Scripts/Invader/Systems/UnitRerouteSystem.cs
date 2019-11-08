@@ -53,7 +53,7 @@ namespace MDG.Invader.Systems
                 [ReadOnly] ref CommandListener commandListener)
             {
 
-                if (commandListener.CommandType == Commands.CommandType.None)
+                if (commandListener.CommandType == Commands.CommandType.None || linearVelocityComponent.Velocity == Vector3f.Zero)
                 {
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(RerouteComponent));
                     linearVelocityComponent.Velocity = Vector3f.Zero;
@@ -284,6 +284,7 @@ namespace MDG.Invader.Systems
                     EntityTransform.Component entityTransform = EntityManager.GetComponentData<EntityTransform.Component>(entity);
 
                     CommandListener commandListener = EntityManager.GetComponentData<CommandListener>(entity);
+                    Debug.Log($"Adding reroute component to {scheduleRedirectJob.entityId}");
                     RerouteComponent rerouteComponent = new RerouteComponent
                     {
                         destination = commandListener.TargetPosition,

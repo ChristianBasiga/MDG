@@ -93,7 +93,8 @@ namespace MDG.Templates
         {
             if (!authoritative)
             {
-                
+
+                UnityEngine.Debug.Log("Adding enemy to weapn entity");
                 entityManager.AddComponent<Enemy>(entity);
             }
             else
