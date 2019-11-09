@@ -1,5 +1,9 @@
 package mdg_schema.common.structure;
 
+enum StructureType{
+    Spawning = 1;
+    Trap = 2;
+}
 
 
 type BuildEventPayload{
@@ -17,7 +21,7 @@ type JobRunEventPayload{
 component Structure{
     id = 951;
     bool constructing = 1;
-    int32 health = 2;
+    StructureType structure_type = 2;
     event BuildEventPayload build;
     event JobRunEventPayload run_job;
 }

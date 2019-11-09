@@ -13,7 +13,7 @@ namespace MDG.DTO
     public class UnitConfig
     {
         public UnitTypes unitType;
-        public long owner_id;
+        public long ownerId;
         public Vector3f position;
     }
 }

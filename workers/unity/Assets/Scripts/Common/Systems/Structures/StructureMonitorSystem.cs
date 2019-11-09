@@ -37,7 +37,6 @@ namespace MDG.Common.Systems.Structure
                 );
             constructingQuery = GetEntityQuery(
                 ComponentType.ReadOnly<SpatialEntityId>(),
-                ComponentType.ReadOnly<StructureSchema.StructureMetadata.Component>(),
                 ComponentType.ReadOnly<StructureSchema.Structure.ComponentAuthority>(),
                 ComponentType.ReadWrite<StructureSchema.Structure.Component>(),
                 ComponentType.ReadWrite<StructureComponents.BuildingComponent>()
@@ -45,14 +44,14 @@ namespace MDG.Common.Systems.Structure
             constructingQuery.SetFilter(StructureSchema.Structure.ComponentAuthority.Authoritative);
         }
 
-        struct TickConstructionJob : IJobForEachWithEntity<SpatialEntityId, StructureSchema.StructureMetadata.Component,
-            StructureSchema.Structure.Component, StructureComponents.BuildingComponent>
+        struct TickConstructionJob : IJobForEachWithEntity<SpatialEntityId, StructureSchema.Structure.Component, 
+            StructureComponents.BuildingComponent>
         {
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             // To know for which entityIds I need to send events for.
             public NativeQueue<ConstructionPayloadHeader>.ParallelWriter stillBuilding;
             public float deltaTime;
-            public void Execute(Entity entity, int index, [ReadOnly] ref SpatialEntityId c0, [ReadOnly] ref StructureSchema.StructureMetadata.Component c1, 
+            public void Execute(Entity entity, int index, [ReadOnly] ref SpatialEntityId c0,  
                 ref StructureSchema.Structure.Component c2, ref StructureComponents.BuildingComponent c3)
             {
 

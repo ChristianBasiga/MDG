@@ -174,6 +174,9 @@ namespace MDG.Common.Systems.Spawn
             {
                 var request = spawnRequests.Dequeue();
                 long requestId = -1;
+
+                // Move this to a mapping of type to delegate.
+                // special cases being players.
                 switch (request.payload.TypeToSpawn)
                 {
                     case CommonSchema.GameEntityTypes.Unit:
@@ -212,6 +215,11 @@ namespace MDG.Common.Systems.Spawn
                                 new EntityId(weaponMetadata.wielderId), request.spawnData
                                 )
                             ));
+                        break;
+                    case CommonSchema.GameEntityTypes.Structure:
+                        requestId = commandSystem.SendCommand(
+                           new WorldCommands.CreateEntity.Request(
+                               EntityTemplates.StructureTemplates.GetStructureTemplate(workerSystem.WorkerId, request.spawnMetaData)));
                         break;
                         
                 }

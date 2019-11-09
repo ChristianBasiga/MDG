@@ -8,7 +8,7 @@ enum GameEntityTypes{
     Unit = 4;
     Invalid = 5;
     Resource = 6;
-    Building = 7;
+    Structure = 7;
     Weapon = 8;
 }
 

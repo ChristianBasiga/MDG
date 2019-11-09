@@ -153,7 +153,7 @@ namespace MDG
 
                             UnitConfig unitConfig = new UnitConfig
                             {
-                                owner_id = entity.SpatialOSEntityId.Id,
+                                ownerId = entity.SpatialOSEntityId.Id,
                                 position = initialUnitCoordinates[i],
                                 unitType = UnitTypes.WORKER
                             };
