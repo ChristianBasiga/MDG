@@ -21,6 +21,7 @@ using SpawnSystems = MDG.Common.Systems.Spawn;
 using InvaderSystems =  MDG.Invader.Systems;
 using MdgSchema.Units;
 using MDG.Templates;
+using MDG.DTO;
 
 namespace MDG
 {
@@ -146,14 +147,26 @@ namespace MDG
 
                         int multiplier = startingPointsUsed == 1 ? 1 : -1;
 
+                       
                         for (int i = 0; i < initialUnitCoordinates.Count; ++i)
                         {
+
+                            UnitConfig unitConfig = new UnitConfig
+                            {
+                                owner_id = entity.SpatialOSEntityId.Id,
+                                position = initialUnitCoordinates[i],
+                                unitType = UnitTypes.WORKER
+                            };
+
+
                             spawnReqSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                             {
                                 TypeToSpawn = GameEntityTypes.Unit,
                                 Position = initialUnitCoordinates[i],
-                                TypeId = (int)UnitTypes.WORKER
-                            });
+                                // Deperecate typeId, should all be serialized args for stuff like this.
+                                TypeId = (int)UnitTypes.WORKER,
+                                
+                            }, null, Converters.SerializeArguments<UnitConfig>(unitConfig));
                         }
                         /* systems not being added during here. Hmm.
                         spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.SelectionSystem>();

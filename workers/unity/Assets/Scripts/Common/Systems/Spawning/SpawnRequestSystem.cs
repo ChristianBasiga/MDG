@@ -179,7 +179,10 @@ namespace MDG.Common.Systems.Spawn
                     case CommonSchema.GameEntityTypes.Unit:
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
-                                EntityTemplates.UnitTemplates.GetUnitEntityTemplate(workerSystem.WorkerId, (UnitTypes)request.payload.TypeId, request.payload.Position)
+                                EntityTemplates.UnitTemplates.GetUnitEntityTemplate(workerSystem.WorkerId, 
+                                (UnitTypes)request.payload.TypeId, 
+                                request.payload.Position,
+                                request.spawnMetaData)
                               ));
                         break;
                     case CommonSchema.GameEntityTypes.Hunted:

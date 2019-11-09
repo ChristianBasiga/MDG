@@ -26,7 +26,9 @@ namespace MDG.Templates
 {
     public class UnitTemplates
     {
-        public static EntityTemplate GetUnitEntityTemplate(string workerId, UnitTypes unitType, Vector3f spawnPositon)
+        // Using serialized args, I COULD make an interface / base function they all call that then calls specific one
+        // based on game type. That would be 100% better, but that's elegance.
+        public static EntityTemplate GetUnitEntityTemplate(string workerId, UnitTypes unitType, Vector3f spawnPositon, byte[] spawnArgs = null)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
             var serverAttribute = UnityGameLogicConnector.WorkerType;
@@ -53,11 +55,16 @@ namespace MDG.Templates
                 Dimensions = new Vector3f(15, 0, 15)
             }, serverAttribute);
 
-
-            template.AddComponent(new UnitsSchema.Unit.Snapshot
+            UnitsSchema.Unit.Snapshot unitSnapshot = new Unit.Snapshot { Type = unitType };
+            if (spawnArgs != null)
             {
-                Type = unitType
-            }, serverAttribute);
+                UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(spawnArgs);
+                Debug.Log("Unit config has owner id " + unitConfig.owner_id);
+                unitSnapshot.OwnerId = new EntityId(unitConfig.owner_id);
+                unitSnapshot.Type = unitConfig.unitType;
+            }
+            template.AddComponent(unitSnapshot, serverAttribute);
+
             switch (unitType)
             {
                 case UnitsSchema.UnitTypes.WORKER:
