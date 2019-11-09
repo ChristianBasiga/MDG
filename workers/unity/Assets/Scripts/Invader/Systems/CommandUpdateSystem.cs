@@ -52,9 +52,18 @@ namespace MDG.Invader.Systems
         public struct AttackPayload
         {
             public EntityId attackerId;
+            public EntityId attackeeId;
             public Vector3f startingPosition;
             public Vector3f positionToAttack;
         }
+
+        struct PendingAttack
+        {
+            public AttackPayload attackPayload;
+            public JobHandle jobHandle;
+            public NativeQueue<CommonJobs.ClientJobs.RaycastHit> InLineOfSight;
+        }
+
 
         private EntityQuery collectorGroup;
 
@@ -63,7 +72,6 @@ namespace MDG.Invader.Systems
         private NativeQueue<CollectPayload> pendingOccupy;
         private NativeQueue<CollectPayload> pendingCollects;
         private NativeQueue<CollectPayload> pendingReleases;
-
         private PositionSystem positionSystem;
         private CommandSystem commandSystem;
         private SpawnRequestSystem spawnRequestSystem;
@@ -162,22 +170,29 @@ namespace MDG.Invader.Systems
 
         public struct GetTargetPositionsJob : IJobForEach<SpatialEntityId, Enemy, EntityTransform.Component>
         {
-            public NativeHashMap<EntityId, Vector3f>.ParallelWriter attackerToAttackeePosition;
+            public NativeHashMap<EntityId, Vector3f>.ParallelWriter attackeePositions;
 
             public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Enemy enemy, 
                 [ReadOnly] ref EntityTransform.Component entityTransform)
             {
                 // Maybe add clickable and clicked.
-                if (attackerToAttackeePosition.TryAdd(spatialEntityId.EntityId, entityTransform.Position))
+                if (attackeePositions.TryAdd(spatialEntityId.EntityId, entityTransform.Position))
                 {
                     Debug.Log("Adding spatial id to map " + spatialEntityId.EntityId);
                 }
             }
         }
 
+        // So what I want to do is actually act upon the AttackPayload stuff.
+        // Only those entities do I want to check if line of sight, since that is when they are prepping to attack.
+        // Let default reroute collision syttem handle it for most part.
+
         public struct MoveToAttackTargetJob : IJobForEachWithEntity<SpatialEntityId, AttackCommand, PositionSchema.LinearVelocity.Component,
-            EntityTransform.Component, CollisionSchema.BoxCollider.Component, CombatStats>
+            EntityTransform.Component, CombatStats>
         {
+
+            public EntityCommandBuffer.Concurrent entityCommandBuffer;
+
             [ReadOnly]
             public NativeHashMap<EntityId, Vector3f> attackerToAttackeePosition;
             public float deltaTime;
@@ -186,15 +201,13 @@ namespace MDG.Invader.Systems
 
             public void Execute(Entity entity, int jobIndex, [ReadOnly] ref SpatialEntityId spatialEntityId, ref AttackCommand attackCommand, 
                 ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref EntityTransform.Component entityTransform, 
-                [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider, [ReadOnly] ref CombatStats combatStats)
+                [ReadOnly] ref CombatStats combatStats)
             {
 
-                // First see if attacker is close enough to target.
-                float minDistanceForAttack = HelperFunctions.Magnitude(boxCollider.Dimensions) * 2;
                 if (attackerToAttackeePosition.TryGetValue(attackCommand.target, out Vector3f targetPosition))
                 {
                     float distance = HelperFunctions.Distance(targetPosition, entityTransform.Position);
-                    if (distance <= minDistanceForAttack)
+                    if (distance <= combatStats.attackRange)
                     {
                         if (combatStats.attackCooldown == 0)
                         {
@@ -202,20 +215,28 @@ namespace MDG.Invader.Systems
                             {
                                 attackerId = spatialEntityId.EntityId,
                                 positionToAttack = targetPosition,
-                                startingPosition = entityTransform.Position
+                                startingPosition = entityTransform.Position + (linearVelocityComponent.Velocity * deltaTime),
+                                attackeeId = attackCommand.target
                             });
                             attackCommand.attacking = true;
-                            linearVelocityComponent.Velocity = Vector3f.Zero;
                         }
+                        linearVelocityComponent.Velocity = Vector3f.Zero;
                     }
                     else
                     {
-                        Debug.Log("Moving to target");
+                        // Issue is this happens. since no longer in range.
+
                         // If no longer in range, stop attacking, start following again.
                         attackCommand.attacking = false;
                         Vector3f velocity = targetPosition - entityTransform.Position;
                         linearVelocityComponent.Velocity = velocity;
                     }
+                }
+                else
+                {
+                    // If not in that dictionary, then has to be dead, remove attack command.
+                    entityCommandBuffer.RemoveComponent<AttackCommand>(jobIndex, entity);
+                    linearVelocityComponent.Velocity = Vector3f.Zero;
                 }
             }
         }
@@ -233,10 +254,10 @@ namespace MDG.Invader.Systems
                 ComponentType.ReadWrite<AttackCommand>(),
                 ComponentType.ReadWrite<PositionSchema.LinearVelocity.Component>(),
                 ComponentType.ReadOnly<PositionSchema.LinearVelocity.ComponentAuthority>(),
-                ComponentType.ReadOnly<CollisionSchema.BoxCollider.Component>(),
                 ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<EntityTransform.Component>(),
-                ComponentType.ReadOnly<CombatStats>()
+                ComponentType.ReadOnly<CombatStats>(),
+                ComponentType.Exclude<RerouteComponent>()
                 );
             attackQuery.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
 
@@ -362,7 +383,7 @@ namespace MDG.Invader.Systems
                                 }
                             }
                         }
-                        if (closestNewResource.HasValue)
+                        if (closestNewResource.HasValue)    
                         {
                             entityManager.SetComponentData(entity, closestNewResource.Value);
                         }
@@ -425,6 +446,7 @@ namespace MDG.Invader.Systems
 
 
 
+        // Pretty unorgnaized and interwined sections for the purpose of parralelization
         private void RunCommandJobs()
         {
             float deltaTime = Time.deltaTime;
@@ -435,10 +457,11 @@ namespace MDG.Invader.Systems
             };
             JobHandle tickAttackCoolDownHandle = tickAttackCooldownJob.Schedule(this);
 
-            NativeHashMap<EntityId, Vector3f> attackerToAttackees = new NativeHashMap<EntityId, Vector3f>(enemyQuery.CalculateEntityCount() , Allocator.TempJob);
+
+            NativeHashMap<EntityId, Vector3f> attackeePositions = new NativeHashMap<EntityId, Vector3f>(enemyQuery.CalculateEntityCount() , Allocator.TempJob);
             GetTargetPositionsJob getTargetPositionsJob = new GetTargetPositionsJob
             {
-                attackerToAttackeePosition = attackerToAttackees.AsParallelWriter()
+                attackeePositions = attackeePositions.AsParallelWriter()
             };
 
             JobHandle getTargetPositionsHandle = getTargetPositionsJob.Schedule(enemyQuery);
@@ -469,8 +492,23 @@ namespace MDG.Invader.Systems
             entityQuery = GetEntityQuery(entityQueryDesc);
             // For each pending collect, send Collect request.
             getTargetPositionsHandle.Complete();
-            moveToResourceJob.Schedule(entityQuery).Complete();
 
+            var potentialTargetEntities = attackeePositions.GetKeyArray(Allocator.TempJob);
+
+            // Need to remove any keys that are respawning.
+            foreach(var potentialTargetId in potentialTargetEntities)
+            {
+                workerSystem.TryGetEntity(potentialTargetId, out Entity targetEntity);
+
+                //CHeck if respawning
+                if (EntityManager.HasComponent<SpawnSchema.RespawnMetadata.Component>(targetEntity) && EntityManager.GetComponentData<SpawnSchema.PendingRespawn.Component>(targetEntity).RespawnActive)
+                {
+                    attackeePositions.Remove(potentialTargetId);
+                }
+            }
+            potentialTargetEntities.Dispose();
+
+            moveToResourceJob.Schedule(entityQuery).Complete();
 
             tickAttackCoolDownHandle.Complete();
             // Maybe make this a member variale instead of local. For now it's fine.
@@ -478,61 +516,166 @@ namespace MDG.Invader.Systems
             MoveToAttackTargetJob moveToAttackTargetJob = new MoveToAttackTargetJob
             {
                 deltaTime = deltaTime,
-                attackerToAttackeePosition = attackerToAttackees,
-                attackPayloads = attackPayloads.AsParallelWriter()
+                attackerToAttackeePosition = attackeePositions,
+                attackPayloads = attackPayloads.AsParallelWriter(),
+                entityCommandBuffer = PostUpdateCommands.ToConcurrent()
             };
 
             moveToAttackTargetJob.Schedule(attackQuery).Complete();
-            attackerToAttackees.Dispose();
+            attackeePositions.Dispose();
 
+       
+
+
+            // Maybe list instead of queue, that way ca
+            Queue<PendingAttack> pendingAttacks = new Queue<PendingAttack>(attackQuery.CalculateEntityCount());
             // Later check range or melee
             while (attackPayloads.Count > 0)
             {
                 AttackPayload attackPayload = attackPayloads.Dequeue();
-
-                workerSystem.TryGetEntity(attackPayload.attackerId, out Entity attackerEntity);
-
-                CombatMetadata combatMetadata = EntityManager.GetComponentData<CombatMetadata>(attackerEntity);
-                EntityManager.SetComponentData(attackerEntity, new CombatStats
-                {
-                    attackCooldown = combatMetadata.attackCooldown
-                });
                 
-                // WOO them magic nums. Gotta update this.
-                // will retrieve this from scriptable object instead of hardcoding the nums here.
-                ProjectileConfig projectileConfig = new ProjectileConfig
+
+
+                // Check if within line of sight first. Simply running ray cast job and checking if front of list
+                // is the target. If not, reroute. (Down line MAYBE check if what hit was also enemy. If so change target.
+                // BUT that is more specifics / polish.
+
+                int initialCapacity = enemyQuery.CalculateEntityCount() + attackQuery.CalculateEntityCount();
+
+
+
+                NativeQueue<CommonJobs.ClientJobs.RaycastHit> entitiesOnLineOfSight = new NativeQueue<CommonJobs.ClientJobs.RaycastHit>(Allocator.TempJob);
+
+                CommonJobs.ClientJobs.Raycast raycastJob = new CommonJobs.ClientJobs.Raycast
                 {
-                    startingPosition = attackPayload.startingPosition,
-                    linearVelocity = attackPayload.positionToAttack - attackPayload.startingPosition,
-                    maximumHits = 1,
-                    damage = 1,
-                    projectileId = 1,
-                    dimensions = new Vector3f(5, 0, 5),
-                    lifeTime = 5.0f,
+                    startPoint = attackPayload.positionToAttack - attackPayload.startingPosition,
+                    endPoint = attackPayload.positionToAttack,
+                    hits = entitiesOnLineOfSight.AsParallelWriter(),
+                    checking = attackPayload.attackerId
                 };
 
-                byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
-
-                WeaponMetadata weaponMetadata = new WeaponMetadata
+                // Still good since parralel operation, BUT if I could stagger this completion it would be ideal.
+                // What I could do is insert it into ANOTHER queue for pending attacks.
+                // then in next loop complete
+                pendingAttacks.Enqueue(new PendingAttack
                 {
-                    weaponType = MdgSchema.Common.Weapon.WeaponType.Projectile,
-                    wielderId = attackPayload.attackerId.Id,
-                    attackCooldown = 1.0f
-                };
-                byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
-
-                spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
-                {
-                    Position = attackPayload.startingPosition,
-                    TypeToSpawn = MdgSchema.Common.GameEntityTypes.Weapon,
-                    TypeId = 1,
-                    Count = 1
-                }, null, serializedWeaponMetadata, serializedWeapondata);
+                    attackPayload = attackPayload,
+                    jobHandle = raycastJob.Schedule(this),
+                    InLineOfSight = entitiesOnLineOfSight,
+                });
             }
             attackPayloads.Dispose();
+
+            while (pendingAttacks.Count > 0)
+            {
+                PendingAttack pendingAttack = pendingAttacks.Peek();
+                AttackPayload attackPayload = pendingAttack.attackPayload;
+
+             
+
+
+                pendingAttack.jobHandle.Complete();
+
+
+
+                workerSystem.TryGetEntity(attackPayload.attackerId, out Entity attackerEntity);
+                workerSystem.TryGetEntity(attackPayload.attackeeId, out Entity targetEntity);
+                // O(n) time checking distance faster than converting to sortable and sorting
+                // and implementing own auto sorting native contiainer.
+                float closestInLineOfSight = Mathf.Infinity;
+                CommonJobs.ClientJobs.RaycastHit? closestEntity = null;
+
+                while (pendingAttack.InLineOfSight.Count > 0)
+                {
+                    CommonJobs.ClientJobs.RaycastHit raycastHit = pendingAttack.InLineOfSight.Dequeue();
+
+                    float distanceFromHit = HelperFunctions.Distance(attackPayload.startingPosition, raycastHit.position);
+                    if ( distanceFromHit < closestInLineOfSight)
+                    {
+                        closestInLineOfSight = distanceFromHit;
+                        closestEntity = raycastHit;
+                    }
+                }
+
+                // If in line of sight AND its first one in line of sight, ie: no blocking it then continue on with attack.
+                // Confirmed in range and headed towards that position so line of sight must be filled, main question is what's in between.
+                if (closestEntity.HasValue && closestEntity.Value.entityId.Equals(attackPayload.attackeeId))
+                {
+                    Debug.Log("First in line of sight is target");
+
+                    CombatMetadata combatMetadata = EntityManager.GetComponentData<CombatMetadata>(attackerEntity);
+                    CombatStats stats = EntityManager.GetComponentData<CombatStats>(attackerEntity);
+
+                    EntityManager.SetComponentData(attackerEntity, new CombatStats
+                    {
+                        attackCooldown = combatMetadata.attackCooldown,
+                        attackRange = stats.attackRange
+                    });
+
+                    Debug.Log($"Starting position = {attackPayload.startingPosition} position to attack: {attackPayload.positionToAttack}");
+                    Vector3f sameYTarget = new Vector3f(attackPayload.positionToAttack.X, attackPayload.startingPosition.Y, attackPayload.positionToAttack.Z);
+
+                    // WOO them magic nums. Gotta update this.
+                    // will retrieve this from scriptable object instead of hardcoding the nums here.
+                    ProjectileConfig projectileConfig = new ProjectileConfig
+                    {
+                        startingPosition = attackPayload.startingPosition,
+                        linearVelocity = sameYTarget - attackPayload.startingPosition,
+                        maximumHits = 1,
+                        damage = 1,
+                        projectileId = 1,
+                        dimensions = new Vector3f(15, 0, 15),
+                        lifeTime = 5.0f,
+                    };
+
+                    byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
+
+                    WeaponMetadata weaponMetadata = new WeaponMetadata
+                    {
+                        weaponType = MdgSchema.Common.Weapon.WeaponType.Projectile,
+                        wielderId = attackPayload.attackerId.Id,
+                        attackCooldown = 1.0f
+                    };
+                    byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
+
+                    spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
+                    {
+                        Position = attackPayload.startingPosition,
+                        TypeToSpawn = MdgSchema.Common.GameEntityTypes.Weapon,
+                        TypeId = 1,
+                        Count = 1
+                    }, null, serializedWeaponMetadata, serializedWeapondata);
+
+                }
+                else
+                {
+                    // Otherwise if was not in line of sight apply reroute component.
+                    // Maybe instead of applying reroute component
+                    // Sub destination could be angle from 
+
+                    // This is so EXTRA, but good.
+                    Vector3f currentVelocity = attackPayload.positionToAttack - attackPayload.startingPosition;
+
+                    float angleOfTravel = Mathf.Atan2(currentVelocity.Z, currentVelocity.X);
+                    float magnitude = HelperFunctions.Magnitude(currentVelocity);
+                    // See if slightly left of vector or not.
+                    // HelperFunctions.IsLeftOfVector(attackPayload.positionToAttack, )
+                    //Meh just try to go 45 degrees.
+                    //angleOfTravel += 45 * Mathf.Deg2Rad;
+                    angleOfTravel += deltaTime;
+                    Debug.Log("Adding reroute component here");
+                    Vector3f newVelocity = new Vector3f(Mathf.Cos(angleOfTravel), 0, Mathf.Sin(angleOfTravel)) * magnitude;
+                    PostUpdateCommands.AddComponent(attackerEntity, new RerouteComponent
+                    {
+                        applied = false,
+                        subDestination = newVelocity,
+                        destination = currentVelocity
+                    });
+                }
+                pendingAttack.InLineOfSight.Dispose();
+                pendingAttacks.Dequeue();
+            }
         }
-            // Need to do attack commands.
-        
 
         private void RunCommandRequests()
         {

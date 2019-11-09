@@ -145,6 +145,7 @@ namespace MDG.Templates
             }
             else
             {
+                Debug.Log("Adding enemy component to unit");
                 entityManager.AddComponentData(entity, new Enemy());
             }
             entityManager.AddComponent<Clickable>(entity);
@@ -159,16 +160,19 @@ namespace MDG.Templates
 
         private static void AddWorkerUnitArchtype(EntityManager entityManager, Entity entity, bool authoritative)
         {
+            // Replace all hard coded values with scriptab le objects.
             if (authoritative)
             {
                 entityManager.AddComponentData(entity, new CombatMetadata
                 {
-                    attackCooldown = 2.0f
+                    attackCooldown = 2.0f,
+                    attackRange = 90.0f
                 });
 
                 entityManager.AddComponentData(entity, new CombatStats
                 {
-                    attackCooldown = 0
+                    attackCooldown = 0,
+                    attackRange = 90.0f
                 });
             }
         }

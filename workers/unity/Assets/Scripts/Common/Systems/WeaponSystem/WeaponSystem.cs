@@ -144,29 +144,7 @@ namespace MDG.Common.Systems.Weapon
         // Update UnitRerouteSystem later to also work off like this isntead of off events
         // entityQuery faster than my query yo.
         private void ProcessWeaponCollisions() {
-            // Maybe first query ALL weapons, then with grab all entityIds in parralel
-            // and congregate all of those events. LATER. THATS OPTIMIZATION. STOP IT.
-            // If I do change this to sit on server side, instead of work off event, I can access the collision components directly.
-            // this way I can apply query to ONLY get component & collisions which reduces iterations.
-            // see if this works. Try that, if no work first time, stop. Period. For now.
-            // If go event route I COULD make it a job component system. lol. Enough. It works stop for now.
-            /*
-            var events = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.OnCollision.Event>();
-            for (int i = 0; i < events.Count; ++i)
-            {
-                ref readonly var collisionEvent = ref events[i];
-                if (workerSystem.TryGetEntity(collisionEvent.EntityId, out Entity entity))
-                {
-                    if (!EntityManager.HasComponent<WeaponSchema.Weapon.Component>(entity))
-                    {
-                        continue;
-                    }
-           
-                    var collisionPoints = collisionEvent.Event.Payload.CollidedWith;
-                    WeaponSchema.Weapon.Component weaponComponent = EntityManager.GetComponentData<WeaponSchema.Weapon.Component>(entity);
-                    WeaponSchema.Damage.Component damageComponent = EntityManager.GetComponentData<WeaponSchema.Damage.Component>(entity);
-                    UpdateDurability updateDurability;
-         */
+            
             Entities.With(weaponCollisionQuery).ForEach((Entity entity, ref SpatialEntityId spatialEntityId, ref WeaponSchema.Weapon.Component weaponComponent, ref WeaponSchema.Damage.Component damageComponent,
                 ref CollisionSchema.Collision.Component collisionComponent) =>
             {
@@ -175,10 +153,8 @@ namespace MDG.Common.Systems.Weapon
                 {
                     if (workerSystem.TryGetEntity(entityIdToCollision.Value.CollidingWith, out Entity collidedEntity))
                     {
-                        UnityEngine.Debug.Log($"colliding with {entityIdToCollision.Value.CollidingWith}");
                         // If collidee not enemy, and what collision hit is enemy on respective client. This makes it so enemies not hitting each other 
                         // on other clients.
-                        UnityEngine.Debug.Log($"Weapon has enemy component {EntityManager.HasComponent<Enemy>(entity)}");
                         if (!EntityManager.HasComponent<Enemy>(entity) && EntityManager.HasComponent<Enemy>(collidedEntity))
                         {
                             currentHits += 1;
@@ -223,7 +199,6 @@ namespace MDG.Common.Systems.Weapon
                             pendingDamageRequests.Remove(damageResponse.RequestId);
                             if (responsePayload.AlreadyDead)
                             {
-                                UnityEngine.Debug.Log("Already dead");
                                 // If was already dead before hit. Decrease amount of hits
                                 if (weaponIdToHitsThisFrame.TryGetValue(requestSent.weapon_id, out int calculatedHits))
                                 {

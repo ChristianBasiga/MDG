@@ -104,7 +104,7 @@ namespace MDG.Templates
             template.AddComponent(new SpawnSchema.RespawnMetadata.Snapshot
             {
                 BaseRespawnPosition = Vector3f.Zero,
-                BaseRespawnTime = 60.0f
+                BaseRespawnTime = 5.0f,
             }, serverAttribute);
 
             template.AddComponent(new SpawnSchema.PendingRespawn.Snapshot

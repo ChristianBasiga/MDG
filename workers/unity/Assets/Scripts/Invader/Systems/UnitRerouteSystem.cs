@@ -53,7 +53,7 @@ namespace MDG.Invader.Systems
                 [ReadOnly] ref CommandListener commandListener)
             {
 
-                if (commandListener.CommandType == Commands.CommandType.None)
+                if (commandListener.CommandType == Commands.CommandType.None || linearVelocityComponent.Velocity == Vector3f.Zero)
                 {
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(RerouteComponent));
                     linearVelocityComponent.Velocity = Vector3f.Zero;
@@ -129,7 +129,7 @@ namespace MDG.Invader.Systems
                     float dotProduct = Vector3.Dot(collisionPointDistNormalized, newVelocity.ToUnityVector());
                     // It works, but it's trying routes that will fail since only take into account
                     // point not size of colliders in reroute
-                    if (dotProduct < 0.5f)
+                    if (dotProduct < 0.8f)
                     {
                         potentialRoutes.Enqueue(newVelocity * velocityMagnitude);
                         break;
@@ -284,6 +284,7 @@ namespace MDG.Invader.Systems
                     EntityTransform.Component entityTransform = EntityManager.GetComponentData<EntityTransform.Component>(entity);
 
                     CommandListener commandListener = EntityManager.GetComponentData<CommandListener>(entity);
+                    Debug.Log($"Adding reroute component to {scheduleRedirectJob.entityId}");
                     RerouteComponent rerouteComponent = new RerouteComponent
                     {
                         destination = commandListener.TargetPosition,

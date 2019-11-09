@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Collections;
 using StatSchema = MdgSchema.Common.Stats;
+using SpawnSchema = MdgSchema.Common.Spawn;
 using Improbable.Gdk.Core;
 using MDG.Common.Components;
 using Improbable.Gdk.Core.Commands;
@@ -13,10 +14,12 @@ namespace MDG.Common.Systems.Stat
 {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
+    [UpdateBefore(typeof(Stat.StatMonitorSystem))]
     public class StatMonitorSystem : JobComponentSystem
     {
         EntityQuery healthMonitorQuery;
         EntityQuery applyDamageQuery;
+        ComponentUpdateSystem componentUpdateSystem;
         CommandSystem commandSystem;
         WorkerSystem workerSystem;
 
@@ -39,6 +42,7 @@ namespace MDG.Common.Systems.Stat
 
             commandSystem = World.GetExistingSystem<CommandSystem>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
+            componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
         }
 
         struct MonitorHealthJob : IJobForEach<SpatialEntityId, StatSchema.Stats.Component>
@@ -83,8 +87,9 @@ namespace MDG.Common.Systems.Stat
 
             for (int i = 0; i < damageRequests.Count; ++i)
             {
-                Debug.Log("recieved damage request");
                 ref readonly var damageRequest = ref damageRequests[i];
+                Debug.Log($"recieved damage request or {damageRequest.EntityId}");
+
                 workerSystem.TryGetEntity(damageRequest.EntityId, out Entity entity);
                 StatSchema.Stats.Component statComponent = EntityManager.GetComponentData<StatSchema.Stats.Component>(entity);
 
@@ -160,10 +165,38 @@ namespace MDG.Common.Systems.Stat
             while (dead.Count > 0)
             {
                 EntityId killed_id = dead.Dequeue();
-                commandSystem.SendCommand(new WorldCommands.DeleteEntity.Request
+
+                workerSystem.TryGetEntity(killed_id, out Entity killedEntity);
+
+                if (EntityManager.HasComponent<SpawnSchema.RespawnMetadata.Component>(killedEntity))
                 {
-                    EntityId = killed_id
-                });
+                    if (EntityManager.GetComponentData<SpawnSchema.PendingRespawn.Component>(killedEntity).RespawnActive)
+                    {
+                        Debug.Log("Already respawning");
+                    }
+                    else
+                    {
+
+                        Debug.Log("Settgin respawn");
+                        // Need to trigger it somehow. Will see if can just set active, toherwise can add temp server only component
+                        var respawnMetadata = EntityManager.GetComponentData<SpawnSchema.RespawnMetadata.Component>(killedEntity);
+                        componentUpdateSystem.SendUpdate(new SpawnSchema.PendingRespawn.Update
+                        {
+                            RespawnActive = true,
+                            TimeTillRespawn = respawnMetadata.BaseRespawnTime,
+                            PositionToRespawn = respawnMetadata.BaseRespawnPosition
+                        }, killed_id);
+                    }
+                }
+                else
+                {
+
+                    Debug.Log("Sending Delete entity request");
+                    commandSystem.SendCommand(new WorldCommands.DeleteEntity.Request
+                    {
+                        EntityId = killed_id
+                    });
+                }
             }
             dead.Dispose();
             #endregion

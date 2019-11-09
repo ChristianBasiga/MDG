@@ -22,6 +22,7 @@ namespace MDG.Defender.Monobehaviours
         private void OnRespawnActiveChange(bool respawning)
         {
             // Trigger other things.
+            Debug.Log("respawning " + respawning);
             gameObject.SetActive(!respawning);
         }
     }
