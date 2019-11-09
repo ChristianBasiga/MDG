@@ -15,4 +15,5 @@ enum UnitTypes{
 component Unit{
     id = 600;
     UnitTypes type = 1;
+    EntityId owner_id = 2;
 }

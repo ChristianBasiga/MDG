@@ -210,16 +210,20 @@ namespace MDG.Common.Systems.Weapon
                                 WeaponSchema.Weapon.Component weaponComponent = requestSent.weaponComponent;
                                 workerSystem.TryGetEntity(requestSent.request.TargetEntityId, out Entity killedEntity);
                                 PointSchema.Point.Component pointComponent = EntityManager.GetComponentData<PointSchema.Point.Component>(killedEntity);
-
-                                // So 2 ways. Add points to unit, then that gets sent to invader
-                                // or invader points is sum of all points of units?
-                                // Or maybe instead make the wielder the invader.
-
-                                pointRequestSystem.AddPointRequest(new PointSchema.PointRequest
+                                workerSystem.TryGetEntity(weaponComponent.WielderId, out Entity wielderEntity);
+                                PointSchema.PointRequest pointRequestPayload = new PointSchema.PointRequest { PointUpdate = pointComponent.Value };
+                                if (EntityManager.HasComponent<MdgSchema.Units.Unit.Component>(wielderEntity))
                                 {
-                                    EntityUpdating = weaponComponent.WielderId,
-                                    PointUpdate = pointComponent.Value
-                                }, OnGainKillPoints);
+                                    pointRequestPayload.EntityUpdating = EntityManager.GetComponentData<MdgSchema.Units.Unit.Component>(wielderEntity).OwnerId;
+                                }
+                                else
+                                {
+                                    pointRequestPayload.EntityUpdating = weaponComponent.WielderId;
+                                }
+
+                                UnityEngine.Debug.Log($"Adding points to entity {pointRequestPayload.EntityUpdating}");
+
+                                pointRequestSystem.AddPointRequest(pointRequestPayload, OnGainKillPoints);
                             }
                             else
                             {
