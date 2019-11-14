@@ -423,7 +423,7 @@ namespace MDG.Invader.Systems
                         {
                             EntityUpdating = invaderObject.GetComponent<LinkedEntityComponent>().EntityId,
                             PointUpdate = pointMetadata.StartingPoints
-                        }, (PointSchema.PointResponse pointResponse) =>
+                        }, (PointSchema.Point.UpdatePoints.ReceivedResponse pointResponsepointResponse) =>
                         {
                             Debug.Log("Callback for added points returned");
                         });

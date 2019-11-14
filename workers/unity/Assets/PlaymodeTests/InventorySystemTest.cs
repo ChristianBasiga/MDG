@@ -13,9 +13,9 @@ using InventorySystems = MDG.Common.Systems.Inventory;
 using InventoryComponents = MDG.Common.Components;
 using InventorySchema = MdgSchema.Common.Inventory;
 using MDG.Factories;
-using MDG.ScriptableObjects;
 using MDG.ClientSide;
 using MDG.ClientSide.UserInterface;
+using MDG.ScriptableObjects.Items;
 
 namespace PlaymodeTests
 {

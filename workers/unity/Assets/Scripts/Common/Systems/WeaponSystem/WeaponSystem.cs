@@ -246,7 +246,7 @@ namespace MDG.Common.Systems.Weapon
             }
         }
 
-        private void OnGainKillPoints(PointSchema.PointResponse pointResponse)
+        private void OnGainKillPoints(PointSchema.Point.UpdatePoints.ReceivedResponse pointResponse)
         {
         }
     }

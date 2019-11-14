@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Factory should have all of these scriptable objects.
-namespace MDG.ScriptableObjects
+namespace MDG.ScriptableObjects.Items
 {
-    [CreateAssetMenu]
+    [CreateAssetMenu(menuName = Constants.RootMenuPath + "/" + Constants.ItemPath + "/BuildableItem")]
     public class BuildableItem : ShopItem
     {
-        public int RequiredWorkers;
+        public int RequiredWorkersCount;
         public override bool Equals(object other)
         {
             BuildableItem otherItem = other as BuildableItem;
             return ItemId.Equals(otherItem.ItemId) && Title.Equals(otherItem.Title) && Cost.Equals(otherItem.Cost) &&
-                RequiredWorkers.Equals(otherItem.RequiredWorkers);
+                RequiredWorkersCount.Equals(otherItem.RequiredWorkersCount);
         }
 
         public override int GetHashCode()

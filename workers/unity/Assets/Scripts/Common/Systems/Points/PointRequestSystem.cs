@@ -14,8 +14,9 @@ namespace MDG.Common.Systems.Point
         public struct PointRequestPayload
         {
             public PointSchema.PointRequest payload;
-            public Action<PointSchema.PointResponse> callback;
+            public Action<PointSchema.Point.UpdatePoints.ReceivedResponse> callback;
         }
+
         private Dictionary<long, PointRequestPayload> requestIdToPayload;
         private List<PointRequestPayload> pointRequests;
         private CommandSystem commandSystem;
@@ -30,7 +31,7 @@ namespace MDG.Common.Systems.Point
         
         // Maybe make it take in something else to construct point request here to avoid including it in every file.
         // Add callback here. Callback will undo point update if fails, etc.
-        public void AddPointRequest(PointSchema.PointRequest pointRequest, Action<PointSchema.PointResponse> callback = null)
+        public void AddPointRequest(PointSchema.PointRequest pointRequest, Action<PointSchema.Point.UpdatePoints.ReceivedResponse> callback = null)
         {
             pointRequests.Add(new PointRequestPayload
             {
@@ -76,7 +77,7 @@ namespace MDG.Common.Systems.Point
                         switch (response.StatusCode)
                         {
                             case Improbable.Worker.CInterop.StatusCode.Success:
-                                pointRequest.callback.Invoke(response.ResponsePayload.GetValueOrDefault());
+                                pointRequest.callback.Invoke(response);
                                 break;
                             case Improbable.Worker.CInterop.StatusCode.Timeout:
                                 // Requeue.

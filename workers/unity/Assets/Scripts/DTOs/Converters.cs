@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using MDG.Common;
-using MDG.ScriptableObjects;
+using MDG.ScriptableObjects.Weapons;
 namespace MDG.DTO
 {
     public class Converters

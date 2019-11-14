@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Improbable.Gdk.Subscriptions;
 using MDG.Common.MonoBehaviours;
-using MDG.ScriptableObjects;
+using MDG.ScriptableObjects.Items;
 using InventorySchema = MdgSchema.Common.Inventory;
 using MDG.Factories;
 using UnityEngine.UI;

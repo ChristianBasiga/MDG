@@ -8,7 +8,7 @@ using MDG.DTO;
 using Improbable;
 using MDG.Common;
 using Improbable.Gdk.Core;
-using MDG.ScriptableObjects;
+using MDG.ScriptableObjects.Weapons;
 
 namespace MDG.Common.MonoBehaviours
 {

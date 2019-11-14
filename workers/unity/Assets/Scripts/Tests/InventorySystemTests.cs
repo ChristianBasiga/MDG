@@ -12,7 +12,7 @@ using InventorySchema = MdgSchema.Common.Inventory;
 using Unity.Entities.Tests;
 using MDG.Factories;
 using Improbable.Gdk.Core;
-using MDG.ScriptableObjects;
+using MDG.ScriptableObjects.Items;
 namespace MDG_Testing
 {
 

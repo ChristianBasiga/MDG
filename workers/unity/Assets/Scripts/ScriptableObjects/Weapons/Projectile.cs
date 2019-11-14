@@ -4,10 +4,10 @@ using UnityEngine;
 using WeaponSchema = MdgSchema.Common.Weapon;
 
 // Factory should have all of these scriptable objects.
-namespace MDG.ScriptableObjects
+namespace MDG.ScriptableObjects.Weapons
 {
     // Config and scriptable objects will be good.
-    [CreateAssetMenu]
+    [CreateAssetMenu(menuName = Constants.RootMenuPath + "/" + Constants.WeaponPath + "/Projectile")]
     public class Projectile : Weapon
     {
         public float LifeTime;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using MDG.ScriptableObjects;
+using MDG.ScriptableObjects.Items;
 namespace MDG.Common.MonoBehaviours
 {
     public class ItemSlot : MonoBehaviour
