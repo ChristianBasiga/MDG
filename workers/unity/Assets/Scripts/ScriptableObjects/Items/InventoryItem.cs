@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Factory should have all of these scriptable objects.
-namespace MDG.ScriptableObjects
+namespace MDG.ScriptableObjects.Items
 {
-    [CreateAssetMenu]
+    [CreateAssetMenu(menuName = Constants.RootMenuPath + "/" + Constants.ItemPath + "/InventoryItem")]
     public class InventoryItem : ScriptableObject
     {
         public Sprite ArtWork;

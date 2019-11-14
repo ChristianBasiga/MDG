@@ -1,0 +1,5 @@
+package mdg_schema.units;
+
+enum MinionTypes{
+    ARCHER = 1;
+}

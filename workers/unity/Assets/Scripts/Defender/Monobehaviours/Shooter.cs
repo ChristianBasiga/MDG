@@ -8,13 +8,16 @@ using MDG.DTO;
 using Improbable;
 using MDG.Common;
 using Improbable.Gdk.Core;
-
+using MDG.ScriptableObjects.Weapons;
 
 namespace MDG.Common.MonoBehaviours
 {
     public class Shooter : MonoBehaviour
     {
         SpawnRequestSystem spawnRequestSystem;
+
+        // Need to figure out how this is set. I've got a trash project right now dude.
+        Weapon weapon;
 
         [SerializeField]
         Transform crossHairs;
@@ -40,23 +43,14 @@ namespace MDG.Common.MonoBehaviours
             // Problem is that the sense of depth off.
             Vector3f bulletLinearVelocity = HelperFunctions.Vector3fFromUnityVector(crossHairs.forward * bulletSpeed);
 
-            // Down line derive this info from currently equipped weapon by referencing scriptable object.
-            ProjectileConfig projectileConfig = new ProjectileConfig
-            {
-                startingPosition = bulletStartingPosition,
-                linearVelocity = bulletLinearVelocity,
-                maximumHits = 1,
-                damage = 1,
-                projectileId = 1,
-                dimensions = new Vector3f(5, 0, 5),
-                lifeTime = 20.0f
-            };
+            ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(weapon as Projectile);
+            projectileConfig.startingPosition = bulletStartingPosition;
+            projectileConfig.linearVelocity = bulletLinearVelocity;
+
+            WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(weapon);
+            weaponMetadata.wielderId = linkedEntityComponent.EntityId.Id;
+
             byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
-            WeaponMetadata weaponMetadata = new WeaponMetadata
-            {
-                weaponType = MdgSchema.Common.Weapon.WeaponType.Projectile,
-                wielderId = linkedEntityComponent.EntityId.Id
-            };
             byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
             spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
             {

@@ -1,4 +1,4 @@
-﻿using MDG.ScriptableObjects;
+﻿using MDG.ScriptableObjects.Items;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

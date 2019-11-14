@@ -423,7 +423,7 @@ namespace MDG.Invader.Systems
                         {
                             EntityUpdating = invaderObject.GetComponent<LinkedEntityComponent>().EntityId,
                             PointUpdate = pointMetadata.StartingPoints
-                        }, (PointSchema.PointResponse pointResponse) =>
+                        }, (PointSchema.Point.UpdatePoints.ReceivedResponse pointResponsepointResponse) =>
                         {
                             Debug.Log("Callback for added points returned");
                         });
@@ -617,6 +617,7 @@ namespace MDG.Invader.Systems
 
                     // WOO them magic nums. Gotta update this.
                     // will retrieve this from scriptable object instead of hardcoding the nums here.
+                    // Scriptable Object
                     ProjectileConfig projectileConfig = new ProjectileConfig
                     {
                         startingPosition = attackPayload.startingPosition,

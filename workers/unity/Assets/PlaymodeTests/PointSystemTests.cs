@@ -97,9 +97,9 @@ namespace PlaymodeTests
                 };
                 PointSchema.PointResponse? response = null;
                 int framesPassed = -1;
-                pointRequestSystem.AddPointRequest(pointRequest, (PointSchema.PointResponse pointResponse) =>
+                pointRequestSystem.AddPointRequest(pointRequest, (PointSchema.Point.UpdatePoints.ReceivedResponse pointResponse) =>
                 {
-                    response = pointResponse;
+                    response = pointResponse.ResponsePayload.Value;
                 });
                 yield return new WaitWhile(() => {
                     // I guess this isn't ran every frame.
@@ -147,9 +147,9 @@ namespace PlaymodeTests
                 };
                 PointSchema.PointResponse? response = null;
                 int framesPassed = -1;
-                pointRequestSystem.AddPointRequest(pointRequest, (PointSchema.PointResponse pointResponse) =>
+                pointRequestSystem.AddPointRequest(pointRequest, (PointSchema.Point.UpdatePoints.ReceivedResponse pointResponse) =>
                 {
-                    response = pointResponse;
+                    response = pointResponse.ResponsePayload.Value;
                 });
                 yield return new WaitWhile(() => {
                     // I guess this isn't ran every frame.
