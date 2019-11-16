@@ -119,7 +119,7 @@ namespace MDG.Invader.Systems
                 return;
             }
 
-
+            Camera inputCamera = hunter.transform.GetChild(0).GetComponent<Camera>();
             EntityId hunterId = linkedEntityComponent.EntityId;
             float3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
@@ -153,6 +153,7 @@ namespace MDG.Invader.Systems
             };
             commandGiveJob.Schedule(this).Complete();
             commandGiven.Dispose();
+            //inputCamera.depth = 0;
         }
     }
 }

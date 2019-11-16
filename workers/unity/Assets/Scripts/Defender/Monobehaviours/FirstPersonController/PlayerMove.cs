@@ -42,9 +42,8 @@ namespace MDG.Defender.Monobehaviours {
         void PlayerMovement()
         {
 
-            float horizInput = Input.GetAxis(horizInputName) * speed;
-            float vertInput = Input.GetAxis(vertInputName) * speed;
-
+            float horizInput = Input.GetAxis(horizInputName);
+            float vertInput = Input.GetAxis(vertInputName);
             Vector3 forwardMovement = transform.forward * vertInput;
             Vector3 rightMovement = transform.right * horizInput;
             // Hmm, it does apply velocity, but tbh, it dies out literally right after sooo lol.
@@ -70,7 +69,7 @@ namespace MDG.Defender.Monobehaviours {
 
         private void OnPlayerMoveHandler()
         {
-            OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
+            //OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
         }
     }
 }

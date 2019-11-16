@@ -26,7 +26,12 @@ namespace MDG.Invader.Monobehaviours
             }
         }
         Settings cameraSettings;
+        private readonly float minZoom = 20;
+        private readonly float maxZoom = 120;
+        [SerializeField] private float worldWidth;
+        [SerializeField] private float worldHeight;
         new Camera camera;
+        Camera inputCamera;
         //This way caninject new camera settings as needed.
         [Inject]
         public void Initialize(Settings cameraSettings)
@@ -34,16 +39,21 @@ namespace MDG.Invader.Monobehaviours
             this.cameraSettings = cameraSettings;
         }
 
+        public void SetCameraSettings()
+        {
+            // Prob will instead listen for event, instead of UI having reference to this, it will subscribe at start then let callback handle it.
+        }
        
         private void Start()
         {
-            camera = GetComponent<Camera>();
+          //  camera = transform.GetChild(1).GetComponent<Camera>();
+            camera = transform.GetChild(0).GetComponent<Camera>();
             if (cameraSettings == null)
             {
                 cameraSettings = new Settings(new Vector2(Screen.width * 0.2f, Screen.height * 0.2f),
-                new Vector2(100, 100),
-                10.0f,
-                100.0f);
+                new Vector2(worldWidth, worldHeight),
+                50.0f,
+                50.0f);
             }
         }
         void Update()
@@ -72,10 +82,11 @@ namespace MDG.Invader.Monobehaviours
             }
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             camera.orthographicSize -= scroll * cameraSettings.scrollSpeed * 100.0f * Time.deltaTime;
+            camera.orthographicSize = Mathf.Clamp(camera.orthographicSize, minZoom, maxZoom);
             newCameraPosition.x = Mathf.Clamp(newCameraPosition.x, -cameraSettings.panningBounds.x, cameraSettings.panningBounds.x);
             newCameraPosition.z = Mathf.Clamp(newCameraPosition.z, -cameraSettings.panningBounds.y, cameraSettings.panningBounds.y);
             transform.position = newCameraPosition;
-        }
 
+        }
     }
 }

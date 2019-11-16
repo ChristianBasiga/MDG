@@ -13,9 +13,11 @@ namespace MDG.Invader.Monobehaviours {
     public class HunterController : MonoBehaviour
     {
         LinkedEntityComponent linkedEntityComponent;
+        Camera inputCamera;
         // Start is called before the first frame update
         void Start()
         {
+            inputCamera = transform.GetChild(0).GetComponent<Camera>();
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             SelectionController selectionController = GetComponent<SelectionController>();
             selectionController.OnSelectionEnd += UpdateSelectionComponent;
@@ -24,10 +26,9 @@ namespace MDG.Invader.Monobehaviours {
         void UpdateSelectionComponent(SelectionController.SelectionPayload payload)
         {
             if (linkedEntityComponent.Worker.TryGetEntity(linkedEntityComponent.EntityId, out Entity entity)) {
-
-                float3 convertedStart = Camera.main.ScreenToWorldPoint(payload.startPosition);
-                float3 convertedEnd = Camera.main.ScreenToWorldPoint(payload.endPosition);
-                float3 convertedScale = Camera.main.ScreenToWorldPoint(payload.scale);
+                float3 convertedStart = inputCamera.ScreenToWorldPoint(payload.startPosition);
+                float3 convertedEnd = inputCamera.ScreenToWorldPoint(payload.endPosition);
+                float3 convertedScale = inputCamera.ScreenToWorldPoint(payload.scale);
                 linkedEntityComponent.World.EntityManager.AddComponentData(entity, new Selection { StartPosition = convertedStart, Scale = convertedScale, EndPosition = convertedEnd});
             }
         }
