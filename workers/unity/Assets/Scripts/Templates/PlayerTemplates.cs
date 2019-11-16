@@ -8,14 +8,21 @@ using MdgSchema.Player;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using MdgSchema.Common;
+using PositionSchema = MdgSchema.Common.Position;
+using InventorySchema = MdgSchema.Common.Inventory;
+using CollisionSchema = MdgSchema.Common.Collision;
+using StatSchema = MdgSchema.Common.Stats;
+using PointSchema = MdgSchema.Common.Point;
+using SpawnSchema = MdgSchema.Common.Spawn;
+using Unity.Entities;
+using MDG.Invader.Components;
+using MDG.Common;
+using MDG.Common.Components;
 
-namespace MDG.Player
+namespace MDG.Templates
 {
-    public class Templates
+    public class PlayerTemplates
     {
-        // If can't reproduce it like this, look at entity creation again.
-        //But worst case I simply add the lobby components to respective player if authoritiave client
-        //so that they may send commands.
         public static EntityTemplate CreatePlayerEntityTemplate(string workerId, byte[] playerCreationArguments)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
@@ -23,19 +30,29 @@ namespace MDG.Player
 
             //Deserializate playerCreationArguments.
             var template = new EntityTemplate();
-
             if (playerCreationArguments.Length > 0)
             {
                 DTO.PlayerConfig creationArgs = DTO.Converters.DeserializeArguments<DTO.PlayerConfig>(playerCreationArguments);
-                //The creation args would come from room clear request / start game request.
-                template.AddComponent(new PlayerMetaData.Snapshot("username",creationArgs.playerType), clientAttribute);
+                // GOtta rethink where I'll store usernames and such.
+                template.AddComponent(new PlayerMetaData.Snapshot("username"), clientAttribute);
+                template.AddComponent(new GameMetadata.Snapshot
+                {
+                    Type = creationArgs.playerType
+                }, serverAttribute);
+                template = creationArgs.playerType == GameEntityTypes.Hunter ? AddInvaderComponents(clientAttribute,template) 
+                    : AddDefenderComponents(clientAttribute, template);
 
-                //Factory instead incase of other roles down the line.
-                template = creationArgs.playerType == PlayerType.HUNTER ? AddHunterComponents(template) : AddHunterComponents(template);
+                template.AddComponent(new EntityTransform.Snapshot
+                {
+                    Position = creationArgs.position
+                }, serverAttribute);
             }
+           
+           
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
-            template.AddComponent(new PlayerTransform.Snapshot(), clientAttribute);
+            // No need for player transform, enttiy transform, etc. is enough now.
+           
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             TransformSynchronizationHelper.AddTransformSynchronizationComponents(template, clientAttribute);
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
@@ -43,18 +60,128 @@ namespace MDG.Player
             return template;
         }
 
-        private static EntityTemplate AddHunterComponents(EntityTemplate template)
+        private static EntityTemplate AddInvaderComponents(string clientAttribute, EntityTemplate template)
         {
-            template.AddComponent(new GameMetadata.Snapshot(GameEntityTypes.Hunter), UnityGameLogicConnector.WorkerType);
+            var serverAttribute = UnityGameLogicConnector.WorkerType;
+
+            template.AddComponent(new PointSchema.PointMetadata.Snapshot
+            {
+                IdleGainRate = 1,
+                StartingPoints = 1000
+            }, serverAttribute);
+
+            template.AddComponent(new PointSchema.Point.Snapshot
+            {
+                Value = 1000
+            }, serverAttribute);
+
+            template.AddComponent(new InventorySchema.Inventory.Snapshot
+            {
+                Inventory = new Dictionary<int, InventorySchema.Item>(),
+                InventorySize = 5
+            }, serverAttribute);
+
             return template;
         }
 
-        private static EntityTemplate AddHuntedComponents(EntityTemplate template)
+        private static EntityTemplate AddDefenderComponents(string clientAttribute, EntityTemplate template)
         {
+            var serverAttribute = UnityGameLogicConnector.WorkerType;
+
+
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                Position = new Vector3f(0, 0, 0),
+                Dimensions = new Vector3f(30, 0, 30)
+            }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.Collision.Snapshot
+            {
+                Collisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>()
+            }, serverAttribute);
+
+
+            template.AddComponent(new SpawnSchema.RespawnMetadata.Snapshot
+            {
+                BaseRespawnPosition = Vector3f.Zero,
+                BaseRespawnTime = 5.0f,
+            }, serverAttribute);
+
+            template.AddComponent(new SpawnSchema.PendingRespawn.Snapshot
+            {
+                RespawnActive = false,
+            }, serverAttribute);
+
+            template.AddComponent(new PointSchema.PointMetadata.Snapshot
+            {
+                IdleGainRate = 10,
+                StartingPoints = 1500
+            }, serverAttribute);
+
+            template.AddComponent(new PointSchema.Point.Snapshot
+            {
+                Value = 1500
+            }, serverAttribute);
+
+            template.AddComponent(new InventorySchema.Inventory.Snapshot
+            {
+                Inventory = new Dictionary<int, InventorySchema.Item>(),
+                InventorySize = 10
+            }, serverAttribute);
+
+            template.AddComponent(new PositionSchema.LinearVelocity.Snapshot
+            {
+                Velocity = Vector3f.Zero
+            }, clientAttribute);
+
+            template.AddComponent(new PositionSchema.AngularVelocity.Snapshot
+            {
+                AngularVelocity = Vector3f.Zero
+            }, clientAttribute);
+
+
+            template.AddComponent(new StatSchema.StatsMetadata.Snapshot
+            {
+                Health = 10
+            }, serverAttribute);
+
+            template.AddComponent(new StatSchema.Stats.Snapshot
+            {
+                Health = 10
+            }, serverAttribute);
+        
             return template;
         }
              
 
 
+    }
+
+    public class PlayerArchtypes
+    {
+        public static void AddInvaderArchtype(EntityManager entityManager, Entity entity, bool authoritative)
+        {
+            
+        }
+        public static void AddDefenderArchtype(EntityManager entityManager, Entity entity, bool authoritative)
+        {
+            if (!authoritative)
+            {
+                entityManager.AddComponent<Enemy>(entity);
+                entityManager.AddComponent<Clickable>(entity);
+            }
+            else
+            {
+                entityManager.AddComponentData(entity, new CombatMetadata
+                {
+                    attackCooldown = 2.0f
+                });
+
+                entityManager.AddComponentData(entity, new CombatStats
+                {
+                    attackCooldown = 0
+                });
+            }
+        }
     }
 }

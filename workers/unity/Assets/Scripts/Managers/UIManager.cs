@@ -2,27 +2,59 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MdgSchema.Player;
-
+using MdgSchema.Common;
+using Improbable.Gdk.PlayerLifecycle;
+using Improbable.Gdk.Core;
 
 namespace MDG.ClientSide.UserInterface
 {
    
     public class UIManager : MonoBehaviour
     {
-        //Inject these later.
-        public GameObject roleSelectionUI;
-        public Transform selectionGrid;
+        GameObject roleSelectionUI;
 
-        public delegate void RoleSelectedHandler(PlayerType type);
+        public delegate void RoleSelectedHandler(GameEntityTypes type);
         public event RoleSelectedHandler OnRoleSelected;
 
+        private void Start()
+        {
+            roleSelectionUI = GameObject.Find("RoleSelectionUI");
+        }
 
         public void SelectRole(string role)
         {
-            PlayerType type = (PlayerType) System.Enum.Parse(typeof(PlayerType), role);
+            GameEntityTypes type = (GameEntityTypes) System.Enum.Parse(typeof(GameEntityTypes), role);
             OnRoleSelected?.Invoke(type);
 
+            UnityClientConnector clientConnector = GetComponent<UnityClientConnector>();
+            var playerCreationSystem = clientConnector.Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
+            playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
+            {
+                playerType = type,
+            }), OnCreatePlayerResponse);
+
+
+            // Here, what I COULD do is add the respective defender and invader systems instead of in client connector.
+            var commandSystem = clientConnector.Worker.World.GetOrCreateSystem<CommandSystem>();
+            commandSystem.SendCommand(new MdgSchema.Game.GameStatus.StartGame.Request
+            {
+                TargetEntityId = new EntityId(3),
+                Payload = new MdgSchema.Game.StartGameRequest()
+            });
             roleSelectionUI.SetActive(false);
+        }
+
+        //Move this and the creation requests to manager and just have this call it from manager.
+        private void OnCreatePlayerResponse(PlayerCreator.CreatePlayer.ReceivedResponse response)
+        {
+            if (response.StatusCode != Improbable.Worker.CInterop.StatusCode.Success)
+            {
+                Debug.LogWarning($"Error: {response.Message}");
+            }
+            else
+            {
+                Debug.Log("Created player succssfully");
+            }
         }
     }
 }

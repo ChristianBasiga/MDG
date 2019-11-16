@@ -8,9 +8,15 @@ using Improbable.Worker.CInterop;
 using UnityEngine;
 using MdgSchema.Player;
 using MdgSchema.Lobby;
-using MDG.Hunter.Systems.UnitCreation;
-using MDG.Hunter.Systems;
+
+using MDG.Invader.Systems;
 using MDG.Common.Systems;
+using MDG.Common.Systems.Inventory;
+using MDG.Common.Systems.Spawn;
+using MDG.Common.Systems.Point;
+using MDG.Common.Systems.Position;
+using MDG.Common.Systems.Stat;
+using MDG.Common.Systems.Weapon;
 
 namespace MDG
 {
@@ -50,16 +56,21 @@ namespace MDG
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>(); 
             TransformSynchronizationHelper.AddServerSystems(Worker.World);
-            // But then it's in a different world? Hmm this also onl reall makes sense in invader context.
-           // Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
+            Worker.World.GetOrCreateSystem<PositionSystem>();
+            //Worker.World.GetOrCreateSystem<PointRequestSystem>();
+            Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
+            Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
+            Worker.World.GetOrCreateSystem<StatMonitorSystem>();
+            //Worker.World.GetOrCreateSystem<WeaponSystem>();
 
-            //Worker.World.GetOrCreateSystem<CollisionDetectionSystem>();
+            Worker.World.GetOrCreateSystem<Game.GameStatusSystem>();
+            Worker.World.GetOrCreateSystem<RespawnMonitorSystem>();
+            Worker.World.GetOrCreateSystem<PointSystem>();
+            Worker.World.GetOrCreateSystem<TimeManagementSystem>();
+            Worker.World.GetOrCreateSystem<MDG.Common.Systems.Collision.CollisionDetectionSystem>();
+            Worker.World.GetOrCreateSystem<MDG.Common.Systems.Collision.CollisionHandlerSystem>();
+
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
-            //UnitCreationHelper.AddServerSystems(Worker.World);
-            //UnitCreationHelper.AddClientSystems(Worker.World);
-            //Create helper on entity for server and client systems
-            //for current systems INit, just client.
         }
-
     }
 }

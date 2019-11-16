@@ -10,8 +10,10 @@ namespace MDG.Lobby
 {
     // This will attach to UI prefab. Now to actually store the rooms.
     // 
+    /*
     public class LobbyClientWorker : MonoBehaviour
     {
+        
         [Require] LobbyCommandSender lobbyCommandSender;
         [Require] LobbyReader lobbyReader;
 
@@ -41,7 +43,7 @@ namespace MDG.Lobby
                 int room_id = i;
                 joinButton.onClick.AddListener( delegate()
                 {
-                    this.JoinRoom(room_id, PlayerType.HUNTER);
+                    this.JoinRoom(room_id);
                 });
                 rooms.Add(room);
             }
@@ -49,11 +51,10 @@ namespace MDG.Lobby
         }
 
         //Need player object or playerdto so send around for this stuff.
-        public void JoinRoom(int id, PlayerType playerType)
+        public void JoinRoom(int id)
         {
             RoomJoinRequest payload = new RoomJoinRequest
             {
-                Type = playerType,
                 RoomId = id,
                 UserName = "Test"
             };
@@ -97,4 +98,5 @@ namespace MDG.Lobby
             lastUpdateId = res.ResponseId;
         }
     }
+    */
 }

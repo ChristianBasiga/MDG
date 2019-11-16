@@ -1,0 +1,19 @@
+package mdg_schema.units;
+// Prob can reuse this for defender units.
+enum UnitTypes{
+    WORKER = 1;
+    TANK = 2;
+    DPS = 3;
+}
+
+
+// Most easily scalable, is let this Component decide what kind of Unit it is
+// and based on this add any other components.
+// but how do I indicate that in spawning payload.
+// Perhaps along with GameEntity, I'll have id / level of entity.
+// this id maps to different types of that type, gotta make factory for that.
+component Unit{
+    id = 600;
+    UnitTypes type = 1;
+    EntityId owner_id = 2;
+}

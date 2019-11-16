@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-
+using MDG.Common;
+using MDG.ScriptableObjects.Weapons;
 namespace MDG.DTO
 {
     public class Converters
@@ -29,6 +30,30 @@ namespace MDG.DTO
                 binaryFormatter.Serialize(memoryStream, arguments);
                 return memoryStream.ToArray();
             }
+        }
+
+        // Ideally I COULD just serialize the scriptable object.
+        // down road will, but for now this is fine,
+        public static ProjectileConfig ProjectileToProjectileConfig(Projectile projectile)
+        {
+            ProjectileConfig projectileConfig = new ProjectileConfig
+            {
+                projectileId = projectile.WeaponId,
+                dimensions = HelperFunctions.Vector3fFromUnityVector(projectile.Dimensions),
+                lifeTime = projectile.LifeTime,
+                maximumHits = projectile.Durability,
+                damage = projectile.Damage,
+            };
+            return projectileConfig;
+        }
+
+        public static WeaponMetadata WeaponToWeaponMetadata(Weapon weapon)
+        {
+            return new WeaponMetadata
+            {
+                attackCooldown = weapon.AttackCooldown,
+                weaponType = weapon.weaponType
+            };
         }
     }
 

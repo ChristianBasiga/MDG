@@ -1,0 +1,8 @@
+package mdg_schema.common.stats;
+
+
+component StatsMetadata{
+    id = 805;
+    int32 health = 1;
+    // Other info later.
+}

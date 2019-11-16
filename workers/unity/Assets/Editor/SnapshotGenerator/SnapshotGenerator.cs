@@ -26,29 +26,39 @@ namespace MDG.Editor
         {
             var snapshot = new Snapshot();
 
-           // AddResourceManager(snapshot);
             AddPlayerSpawner(snapshot);
+            AddSpawnManager(snapshot);
+            AddGameManager(snapshot);
+            // If not do game launcher here, ma need to store lobby as scene in game.
+            //down the line.
             // AddLobby(snapshot);
-            //AddUnitSpawner(snapshot);
             return snapshot;
         }
 
-        private static void AddResourceManager(Snapshot snapshot)
+        private static void AddGameManager(Snapshot snapshot)
         {
-            snapshot.AddEntity(MDG.Common.Templates.GetResourceManagerTemplate());
-        }
-        // Will load resources on client connect, but can't be part of snapshot due to list of occupants.
-        // Maybe create component like Occupyiable? lol. I could.
-        // Cause resources are inheritently part of snapshot and should be.
-        private static void AddResources(Snapshot snapshot)
-        {
-            snapshot.AddEntity(MDG.Common.Templates.GetResourceTemplate());
+            // Okayyy, so.. Snapshot and game objects don't get along.
+            snapshot.AddEntity(Templates.GameTemplates.CreateGameManagerTemplate());
         }
 
-        // Should also add GameManager
-        private static void AddUnitSpawner(Snapshot snapshot)
+        private static void AddSpawnManager(Snapshot snapshot)
         {
-            snapshot.AddEntity(MDG.Hunter.Unit.Templates.GetUnitSpawnerTemplate());
+            var serverAttribute = UnityGameLogicConnector.WorkerType;
+
+            EntityTemplate template = new EntityTemplate();
+            template.AddComponent(new Position.Snapshot(), serverAttribute);
+            template.AddComponent(new Metadata.Snapshot { EntityType = "SpawnManager" }, serverAttribute);
+            template.AddComponent(new Persistence.Snapshot(), serverAttribute);
+            template.AddComponent(new MdgSchema.Common.Spawn.SpawnManager.Snapshot(), serverAttribute);
+
+            template.SetReadAccess(UnityClientConnector.WorkerType, UnityGameLogicConnector.WorkerType, MobileClientWorkerConnector.WorkerType);
+            template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
+
+            snapshot.AddEntity(template);
+        }
+        private static void AddResources(Snapshot snapshot)
+        {
+            snapshot.AddEntity(MDG.Templates.WorldTemplates.GetResourceTemplate());
         }
 
         private static void AddLobby(Snapshot snapshot)

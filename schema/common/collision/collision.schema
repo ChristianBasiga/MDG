@@ -1,0 +1,26 @@
+package mdg_schema.common.collision;
+import "improbable/vector3.schema";
+import "common/metadata.schema";
+import "improbable/standard_library.schema";
+
+
+type CollisionPoint{
+    EntityId colliding_with = 1;
+    // Storing angle and magnitude from center of entity collided with.
+    improbable.Vector3f distance = 2;
+}
+
+// Will add vision too later.
+// Along with having event, will have state that is updated as well. Keeps acting upon collisions more flexible.
+type CollisionEventPayload{
+    map<EntityId, CollisionPoint> collided_with = 2;
+}
+
+// This is component that is essentially the event payload but as a maintained state.
+component Collision{
+    id = 861;
+    map<EntityId, CollisionPoint> collisions = 1;
+    event CollisionEventPayload on_collision;
+}
+
+

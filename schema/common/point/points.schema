@@ -1,0 +1,20 @@
+package mdg_schema.common.point;
+
+
+type PointRequest{
+    EntityId entity_updating = 1;
+    int32 point_update = 2;
+}
+
+type PointResponse{
+    int32 total_points = 1;
+    EntityId entity_updated = 2;
+}
+
+
+// Point stuff will be ids 820-830
+component Point{
+    id = 821;
+    int32 value = 1;
+    command PointResponse update_points(PointRequest);
+}

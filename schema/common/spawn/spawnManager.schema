@@ -1,0 +1,19 @@
+package mdg_schema.common.spawn;
+import "improbable/vector3.schema";
+import "common/metadata.schema";
+
+type SpawnRequest {
+    mdg_schema.common.GameEntityTypes type_to_spawn = 1;
+    int32 type_id = 2;
+    improbable.Vector3f position = 3;
+    int32 count = 4;
+}
+
+type SpawnResponse {
+    EntityId spawned_entity_id = 1;
+}
+
+component SpawnManager{
+    id = 831;
+    command SpawnResponse spawn_game_entity(SpawnRequest);
+}

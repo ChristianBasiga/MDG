@@ -5,12 +5,16 @@ using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
 using MDG.Common.Systems;
-using MDG.Hunter.Systems;
-using MDG.Hunter.Systems.UnitCreation;
+using MDG.Invader.Systems;
 using UnityEngine;
 using Unity.Rendering;
 using Improbable;
 using Unity.Entities;
+using MDG.Templates;
+using MDG.Common.Systems.Inventory;
+using MDG.Common.Systems.Spawn;
+using MDG.Common.Systems.Point;
+using MDG.Common.Systems.Weapon;
 
 namespace MDG
 {
@@ -18,13 +22,12 @@ namespace MDG
     public class UnityClientConnector : WorkerConnector
     {
         public const string WorkerType = "UnityClient";
-        public CustomGameObjectCreator customGameObjectCreator { get; private set; }
+        public ClientGameObjectCreator clientGameObjectCreator { get; private set; }
 
         private async void Start()
         {
             var connParams = CreateConnectionParameters(WorkerType);
             connParams.Network.ConnectionType = NetworkConnectionType.Kcp;
-            
             var builder = new SpatialOSConnectionHandlerBuilder()
                 .SetConnectionParameters(connParams);
 
@@ -52,34 +55,30 @@ namespace MDG
                 builder.SetConnectionFlow(new ReceptionistFlow(CreateNewWorkerId(WorkerType)));
             }
 
-            PlayerLifecycleConfig.CreatePlayerEntityTemplate = Player.Templates.CreatePlayerEntityTemplate;
+            PlayerLifecycleConfig.CreatePlayerEntityTemplate = PlayerTemplates.CreatePlayerEntityTemplate;
 
             await Connect(builder, new ForwardingDispatcher()).ConfigureAwait(false);
         }
 
         protected override void HandleWorkerConnectionEstablished()
         {
-            GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-            customGameObjectCreator = new CustomGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
-            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, customGameObjectCreator);
             TransformSynchronizationHelper.AddClientSystems(Worker.World);
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
-            UnitCreationHelper.AddClientSystems(Worker.World);
-            // This should actually be in server side, but later.
-            Worker.World.GetOrCreateSystem<StatUpdateSystem>();
-            Worker.World.GetOrCreateSystem<GameEntityInitSystem>();
-            Worker.World.GetOrCreateSystem<MoveSystem>();
-
-            // Todo: Move these to helper class to pass in hunter client systems.
+            Worker.World.GetOrCreateSystem<SpawnRequestSystem>();
+            Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
+            Worker.World.GetOrCreateSystem<PointRequestSystem>();
+            Worker.World.GetOrCreateSystem<WeaponSystem>();
+            //Invader systems.
+            Worker.World.GetOrCreateSystem<SelectionSystem>();
             Worker.World.GetOrCreateSystem<CommandGiveSystem>();
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
-            Worker.World.GetOrCreateSystem<EntitySyncSystem>();
-            Worker.World.GetOrCreateSystem<SelectionSystem>();
-            /*
-            Worker.World.GetOrCreateSystem<Unity.Rendering.RenderMeshSystemV2>();
-            Worker.World.GetOrCreateSystem<Unity.Rendering.RenderBoundsUpdateSystem>();
-            Worker.World.GetOrCreateSystem<Unity.Rendering.LodRequirementsUpdateSystem>();
-            Worker.World.GetOrCreateSystem<Unity.Rendering.LightSystem>();*/
+            Worker.World.GetOrCreateSystem<ResourceRequestSystem>();
+            Worker.World.GetOrCreateSystem<ResourceMonitorSystem>();
+            Worker.World.GetOrCreateSystem<UnitRerouteSystem>();
+
+            GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
+            clientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
+            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, clientGameObjectCreator);
         }
 
         

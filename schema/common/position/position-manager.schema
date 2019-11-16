@@ -1,0 +1,8 @@
+package mdg_schema.common.position;
+
+
+
+
+component PositionManager{
+    id = 851;    
+}

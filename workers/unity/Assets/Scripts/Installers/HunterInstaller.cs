@@ -1,5 +1,4 @@
-using MDG.Hunter.Monobehaviours;
-using MDG.Hunter.Systems.UnitCreation;
+using MDG.Invader.Monobehaviours;
 using UnityEngine;
 using System.Collections.Generic;
 using Zenject;
@@ -14,6 +13,8 @@ namespace MDG.Installers {
         public Material material;
         Dictionary<UnitTypes, RenderMesh> unitTypesToRenderMesh;
         
+        // Do DI later, not neccesarry.
+        /*
         public override void InstallBindings()
         {
             /*
@@ -25,7 +26,7 @@ namespace MDG.Installers {
                 10.0f,
                 100.0f
             ).WhenInjectedInto<CameraController>().Lazy();
-            */
+            
             //Install bindings for unit creation.
            // Container.Bind<Dictionary<UnitTypes, RenderMesh>>().FromInstance(GetMeshesForUnits()).AsSingle().WhenInjectedInto<UnitCreationRequestSystem>();
 
@@ -39,7 +40,7 @@ namespace MDG.Installers {
                 unitTypesToRenderMesh = new Dictionary<UnitTypes, RenderMesh>()
                 {
                     {
-                        UnitTypes.COLLECTOR,
+                        UnitTypes.WORKER,
                         new RenderMesh{
                             mesh = mesh,
                             material = material
@@ -59,5 +60,6 @@ namespace MDG.Installers {
             }
             return mainSceneCamera;
         }
+    */
     }
 }
