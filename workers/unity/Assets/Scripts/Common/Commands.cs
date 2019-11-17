@@ -15,11 +15,4 @@ namespace MDG.Invader.Commands
         Attack
     }
 
-    //Move all this to command
-    public interface ICommand: IComponentData
-    {
-        bool DoneExecuting();
-        void Execute(GameObject gameObject);
-    }
-
 }
