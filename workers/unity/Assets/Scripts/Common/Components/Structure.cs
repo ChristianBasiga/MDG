@@ -17,8 +17,7 @@ namespace MDG.Common.Components.Structure
     {
         public float jobProgress;
         public float estimatedJobCompletion;
-        // This will map to deserialized job data.
-        public int job_id;
+        public int jobId;
     }
 
     public struct BuildingComponent : IComponentData

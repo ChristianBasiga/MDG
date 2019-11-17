@@ -1,11 +1,5 @@
 package mdg_schema.common.structure;
 
-enum StructureType{
-    Spawning = 1;
-    Trap = 2;
-    Claiming = 3;
-}
-
 type BuildRequestPayload{
     EntityId builder_id = 1;
     int build_rate = 2;
@@ -19,7 +13,8 @@ type BuildResponsePayload{
 }
 
 type JobRequestPayload{
-    bytes jobData = 1;
+    bytes job_data = 1;
+    float estimated_job_completion = 2;
 }
 
 type JobResponsePayload{
@@ -36,18 +31,20 @@ type BuildEventPayload{
 }
 
 type JobRunEventPayload{
-    // Actual enums will be in C# side, then cased from enum to this and back accordingly.
-    int32 job_type = 1;
     float job_progress = 2;
     float estimated_job_completion = 3;
+}
+
+type JobCompleteEventPayload{
+    bytes job_data = 1;
 }
 
 component Structure{
     id = 951;
     bool constructing = 1;
-    StructureType structure_type = 3;
     command BuildResponsePayload build(BuildRequestPayload);
     command JobResponsePayload start_job(JobRequestPayload);
     event BuildEventPayload building;
     event JobRunEventPayload job_running;
+    event JobCompleteEventPayload job_complete;
 }
