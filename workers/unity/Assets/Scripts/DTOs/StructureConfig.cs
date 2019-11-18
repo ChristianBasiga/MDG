@@ -14,6 +14,7 @@ namespace MDG.DTO
     {
         public InventoryConfig inventoryConfig;
         public StructureSchema.StructureType structureType;
+        public int constructionTime;
     }
 
     

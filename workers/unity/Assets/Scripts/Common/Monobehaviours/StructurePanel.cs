@@ -1,78 +1,48 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
+using MDG.ScriptableObjects.Items;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using StructureSchema = MdgSchema.Common.Structure;
 
-namespace MDG.Common.MonoBehaviours
+namespace MDG.Common.MonoBehaviours.Structures
 {
-    // General Structure Panel all structure Panels will prob derive from.
-    // Contains loading bar for comleteing job.
-    // loading bar for completiting construction, etc.
-    // Recieves Events via ComponentUpdateSystem and updates UI accordingly.
-    // Specific of structure Panel will be it's on Monobehaviour used in composition with this.
     public class StructurePanel : MonoBehaviour
     {
-        ComponentUpdateSystem componentUpdateSystem;
-        LinkedEntityComponent linkedEntityComponent;
-        [Require] StructureSchema.StructureReader structureReader;
+        public Text errorText;
+        public Sprite blankJobIcon;
+        public Image constructionProgressBar;
+        public Image jobProgressBar;
 
-        Image constructionProgressBar;
-        Image jobProgressBar;
+        protected ShopItem[] jobQueue;
+
+        public Image[] jobQueueUI;
+        public StructureBehaviour structureBehaviour;
+
         // Start is called before the first frame update
         void Start()
         {
-            structureReader.OnConstructingUpdate += OnConstructionUpdate;
-            linkedEntityComponent = GetComponent<LinkedEntityComponent>();
-            componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
+            structureBehaviour.OnJobStarted += OnJobStarted;
+            structureBehaviour.OnBuildComplete += OnFinishConstruction;
+            structureBehaviour.OnJobCompleted += StructureBehaviour_OnJobCompleted;
+            structureBehaviour.OnError += DisplayErrorMessage;
         }
 
-        private void OnConstructionUpdate(bool constructed)
+        private void OnJobStarted(int jobIndex, ShopItem jobInfo, LinkedEntityComponent arg2)
         {
-            // Swap meshes. Do this later, unimportant. For now can just have a layer of opacity over structure.
-
+            jobQueueUI[jobIndex].sprite = jobInfo.ArtWork;
         }
 
-        // Update is called once per frame
-        void Update()
+        private void StructureBehaviour_OnJobCompleted(int arg1, byte[] arg2)
         {
-            // Actual actions done on construction and job completion will be done by systems.
-            // This log is purely for UI.
-            if (structureReader.Data.Constructing)
-            {
-                var buildEvents = componentUpdateSystem.GetEventsReceived<StructureSchema.Structure.Build.Event>(linkedEntityComponent.EntityId);
-                for (int i = 0; i < buildEvents.Count; ++i)
-                {
-                    // I literally made both of them timers.
-                    ref readonly var buildEvent = ref buildEvents[i];
-                    float percentage = buildEvent.Event.Payload.BuildProgress / buildEvent.Event.Payload.EstimatedBuildTime;
-                    HelperFunctions.UpdateFill(constructionProgressBar, percentage);
-                    if (percentage == 1)
-                    {
-                        //Next frame, remove construction progress bar
-                        StartCoroutine(OnFinishConstruction());
-                    }
+            throw new System.NotImplementedException();
+        }
 
-                }
-            }
-            else
-            {
-                var jobEvents = componentUpdateSystem.GetEventsReceived<StructureSchema.Structure.RunJob.Event>(linkedEntityComponent.EntityId);
-                for (int i = 0; i < jobEvents.Count; ++i)
-                {
-                    ref readonly var jobEvent = ref jobEvents[i];
-                    float percentage = jobEvent.Event.Payload.JobProgress / jobEvent.Event.Payload.EstimatedJobCompletion;
-                    HelperFunctions.UpdateFill(jobProgressBar, percentage);
-                    if (percentage == 1)
-                    {
-                        // Next frame, remove job progress bar
-                        StartCoroutine(OnFinishJob());
-                    }
-                }
-            }
-          
+        private void DisplayErrorMessage(string errorMessage)
+        {
+            errorText.text = errorMessage;
         }
 
         IEnumerator ResetBar(Image bar)
@@ -82,16 +52,19 @@ namespace MDG.Common.MonoBehaviours
             bar.gameObject.SetActive(false);
         }
 
-        IEnumerator OnFinishConstruction()
+        void OnFinishConstruction()
         {
-            yield return ResetBar(constructionProgressBar);
             //Swap mesh, clear other UI.
+            StartCoroutine(ResetBar(constructionProgressBar));
         }
 
-        IEnumerator OnFinishJob()
+
+        void OnFinishJob(int jobIndex, byte[] jobData)
         {
-            yield return ResetBar(jobProgressBar);
-            // Clear other UI.
+            StartCoroutine(ResetBar(jobProgressBar));
+            // set image.
+            jobQueueUI[jobIndex].sprite = blankJobIcon;
         }
+
     }
 }

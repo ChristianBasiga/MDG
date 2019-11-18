@@ -2,7 +2,7 @@ package mdg_schema.common.structure;
 
 type BuildRequestPayload{
     EntityId builder_id = 1;
-    int build_rate = 2;
+    int32 build_rate = 2;
 }
 
 // Really just different responses.
@@ -21,13 +21,9 @@ type JobResponsePayload{
 
 }
 
-// Literally the same so I could have job type, ie: constructing, progress type, etc.
-// Build should be request based progress. I'm retarded. I won't
-// leverage resource request though as not tested and while logically same algo now
-// fundamentally differeny systems.
 type BuildEventPayload{
-    int build_progress = 1;
-    int estimated_build_completion = 2;
+    int32 build_progress = 1;
+    int32 estimated_build_completion = 2;
 }
 
 type JobRunEventPayload{

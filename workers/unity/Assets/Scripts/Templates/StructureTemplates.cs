@@ -16,17 +16,21 @@ namespace MDG.Templates
 
             StructureConfig structureConfig = Converters.DeserializeArguments<StructureConfig>(structureArgs);
 
-
             entityTemplate.AddComponent(new InventorySchema.Inventory.Snapshot
             {
                 InventorySize = structureConfig.inventoryConfig.inventorySize,
                 Inventory = structureConfig.inventoryConfig.itemToCost
             }, serverAttribute);
 
+            entityTemplate.AddComponent(new StructureSchema.StructureMetadata.Snapshot
+            {
+                StructureType = structureConfig.structureType,
+                ConstructionTime = structureConfig.constructionTime
+            }, serverAttribute);
+
             entityTemplate.AddComponent(new StructureSchema.Structure.Snapshot
             {
                 Constructing = false,
-                StructureType = structureConfig.structureType
             }, serverAttribute);
 
             return entityTemplate;
