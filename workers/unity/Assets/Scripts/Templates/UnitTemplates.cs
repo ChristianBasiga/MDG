@@ -59,8 +59,8 @@ namespace MDG.Templates
             if (spawnArgs != null)
             {
                 UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(spawnArgs);
-                Debug.Log("Unit config has owner id " + unitConfig.owner_id);
-                unitSnapshot.OwnerId = new EntityId(unitConfig.owner_id);
+                Debug.Log("Unit config has owner id " + unitConfig.ownerId);
+                unitSnapshot.OwnerId = new EntityId(unitConfig.ownerId);
                 unitSnapshot.Type = unitConfig.unitType;
             }
             template.AddComponent(unitSnapshot, serverAttribute);

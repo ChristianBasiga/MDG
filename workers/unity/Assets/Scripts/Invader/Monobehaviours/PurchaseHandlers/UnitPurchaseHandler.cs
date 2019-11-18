@@ -30,7 +30,7 @@ namespace MDG.Invader.Monobehaviours
             ShopUnit shopUnit = shopItem as ShopUnit;
             UnitConfig unitConfig = new UnitConfig
             {
-                owner_id = purchaser.Id,
+                ownerId = purchaser.Id,
                 unitType = shopUnit.UnitType
             };
             

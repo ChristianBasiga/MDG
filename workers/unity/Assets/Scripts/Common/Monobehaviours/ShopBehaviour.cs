@@ -22,7 +22,7 @@ namespace MDG.Common.MonoBehaviours.Shopping
         GameObject shopObject;
         LinkedEntityComponent purchaser;
 
-        public delegate void ShopActionEventHandler(ShopItem shopItem, GameObject purchaser);
+        public delegate void ShopActionEventHandler(ShopItem shopItem, LinkedEntityComponent purchaser);
         public event ShopActionEventHandler OnPurchaseItem;
         // Start is called before the first frame update
         void Start()
@@ -30,7 +30,7 @@ namespace MDG.Common.MonoBehaviours.Shopping
         }
 
         // So two things here, the shop item and the belonging shop gameobject.
-        public void OnShopItem(ShopItem shopItem, GameObject purchaser)
+        public void OnShopItem(ShopItem shopItem, LinkedEntityComponent purchaser)
         {
             // Trigger callbacks for all actions done subscribed by other components on same object.
             OnPurchaseItem?.Invoke(shopItem, purchaser);
@@ -75,7 +75,6 @@ namespace MDG.Common.MonoBehaviours.Shopping
 
         private void ShowCantPurchaseUI()
         {
-            Debug.Log("Can't purchase");
         }
     }
 }

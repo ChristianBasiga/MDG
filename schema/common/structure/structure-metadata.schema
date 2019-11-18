@@ -1,0 +1,15 @@
+package mdg_schema.common.structure;
+
+
+
+enum StructureType{
+    Spawning = 1;
+    Trap = 2;
+    Claiming = 3;
+}
+
+component StructureMetadata{
+    id = 952;
+    StructureType structure_type = 1;
+    int32 construction_time = 2;
+}

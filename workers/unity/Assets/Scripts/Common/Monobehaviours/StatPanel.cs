@@ -1,21 +1,17 @@
-﻿using Improbable.Gdk.Subscriptions;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using StatSchema = MdgSchema.Common.Stats;
-using CommonSchema = MdgSchema.Common;
-using UnityEngine.UI;
-using MDG.Common;
-using Improbable.Gdk.Core;
+﻿using Improbable.Gdk.Core;
 using MdgSchema.Common;
+using System.Collections.Generic;
 using Unity.Entities;
+using UnityEngine;
+using CommonSchema = MdgSchema.Common;
 
 namespace MDG.Common.MonoBehaviours
 {
-   
+
     public interface IStatPanel
     {
         void SetEntityTracking(EntityId entityId);
+        CommonSchema.GameEntityTypes GetGameEntityType();
         void Disable();
     }
 
@@ -34,6 +30,12 @@ namespace MDG.Common.MonoBehaviours
             // Getting to point injection is needed.
             unityClientConnector = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>();
             typeToPanel = new Dictionary<CommonSchema.GameEntityTypes, IStatPanel>();
+            for ( int i = 0; i < transform.childCount; ++i)
+            {
+                Transform child = transform.GetChild(i);
+                IStatPanel statPanel = child.GetComponent<IStatPanel>();
+                typeToPanel.Add(statPanel.GetGameEntityType(), statPanel);
+            }
         }
 
         public void UpdatePanel(CommonSchema.GameEntityTypes gameEntityType, IStatPanel panel)

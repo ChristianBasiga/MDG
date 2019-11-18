@@ -85,27 +85,26 @@ namespace MDG.Common
         #endregion
        
         #region UI related helper functions.
-        public static IEnumerator UpdateHealthBar(UnityEngine.UI.Image healthbar, float pct, float timeToUpdate = 2.2f)
+        public static IEnumerator UpdateFill(UnityEngine.UI.Image image, float pct, float timeToUpdate = 2.2f)
         {
-            if (pct == healthbar.fillAmount)
+            if (pct == image.fillAmount)
             {
                 yield return new WaitForEndOfFrame();
             }
             {
                 float elapsed = 0;
-                float currPercentage = healthbar.fillAmount;
+                float currPercentage = image.fillAmount;
 
                 while (elapsed < timeToUpdate)
                 {
                     elapsed += Time.deltaTime;
-                    healthbar.fillAmount = Mathf.Lerp(currPercentage, pct, elapsed / timeToUpdate);
-                    yield return new WaitForEndOfFrame();
+                    image.fillAmount = Mathf.Lerp(currPercentage, pct, elapsed / timeToUpdate);
+                    yield return null;
                 }
-                healthbar.fillAmount = pct;
+                image.fillAmount = pct;
             }
         }
-
-        #endregion
+            #endregion
     }
 
 }

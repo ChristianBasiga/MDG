@@ -120,11 +120,11 @@ namespace PlaymodeTests
             );
             yield return new WaitUntil(() => { return unitEntityId.IsValid(); });
             yield return new WaitForEndOfFrame();
-            /*
-            GameObject> unitObject = clientWorker.GetComponent<UnityClientConnector>().clientGameObjectCreator.GetLinkedGameObjectById(unitEntityId);
+
+            GameObject unitObject = clientWorker.GetComponent<UnityClientConnector>().clientGameObjectCreator.GetLinkedGameObjectById(unitEntityId);
             EntityManager entityManager = workerSystem.EntityManager;
             Assert.IsNotNull(unitObject, $"Linked GameObject not created for Unit with entity id {unitEntityId}");
-            Assert.True(unitObject[0].name.Contains("authoritative"), "Non authoritative unit created for authoritative client");
+            Assert.True(unitObject.name.Contains("authoritative"), "Non authoritative unit created for authoritative client");
             Assert.True(workerSystem.TryGetEntity(unitEntityId, out Entity entity));
             // This should be stored somewhere instead of repeating, so much required debt.
             ComponentType[] authoritativeComponentTypes = new ComponentType[2]
@@ -136,7 +136,7 @@ namespace PlaymodeTests
             foreach (ComponentType componentType in authoritativeComponentTypes)
             {
                 Assert.True(entityManager.HasComponent(entity, componentType), "Authoritative unit missing required components");
-            }*/
+            }
         }
 
         [UnityTest, Order(4)]
