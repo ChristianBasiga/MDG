@@ -30,5 +30,10 @@ namespace MDG.ScriptableObjects.Weapons
         {
             return base.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            return $"AttackCooldown {AttackCooldown} Damage: {Damage} Durability: {Durability} Dimensions: {Dimensions}";
+        }
     }
 }

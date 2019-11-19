@@ -17,7 +17,9 @@
         "Unity.Transforms.PerformanceTests",
         "Unity.Rendering.Hybrid",
         "Unity.Collections",
-        "Unity.Mathematics.Extensions"
+        "Unity.Mathematics.Extensions",
+        "Unity.Postprocessing.Editor",
+        "Unity.Postprocessing.Runtime"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

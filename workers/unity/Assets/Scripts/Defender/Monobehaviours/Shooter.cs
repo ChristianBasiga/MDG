@@ -31,6 +31,9 @@ namespace MDG.Common.MonoBehaviours
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
 
+            weapon = Resources.Load("ScriptableObjects/Weapons/DefenderProjectile") as Weapon;
+            Debug.Log(weapon.ToString());
+
         }
 
         public void SpawnBullet()
@@ -43,6 +46,9 @@ namespace MDG.Common.MonoBehaviours
             // Problem is that the sense of depth off.
             Vector3f bulletLinearVelocity = HelperFunctions.Vector3fFromUnityVector(crossHairs.forward * bulletSpeed);
 
+
+            // Worse case put this back as literal.
+
             ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(weapon as Projectile);
             projectileConfig.startingPosition = bulletStartingPosition;
             projectileConfig.linearVelocity = bulletLinearVelocity;
@@ -50,8 +56,8 @@ namespace MDG.Common.MonoBehaviours
             WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(weapon);
             weaponMetadata.wielderId = linkedEntityComponent.EntityId.Id;
 
-            byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
-            byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
+            byte[] serializedWeapondata = Converters.SerializeArguments<ProjectileConfig>(projectileConfig);
+            byte[] serializedWeaponMetadata = Converters.SerializeArguments<WeaponMetadata>(weaponMetadata);
             spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
             {
                 Position = bulletStartingPosition,

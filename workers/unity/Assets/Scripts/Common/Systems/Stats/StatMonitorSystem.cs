@@ -14,7 +14,6 @@ namespace MDG.Common.Systems.Stat
 {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
-    [UpdateBefore(typeof(Stat.StatMonitorSystem))]
     public class StatMonitorSystem : JobComponentSystem
     {
         EntityQuery healthMonitorQuery;

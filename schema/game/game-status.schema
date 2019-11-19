@@ -1,5 +1,9 @@
 package mdg_schema.game;
 
+enum WinConditions{
+    TimedOut = 1;
+    TerritoriesClaimed = 2;
+}
 
 type StartGameRequest{
 
@@ -9,11 +13,13 @@ type StartGameResponse{
 
 }
 
+type GameEndEventPayload{
+    WinConditions win_condition_met = 1;
+}
 component GameStatus{
     id = 506;
     bool started = 1;
     float time_left = 2;
-    // Should it be player type instead? I mean I can store just entityId and then query it.
-    EntityId winner = 3;
     command StartGameResponse start_game(StartGameRequest);
-}
+    event GameEndEventPayload end_game;
+} 

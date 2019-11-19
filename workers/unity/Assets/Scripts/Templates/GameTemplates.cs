@@ -12,15 +12,13 @@ namespace MDG.Templates
     {
         public static EntityTemplate CreateGameManagerTemplate()
         {
-            Debug.Log("Getting game manager template");
             var template = new EntityTemplate();
             template.AddComponent(new Metadata.Snapshot("GameManager"), UnityGameLogicConnector.WorkerType);
             template.AddComponent(new Position.Snapshot(), UnityGameLogicConnector.WorkerType); 
             template.AddComponent(new Persistence.Snapshot(), UnityGameLogicConnector.WorkerType);
             template.AddComponent(new GameSchema.GameStatus.Snapshot
             {
-                TimeLeft = 900.0f,
-                Winner = new EntityId(-1)
+                TimeLeft = 900.0f
             }, UnityGameLogicConnector.WorkerType);
             template.SetReadAccess(UnityClientConnector.WorkerType, UnityGameLogicConnector.WorkerType, MobileClientWorkerConnector.WorkerType);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);
@@ -45,9 +43,6 @@ namespace MDG.Templates
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);
 
             return template;
-
         }
-       
-
     }
 }

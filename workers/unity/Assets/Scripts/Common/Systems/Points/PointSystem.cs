@@ -6,6 +6,7 @@ using Improbable.Gdk.Core;
 using CommonComponents = MDG.Common.Components;
 using PointSchema = MdgSchema.Common.Point;
 using Unity.Mathematics;
+using GameSchema = MdgSchema.Game;
 
 namespace MDG.Common.Systems.Point
 {
@@ -21,6 +22,7 @@ namespace MDG.Common.Systems.Point
         Dictionary<EntityId, int> idToPoints;
         EntityQuery pointGroup;
         CommandSystem commandSystem;
+        ComponentUpdateSystem componentUpdateSystem;
         int startingbuffer = 100;
         // I should reserve these.
         EntityId pointWorkerId = new EntityId(4);
@@ -33,6 +35,7 @@ namespace MDG.Common.Systems.Point
             base.OnCreate();
             idToPoints = new Dictionary<EntityId, int>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
+            componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
             pointGroup = GetEntityQuery(
                 ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<PointSchema.PointMetadata.Component>(),

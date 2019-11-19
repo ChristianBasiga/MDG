@@ -5,6 +5,7 @@ using MdgSchema.Player;
 using MdgSchema.Common;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.Core;
+using Improbable.Gdk.Subscriptions;
 
 namespace MDG.ClientSide.UserInterface
 {
@@ -15,6 +16,7 @@ namespace MDG.ClientSide.UserInterface
 
         public delegate void RoleSelectedHandler(GameEntityTypes type);
         public event RoleSelectedHandler OnRoleSelected;
+        private EntityId gameManagerEntityId = new EntityId(3); 
 
         private void Start()
         {
@@ -34,11 +36,12 @@ namespace MDG.ClientSide.UserInterface
             }), OnCreatePlayerResponse);
 
 
-            // Here, what I COULD do is add the respective defender and invader systems instead of in client connector.
+
+
             var commandSystem = clientConnector.Worker.World.GetOrCreateSystem<CommandSystem>();
             commandSystem.SendCommand(new MdgSchema.Game.GameStatus.StartGame.Request
             {
-                TargetEntityId = new EntityId(3),
+                TargetEntityId = gameManagerEntityId,
                 Payload = new MdgSchema.Game.StartGameRequest()
             });
             roleSelectionUI.SetActive(false);

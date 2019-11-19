@@ -55,12 +55,12 @@ namespace MDG
         protected override void HandleWorkerConnectionEstablished()
         {
             Worker.World.GetOrCreateSystem<MetricSendSystem>(); 
-            TransformSynchronizationHelper.AddServerSystems(Worker.World);
             Worker.World.GetOrCreateSystem<PositionSystem>();
             //Worker.World.GetOrCreateSystem<PointRequestSystem>();
             Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<StatMonitorSystem>();
+            Worker.World.GetOrCreateSystem<SystemCleanupSystem>();
             //Worker.World.GetOrCreateSystem<WeaponSystem>();
 
             Worker.World.GetOrCreateSystem<Game.GameStatusSystem>();

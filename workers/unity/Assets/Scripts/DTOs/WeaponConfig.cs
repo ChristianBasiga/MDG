@@ -10,6 +10,7 @@ namespace MDG.DTO
     public class WeaponMetadata
     {
         public WeaponSchema.WeaponType weaponType;
+        public string prefabName;
         public long wielderId;
         public float attackCooldown;
 
