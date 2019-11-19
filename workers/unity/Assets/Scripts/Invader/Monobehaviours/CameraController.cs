@@ -47,7 +47,7 @@ namespace MDG.Invader.Monobehaviours
         private void Start()
         {
           //  camera = transform.GetChild(1).GetComponent<Camera>();
-            camera = transform.GetChild(0).GetComponent<Camera>();
+            camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
             if (cameraSettings == null)
             {
                 cameraSettings = new Settings(new Vector2(Screen.width * 0.2f, Screen.height * 0.2f),

@@ -20,21 +20,13 @@ namespace MDG.Common.Systems
         protected override void OnCreate()
         {
             base.OnCreate();
-            systemsToRemove = new List<ComponentSystemBase>();
-            systemsToRemove.Add(World.GetExistingSystem<Point.PointSystem>());
-            systemsToRemove.Add(World.GetExistingSystem<Stat.StatMonitorSystem>());
-            systemsToRemove.Add(World.GetExistingSystem<Spawn.RespawnMonitorSystem>());
-            systemsToRemove.Add(World.GetExistingSystem<Collision.CollisionDetectionSystem>());
-            systemsToRemove.Add(World.GetExistingSystem<Collision.CollisionHandlerSystem>());
-            systemsToRemove.Add(World.GetExistingSystem<Position.PositionSystem>());
-
-            componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
+          
         }
 
         protected override void OnUpdate()
         {
             // Polish this furher later.
-
+            /*
             var endGameEventMessages = componentUpdateSystem.GetEventsReceived<GameSchema.GameStatus.EndGame.Event>();
             if (endGameEventMessages.Count > 0)
             {
@@ -53,6 +45,7 @@ namespace MDG.Common.Systems
 
                 World.DestroySystem(this);
             }
+            */
         }
     }
 }

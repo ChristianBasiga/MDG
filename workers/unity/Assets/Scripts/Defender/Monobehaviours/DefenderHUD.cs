@@ -1,4 +1,5 @@
 ﻿using Improbable.Gdk.Subscriptions;
+using MDG.Common.MonoBehaviours;
 using MdgSchema.Common.Point;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,15 +13,18 @@ namespace MDG.Defender.Monobehaviours
         [Require] PointReader pointReader;
         Text pointText;
 
+        // Need to get this as singleton later.
+        MainOverlayHUD uIManager;
 
         Text endGameText;
 
         // Start is called before the first frame update
         void Start()
         {
+            uIManager = GameObject.Find("ClientWorker").GetComponent<MainOverlayHUD>();
             pointText = GameObject.Find("PointText").GetComponent<Text>();
-            endGameText = GameObject.Find("EndGameText").GetComponent<Text>();
-
+            
+            // UI Manager should attach 
             DefenderSynchronizer defenderSynchronizer = GetComponent<DefenderSynchronizer>();
             defenderSynchronizer.OnLoseGame += DisplayLoseGameUI;
             defenderSynchronizer.OnWinGame += DisplayWinGameUI;
@@ -35,14 +39,12 @@ namespace MDG.Defender.Monobehaviours
 
         private void DisplayLoseGameUI()
         {
-            endGameText.text = "You lost. Invader has won.";
-            endGameText.color = Color.red;
+            uIManager.SetEndGameText("You failed to stop the invasion.", false);
         }
 
         private void DisplayWinGameUI()
         {
-            endGameText.text = "You won. You have stopped the Invasion";
-            endGameText.color = Color.green;
+            uIManager.SetEndGameText("You have stopped the Invasion", true);
         }
     }
 }

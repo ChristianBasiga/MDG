@@ -4,7 +4,6 @@ using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.Subscriptions;
 using MDG;
-using MDG.ClientSide.UserInterface;
 using MDG.Common.Components;
 using MDG.Invader.Components;
 using MdgSchema.Common;
@@ -21,6 +20,8 @@ using ResourceSchema = MdgSchema.Game.Resource;
 using PointSchema = MdgSchema.Common.Point;
 using PointSystems = MDG.Common.Systems.Point;
 using DefenderComponents = MDG.Defender.Components;
+using MDG.Common.MonoBehaviours;
+
 using Improbable;
 using MDG.Invader.Systems;
 
@@ -54,7 +55,7 @@ namespace PlaymodeTests
 
             });
             yield return new WaitForSeconds(2.0f);
-            uiManager.GetComponent<UIManager>().SelectRole("Hunter");
+            uiManager.GetComponent<MainOverlayHUD>().SelectRole("Hunter");
             yield return new WaitUntil(() =>
             {
                 return GameObject.Find("Hunter_Spawned") != null && GameObject.FindGameObjectWithTag("Unit") != null;

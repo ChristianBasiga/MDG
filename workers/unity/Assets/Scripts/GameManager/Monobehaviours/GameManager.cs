@@ -17,6 +17,7 @@ using Zenject;
 using SpawnSchema = MdgSchema.Common.Spawn;
 using GameSchema = MdgSchema.Game;
 using MdgSchema.Common;
+using MDG.Common.MonoBehaviours;
 
 namespace MDG.Game.Monobehaviours 
 {
@@ -24,10 +25,6 @@ namespace MDG.Game.Monobehaviours
     {
 
         [Require] GameSchema.GameStatusReader gameStatusReader;
-
-        #region UI
-        Text timeText;
-        #endregion
 
 
         int levelWidth;
@@ -46,8 +43,8 @@ namespace MDG.Game.Monobehaviours
 
         void Start()
         {
-            timeText = GameObject.Find("Timer").GetComponent<Text>();
-            gameStatusReader.OnTimeLeftUpdate += GameTimerUpdate;
+            // UI manager should handle this.
+            gameStatusReader.OnTimeLeftUpdate += GameObject.Find("ClientWorker").GetComponent<MainOverlayHUD>().UpdateTime;
         }
 
         private void Update()
@@ -67,15 +64,6 @@ namespace MDG.Game.Monobehaviours
                     }
                 }
             }*/
-        }
-
-        // Gets time in seconds
-        private void GameTimerUpdate(float time)
-        {
-            // Get minutes and remaining time after remving minutes
-            int minutes = (int)(time / 60);
-            int seconds = (int)(time - (minutes * 60));
-            timeText.text = $"{minutes}:{seconds}";
         }
     }
 }
