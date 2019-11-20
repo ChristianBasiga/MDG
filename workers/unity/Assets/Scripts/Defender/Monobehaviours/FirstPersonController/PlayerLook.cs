@@ -22,7 +22,7 @@ namespace MDG.Defender.Monobehaviours
         private void Awake()
         {
             LockCursor();
-            playerCamera = transform.GetChild(0).gameObject;
+            playerCamera = transform.Find("Camera").gameObject;
         }
 
         // Start is called before the first frame update
