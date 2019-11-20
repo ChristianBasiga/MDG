@@ -17,6 +17,7 @@ using Zenject;
 using SpawnSchema = MdgSchema.Common.Spawn;
 using GameSchema = MdgSchema.Game;
 using MdgSchema.Common;
+using MDG.Common.MonoBehaviours;
 
 namespace MDG.Game.Monobehaviours 
 {
@@ -24,10 +25,6 @@ namespace MDG.Game.Monobehaviours
     {
 
         [Require] GameSchema.GameStatusReader gameStatusReader;
-
-        #region UI
-        Text timeText;
-        #endregion
 
 
         int levelWidth;
@@ -46,36 +43,17 @@ namespace MDG.Game.Monobehaviours
 
         void Start()
         {
-            timeText = GameObject.Find("Timer").GetComponent<Text>();
-            gameStatusReader.OnTimeLeftUpdate += GameTimerUpdate;
+            // UI manager should handle this.
+            gameStatusReader.OnTimeLeftUpdate += GameObject.Find("ClientWorker").GetComponent<MainOverlayHUD>().UpdateTime;
+            gameStatusReader.OnEndGameEvent += OnEndGame;
         }
 
-        private void Update()
+        private void OnEndGame(GameSchema.GameEndEventPayload endgameInfo)
         {
-            // Why did this take me over an hour. Not thinking right????? wat the actual fuck.
-            // not hard. Just needed to check for it like I check for events
-            // cause update is just ane vent lol. God.
-           /* if (componentUpdateSystem != null)
-            {
-                var updates = componentUpdateSystem.GetComponentUpdatesReceived<GameSchema.GameStatus.Update>();
-                if (updates.Count > 0)
-                {
-                    var update = updates[0];
-                    if (update.Update.TimeLeft.TryGetValue(out float updatedTime))
-                    {
-                        GameTimerUpdate(updatedTime);
-                    }
-                }
-            }*/
+
         }
 
-        // Gets time in seconds
-        private void GameTimerUpdate(float time)
-        {
-            // Get minutes and remaining time after remving minutes
-            int minutes = (int)(time / 60);
-            int seconds = (int)(time - (minutes * 60));
-            timeText.text = $"{minutes}:{seconds}";
-        }
+
+
     }
 }

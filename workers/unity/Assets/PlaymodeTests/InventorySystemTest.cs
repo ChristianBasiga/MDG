@@ -13,9 +13,8 @@ using InventorySystems = MDG.Common.Systems.Inventory;
 using InventoryComponents = MDG.Common.Components;
 using InventorySchema = MdgSchema.Common.Inventory;
 using MDG.Factories;
-using MDG.ClientSide;
-using MDG.ClientSide.UserInterface;
 using MDG.ScriptableObjects.Items;
+using MDG.Common.MonoBehaviours;
 
 namespace PlaymodeTests
 {
@@ -38,7 +37,7 @@ namespace PlaymodeTests
 
             });
             yield return new WaitForSeconds(2.0f);
-            uiManager.GetComponent<UIManager>().SelectRole("Hunter");
+            uiManager.GetComponent<MainOverlayHUD>().SelectRole("Hunter");
             yield return new WaitUntil(() =>
             {
                 return GameObject.Find("Hunter_Spawned") != null && GameObject.FindGameObjectWithTag("Unit") != null;

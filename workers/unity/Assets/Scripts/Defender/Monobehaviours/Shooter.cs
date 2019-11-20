@@ -10,7 +10,7 @@ using MDG.Common;
 using Improbable.Gdk.Core;
 using MDG.ScriptableObjects.Weapons;
 
-namespace MDG.Common.MonoBehaviours
+namespace MDG.Defender.Monobehaviours
 {
     public class Shooter : MonoBehaviour
     {
@@ -30,6 +30,7 @@ namespace MDG.Common.MonoBehaviours
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
+            GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
 
             weapon = Resources.Load("ScriptableObjects/Weapons/DefenderProjectile") as Weapon;
             Debug.Log(weapon.ToString());

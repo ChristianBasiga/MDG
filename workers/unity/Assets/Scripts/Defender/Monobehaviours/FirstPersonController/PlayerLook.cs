@@ -22,13 +22,20 @@ namespace MDG.Defender.Monobehaviours
         private void Awake()
         {
             LockCursor();
-            playerCamera = transform.GetChild(0).gameObject;
+            playerCamera = transform.Find("Camera").gameObject;
         }
 
         // Start is called before the first frame update
         void Start()
         {
-
+            GetComponent<DefenderSynchronizer>().OnEndGame += () => {
+                this.enabled = false;
+                angularVelocityWriter.SendUpdate(new PositionSchema.AngularVelocity.Update
+                {
+                    AngularVelocity = Vector3f.Zero
+                });
+                Cursor.lockState = CursorLockMode.None;
+            };
         }
 
         // Update is called once per frame
@@ -42,7 +49,7 @@ namespace MDG.Defender.Monobehaviours
         {
 
             Cursor.lockState = CursorLockMode.Locked;
-
+            Debug.Log("I stay locked");
         }
 
         void CameraRotation()

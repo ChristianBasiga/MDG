@@ -14,6 +14,7 @@ namespace MDG.Defender.Monobehaviours
         void Start()
         {
             shooter = GetComponent<Shooter>();
+            GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
         }
 
         // Update is called once per frame

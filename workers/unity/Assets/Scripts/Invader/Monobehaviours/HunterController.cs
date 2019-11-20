@@ -17,7 +17,7 @@ namespace MDG.Invader.Monobehaviours {
         // Start is called before the first frame update
         void Start()
         {
-            inputCamera = transform.GetChild(0).GetComponent<Camera>();
+            inputCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             SelectionController selectionController = GetComponent<SelectionController>();
             selectionController.OnSelectionEnd += UpdateSelectionComponent;

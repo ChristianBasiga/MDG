@@ -29,8 +29,11 @@ namespace MDG.Defender.Monobehaviours {
         //This will have reference to the reader and writer of component.
         void Start()
         {
+            GetComponent<DefenderSynchronizer>().OnEndGame += () => {
+                this.enabled = false;
+            };
         }
-       
+
 
         // Update is called once per frame
         void Update()

@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Improbable.Gdk.Subscriptions;
-using MDG.ClientSide.UserInterface;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using MDG.Common.MonoBehaviours;
+
 
 namespace Tests
 {
@@ -25,7 +26,7 @@ namespace Tests
             });
             yield return new WaitForSeconds(2.0f);
             
-            uiManager.GetComponent<UIManager>().SelectRole("Hunter");
+            uiManager.GetComponent<MainOverlayHUD>().SelectRole("Hunter");
             yield return new WaitUntil(() =>
             {
                 return GameObject.Find("Hunter_Spawned") != null && GameObject.FindGameObjectWithTag("Unit") != null;

@@ -1,4 +1,5 @@
 ﻿using Improbable.Gdk.Subscriptions;
+using MDG.Common.MonoBehaviours;
 using MdgSchema.Common.Point;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,39 +11,33 @@ namespace MDG.Defender.Monobehaviours
     public class DefenderHUD : MonoBehaviour
     {
         [Require] PointReader pointReader;
-        Text pointText;
 
+        // Need to get this as singleton later.
+        MainOverlayHUD mainOverlayHUD;
 
-        Text endGameText;
 
         // Start is called before the first frame update
         void Start()
         {
-            pointText = GameObject.Find("PointText").GetComponent<Text>();
-            endGameText = GameObject.Find("EndGameText").GetComponent<Text>();
 
+            mainOverlayHUD = GameObject.Find("ClientWorker").GetComponent<MainOverlayHUD>();
+            // Subsribe to main overlay hud.
             DefenderSynchronizer defenderSynchronizer = GetComponent<DefenderSynchronizer>();
             defenderSynchronizer.OnLoseGame += DisplayLoseGameUI;
             defenderSynchronizer.OnWinGame += DisplayWinGameUI;
-
-            pointReader.OnValueUpdate += UpdatePointText;
-        }
-
-        private void UpdatePointText(int pointValue)
-        {
-            pointText.text = pointValue.ToString();
+            pointReader.OnValueUpdate += mainOverlayHUD.UpdatePoints;
         }
 
         private void DisplayLoseGameUI()
         {
-            endGameText.text = "You lost. Invader has won.";
-            endGameText.color = Color.red;
+            mainOverlayHUD.SetEndGameText("You failed to stop the invasion.", false);
         }
 
         private void DisplayWinGameUI()
         {
-            endGameText.text = "You won. You have stopped the Invasion";
-            endGameText.color = Color.green;
+            mainOverlayHUD.SetEndGameText("You have stopped the Invasion", true);
         }
+
+        
     }
 }

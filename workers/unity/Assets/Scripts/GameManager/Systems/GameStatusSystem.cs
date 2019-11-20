@@ -16,6 +16,7 @@ namespace MDG.Game
     public class GameStatusSystem : ComponentSystem
     {
 
+        readonly int minPlayers = 1;
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
         WorkerSystem workerSystem;
@@ -62,12 +63,11 @@ namespace MDG.Game
         {
             // Will validate and limit player choice prior, so simply getting the count is enough.
             // Four clients for 3 defenders and 1 invader.
-            int playersSpawned = playerQuery.CalculateEntityCount();
+            bool startGame = playerQuery.CalculateEntityCount() == minPlayers;
            // startedGame = playersSpawned == minPlayersToStart;
-            // Forget the request stuff, remove this later on, or perhaps do run the requset but from somewhere else.
-            var startGameRequests = commandSystem.GetRequests<GameSchema.GameStatus.StartGame.ReceivedRequest>(new EntityId(3));
+           // Store entityId of core entities.
             // Should only be started once both invader and defender are in the world.
-            if (!startedGame && startGameRequests.Count > 0)
+            if (!startedGame && startGame)
             {
                 startedGame = true;     
                 workerSystem.TryGetEntity(new EntityId(3), out Unity.Entities.Entity gameManagerEntity);

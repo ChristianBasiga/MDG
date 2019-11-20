@@ -213,7 +213,6 @@ namespace MDG
             else if (metaData.EntityType.Equals("Resource"))
             {
                 pathToEntity = $"{pathToEntity}/Resource";
-                //GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 created.tag = "Resource";
             }
