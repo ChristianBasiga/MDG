@@ -45,25 +45,15 @@ namespace MDG.Game.Monobehaviours
         {
             // UI manager should handle this.
             gameStatusReader.OnTimeLeftUpdate += GameObject.Find("ClientWorker").GetComponent<MainOverlayHUD>().UpdateTime;
+            gameStatusReader.OnEndGameEvent += OnEndGame;
         }
 
-        private void Update()
+        private void OnEndGame(GameSchema.GameEndEventPayload endgameInfo)
         {
-            // Why did this take me over an hour. Not thinking right????? wat the actual fuck.
-            // not hard. Just needed to check for it like I check for events
-            // cause update is just ane vent lol. God.
-           /* if (componentUpdateSystem != null)
-            {
-                var updates = componentUpdateSystem.GetComponentUpdatesReceived<GameSchema.GameStatus.Update>();
-                if (updates.Count > 0)
-                {
-                    var update = updates[0];
-                    if (update.Update.TimeLeft.TryGetValue(out float updatedTime))
-                    {
-                        GameTimerUpdate(updatedTime);
-                    }
-                }
-            }*/
+
         }
+
+
+
     }
 }

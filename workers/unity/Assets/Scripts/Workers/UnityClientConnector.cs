@@ -82,6 +82,10 @@ namespace MDG
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, clientGameObjectCreator);
         }
 
-        
+        public void CloseConnection()
+        {
+            // Other clean up and logs...
+            Application.Quit();
+        }
     }
 }

@@ -15,6 +15,7 @@ namespace MDG.Common.MonoBehaviours
     {
         GameObject roleSelectionUI;
         GameObject gameStatusHUD;
+        Button exitGameButton;
         Text pointText;
         Text endGameText;
         Text timerText;
@@ -29,13 +30,14 @@ namespace MDG.Common.MonoBehaviours
         {
             roleSelectionUI = GameObject.Find("RoleSelectionUI");
             gameStatusHUD = GameObject.Find("GameStatusHUD");
+            exitGameButton = GameObject.Find("LeaveGame").GetComponent<Button>();
             endGameText = gameStatusHUD.transform.GetChild(0).Find("EndGameText").GetComponent<Text>();
             timerText = gameStatusHUD.transform.GetChild(0).Find("Timer").GetComponent<Text>();
 
+            exitGameButton.gameObject.SetActive(false);
             endGameText.gameObject.SetActive(false);    
             gameStatusHUD.SetActive(false);
         }
-
 
         public void UpdatePoints(int points)
         {
@@ -72,6 +74,7 @@ namespace MDG.Common.MonoBehaviours
             endGameText.text = text;
             endGameText.color = won ? Color.blue : Color.red;
             endGameText.gameObject.SetActive(true);
+            exitGameButton.gameObject.SetActive(true);
         }
 
 
