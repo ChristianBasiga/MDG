@@ -1,9 +1,10 @@
 package mdg_schema.game.territory;
 import "improbable/standard_library.schema";
 
+
+
 component Territory {
     id = 504;
     int32 point_gain = 1;
     float participation_radius = 2;
-    
 }

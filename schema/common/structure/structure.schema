@@ -17,8 +17,12 @@ type JobRequestPayload{
     float estimated_job_completion = 2;
 }
 
-type JobResponsePayload{
+type JobCancelRequestPayload{
+    int job_id = 1;
+}
 
+type JobResponsePayload{
+    int job_id = 1;
 }
 
 type BuildEventPayload{
@@ -40,6 +44,7 @@ component Structure{
     bool constructing = 1;
     command BuildResponsePayload build(BuildRequestPayload);
     command JobResponsePayload start_job(JobRequestPayload);
+    command JobResponsePayload cancel_job(JobCancelRequestPayload);
     event BuildEventPayload building;
     event JobRunEventPayload job_running;
     event JobCompleteEventPayload job_complete;

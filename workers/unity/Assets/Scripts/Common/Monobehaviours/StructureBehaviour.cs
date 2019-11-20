@@ -13,8 +13,9 @@ namespace MDG.Common.MonoBehaviours.Structures
 {
     public interface IStructure
     {
+        // Not shop item as not always applicable so bytes as job context.
         void Link(StructureBehaviour structureBehaviour);
-        void StartJob(ShopItem shopItem, LinkedEntityComponent purchaser);
+        void StartJob(byte[] jobContext);
         void CompleteJob(byte[] jobData);
     }
 
@@ -31,7 +32,7 @@ namespace MDG.Common.MonoBehaviours.Structures
         public event Action<int, byte[]> OnJobCompleted;
         public event Action<string> OnError;
 
-
+        public int JobCapacity;
         ComponentUpdateSystem componentUpdateSystem;
         LinkedEntityComponent linkedEntityComponent;
         [Require] StructureSchema.StructureReader structureReader;
@@ -46,7 +47,8 @@ namespace MDG.Common.MonoBehaviours.Structures
         public virtual void Start()
         {
             jobIndex = 0;
-            jobQueue = new ShopItem[6];
+            // Not Even relevant to smoe structures lmao. This is so shitty.
+            jobQueue = new ShopItem[JobCapacity];
             concreteStructureBehaviour.Link(this);
             ShopBehaviour shopBehaviour = GetComponent<ShopBehaviour>();
             shopBehaviour.OnPurchaseItem += StartJob;
@@ -105,7 +107,7 @@ namespace MDG.Common.MonoBehaviours.Structures
                     ref readonly var jobCompleteEvent = ref jobCompleteEvents[0];
                     concreteStructureBehaviour.CompleteJob(jobCompleteEvent.Event.Payload.JobData);
                     OnJobCompleted?.Invoke(jobIndex, jobCompleteEvent.Event.Payload.JobData);
-                    jobIndex = (jobIndex + 1) % jobQueue.Length;
+                    jobIndex = (jobIndex + 1) % JobCapacity;
                 }
             }
             #endregion

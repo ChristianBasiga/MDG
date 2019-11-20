@@ -17,5 +17,10 @@ namespace MDG.DTO
         public int constructionTime;
     }
 
-    
+
+    [Serializable]
+    public class ClaimConfig
+    {
+        public EntityId territoryId;
+    }
 }

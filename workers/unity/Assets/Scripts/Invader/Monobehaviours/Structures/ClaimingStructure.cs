@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,40 +9,36 @@ using Improbable.Gdk.Subscriptions;
 using Improbable.Gdk.Core;
 using MDG.Common;
 using StructureSchema = MdgSchema.Common.Structure;
+using TerritorySchema = MdgSchema.Game.Territroy;
 using MdgSchema.Units;
 using MDG.Common.Systems.Spawn;
 using MDG.Common.MonoBehaviours.Structures;
 
-// Need to change where this goes since longer monobehaviour.
 namespace MDG.Invader.Monobehaviours.Structures
 {
-    public class UnitSpawnerStructure : IStructure
+    public class ClaimingStructure : IStructure
     {
         LinkedEntityComponent linkedStructure;
-        SpawnRequestSystem spawnRequestSystem;
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
-        public Vector3 spawnOffset;
 
+        Image claimProgressBar;
+
+        int claimRequestId = -1;
         public void Link(StructureBehaviour structureBehaviour)
         {
             LinkedEntityComponent linkedEntityComponent = structureBehaviour.GetComponent<LinkedEntityComponent>();
             linkedStructure = linkedEntityComponent;
-            spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
             componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
+            structureBehaviour.OnJobRun += 
         }
         // Create abstract class with startjob base sending StartJobRequest.
         // Should be in structure interface called start job as common argumens.
+        // I don't think shop item would work makes no sense in context of claiming job.
         public void StartJob(byte[] jobContext)
         {
-            ShopUnit shopUnit = Converters.DeserializeArguments<ShopUnit>(jobContext);
-            // So send run job requests with spawn request as serialzied payload.
-            UnitConfig unitConfig = new UnitConfig
-            {
-                ownerId = purchaser.EntityId.Id,
-                position = HelperFunctions.Vector3fFromUnityVector(linkedStructure.transform.position + spawnOffset),
-                unitType = shopUnit.UnitType
-            };
+            // No need to deserialize it. Maybe to store which territorty trying to claim for soem reason.
+           // ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobContext);
 
             byte[] jobPayload = Converters.SerializeArguments<UnitConfig>(unitConfig);
             // Don't care about the response right now.
@@ -50,28 +46,32 @@ namespace MDG.Invader.Monobehaviours.Structures
             {
                 Payload = new StructureSchema.JobRequestPayload
                 {
-                    JobData = Converters.SerializeArguments<UnitConfig>(unitConfig),
+                    JobData = jobContext
                     EstimatedJobCompletion = shopUnit.ConstructTime,
                 },
                 TargetEntityId = linkedStructure.EntityId
             });
         }
 
+        public void UpdateClaimProgress(StructureSchema.JobRunEventPayload jobRunEvent)
+        {
+            // Do other things alongside the claim progress bar.
+            StartCoroutine(HelperFunctions.UpdateFill(claimProgressBar, jobRunEvent.JobProgress / jobRunEvent.EstimatedJobCompletion));
+        }
+
+        // This fine, then will have reader on claiming structure that once claimed is true update UI.
         public void CompleteJob(byte[] jobData)
         {
             // Will be removed when I include spawnPos in the byte payload for spawnMetaData.
-            UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(jobData);
-            spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
-            {
-                TypeToSpawn = MdgSchema.Common.GameEntityTypes.Unit,
-                Count = 1,
-                Position = unitConfig.position
-            }, OnUnitSuccessfullySpawned, jobData);
-        }
+            ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobData);
+            claimRequestId = commandSystem.SendCommand(new TerritorySchema.TerritoryStatus.UpdateClaim.Request{
 
-        private void OnUnitSuccessfullySpawned(EntityId entityId)
-        {
+                Payload = TerritorySchema.TerritoryStatusTypes.Claimed
+            }, claimConfig.territoryId);
 
+            claimProgressBar.gameObject.SetActive(false);
+
+            // Update other UI
         }
     }
 }
