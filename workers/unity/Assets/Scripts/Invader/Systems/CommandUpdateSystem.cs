@@ -18,6 +18,8 @@ using PositionSchema = MdgSchema.Common.Position;
 using CommonJobs = MDG.Common.Jobs;
 using CollisionSchema = MdgSchema.Common.Collision;
 using SpawnSchema = MdgSchema.Common.Spawn;
+using StructureSchema = MdgSchema.Common.Structure;
+
 using PointSchema = MdgSchema.Common.Point;
 using MDG.Common.Systems.Point;
 using Improbable.Gdk.Subscriptions;
@@ -43,13 +45,20 @@ namespace MDG.Invader.Systems
     public class CommandUpdateSystem : ComponentSystem
     {
 
-        public struct CollectPayload
+
+        struct BuildPayload
+        {
+            public EntityId builderId;
+            public EntityId structureId;
+        }
+
+        struct CollectPayload
         {
             public EntityId resourceId;
             public EntityId requestingOccupant;
         }
 
-        public struct AttackPayload
+        struct AttackPayload
         {
             public EntityId attackerId;
             public EntityId attackeeId;
@@ -72,6 +81,10 @@ namespace MDG.Invader.Systems
         private NativeQueue<CollectPayload> pendingOccupy;
         private NativeQueue<CollectPayload> pendingCollects;
         private NativeQueue<CollectPayload> pendingReleases;
+
+
+        private NativeQueue<BuildPayload> buildRequestsToSend;
+
         private PositionSystem positionSystem;
         private CommandSystem commandSystem;
         private SpawnRequestSystem spawnRequestSystem;
@@ -91,11 +104,10 @@ namespace MDG.Invader.Systems
 
 
 
-        public struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component, PositionSchema.LinearVelocity.Component,
+        struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component, PositionSchema.LinearVelocity.Component,
             CollisionSchema.BoxCollider.Component, CommandListener>
         {
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
-            public float deltaTime;
             public void Execute(Entity entity, int jobIndex, [ReadOnly] ref MoveCommand moveCommand, [ReadOnly] ref EntityTransform.Component entityTransform,
                 ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider,
                 ref CommandListener commandListener)
@@ -120,13 +132,12 @@ namespace MDG.Invader.Systems
             }
         }
 
-        public struct MoveToResourceJob : IJobForEachWithEntity<SpatialEntityId, CollectCommand, EntityTransform.Component, 
+        struct MoveToResourceJob : IJobForEachWithEntity<SpatialEntityId, CollectCommand, EntityTransform.Component, 
             PositionSchema.LinearVelocity.Component, CollisionSchema.BoxCollider.Component, CommandListener>
         {
             // There is chance that the resource moving to is gone before get there.
             // In that case collect command needs to removed on not just those ready to collect but on all.
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
-            public float deltaTime;
             [WriteOnly]
             public NativeQueue<CollectPayload>.ParallelWriter occupyPayloads;
 
@@ -168,7 +179,7 @@ namespace MDG.Invader.Systems
         // Also need attack meta data for specifying attack range. Add later.
         #region Attack Command Jobs
 
-        public struct GetTargetPositionsJob : IJobForEach<SpatialEntityId, Enemy, EntityTransform.Component>
+        struct GetTargetPositionsJob : IJobForEach<SpatialEntityId, Enemy, EntityTransform.Component>
         {
             public NativeHashMap<EntityId, Vector3f>.ParallelWriter attackeePositions;
 
@@ -187,7 +198,7 @@ namespace MDG.Invader.Systems
         // Only those entities do I want to check if line of sight, since that is when they are prepping to attack.
         // Let default reroute collision syttem handle it for most part.
 
-        public struct MoveToAttackTargetJob : IJobForEachWithEntity<SpatialEntityId, AttackCommand, PositionSchema.LinearVelocity.Component,
+        struct MoveToAttackTargetJob : IJobForEachWithEntity<SpatialEntityId, AttackCommand, PositionSchema.LinearVelocity.Component,
             EntityTransform.Component, CombatStats>
         {
 
@@ -224,8 +235,6 @@ namespace MDG.Invader.Systems
                     }
                     else
                     {
-                        // Issue is this happens. since no longer in range.
-
                         // If no longer in range, stop attacking, start following again.
                         attackCommand.attacking = false;
                         Vector3f velocity = targetPosition - entityTransform.Position;
@@ -237,6 +246,27 @@ namespace MDG.Invader.Systems
                     // If not in that dictionary, then has to be dead, remove attack command.
                     entityCommandBuffer.RemoveComponent<AttackCommand>(jobIndex, entity);
                     linearVelocityComponent.Velocity = Vector3f.Zero;
+                }
+            }
+        }
+        #endregion
+
+        # Build Command Jobs
+        struct MoveToBuildLocationJob: IJobForEach<SpatialEntityId, BuildCommand, PositionSchema.LinearVelocity.Component,
+            EntityTransform.Component>
+        {
+            public NativeHashMap<EntityId, BuildCommand>.ParallelWriter entitiesBuilding;
+            public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, ref BuildCommand buildCommand, ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
+            [ReadOnly] ref EntityTransform.Component entityTransformComponent )
+            {
+                float distance = HelperFunctions.Distance(buildCommand.buildLocation, entityTransformComponent.Position);
+                if (distance <= buildCommand.minDistanceToBuild && !buildCommand.building){
+                    buildCommand.building = true;
+                    entitiesBuilding.TryAdd(spatialEntityId.EntityId, buildCommand);
+                }
+                else{
+                    linearVelocityComponent.Velocity = buildCommand.buildLocation - entityTransformComponent.Position;
+                    buildCommand.building = false;
                 }
             }
         }
@@ -303,10 +333,160 @@ namespace MDG.Invader.Systems
         protected override void OnUpdate()
         {
             RunCommandJobs();
-            RunCommandRequests();
             ProcessInterruptedCommands();
         }
+        
 
+
+        // Pretty unorgnaized and interwined sections for the purpose of parralelization
+        private void RunCommandJobs()
+        {
+            float deltaTime = Time.deltaTime;
+
+            CommonJobs.ClientJobs.TickAttackCooldownJob tickAttackCooldownJob = new CommonJobs.ClientJobs.TickAttackCooldownJob
+            {
+                deltaTime = deltaTime
+            };
+            JobHandle tickAttackCoolDownHandle = tickAttackCooldownJob.Schedule(this);
+
+
+            NativeHashMap<EntityId, Vector3f> attackeePositions = new NativeHashMap<EntityId, Vector3f>(enemyQuery.CalculateEntityCount() , Allocator.TempJob);
+            GetTargetPositionsJob getTargetPositionsJob = new GetTargetPositionsJob
+            {
+                attackeePositions = attackeePositions.AsParallelWriter()
+            };
+
+            JobHandle getTargetPositionsHandle = getTargetPositionsJob.Schedule(enemyQuery);
+
+            MoveCommandJob moveCommandJob = new MoveCommandJob
+            {
+                // Need to be able to get post update commands in client world in job component system.
+                entityCommandBuffer = PostUpdateCommands.ToConcurrent()
+            };
+            authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<MoveCommand>();
+            EntityQueryDesc entityQueryDesc = new EntityQueryDesc
+            {
+                All = authVelocityGroup
+            };
+            EntityQuery entityQuery = GetEntityQuery(entityQueryDesc);
+            entityQuery.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
+            JobHandle moveToDestHandle = moveCommandJob.Schedule(entityQuery);
+
+            authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<CollectCommand>();
+            authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
+
+            // Might need to keep doing 
+            entityQueryDesc = new EntityQueryDesc
+            {
+                All = authVelocityGroup
+            };
+
+            MoveToResourceJob moveToResourceJob = new MoveToResourceJob
+            {
+                occupyPayloads = pendingOccupy.AsParallelWriter()
+            };
+            entityQuery = GetEntityQuery(entityQueryDesc);
+            // For each pending collect, send Collect request.
+            getTargetPositionsHandle.Complete();
+            JobHandle moveToCollectHandle = moveToResourceJob.Schedule(entityQuery);
+
+            authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<BuildCommand>();
+            authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
+            entityQuery = GetEntityQuery(entityQueryDesc);
+
+            NativeHashMap<EntityId, BuildCommand> buildingUnits = new NativeHashMap<EntityId, BuildCommand>()
+            MoveToBuildLocationJob moveToBuildLocation = new MoveToBuildLocationJob{
+                entitiesBuilding = buildingUnits.AsParallelWriter()
+            };
+            JobHandle moveToBuildHandle = moveToBuildLocation.Schedule(entityQuery);
+
+            var potentialTargetEntities = attackeePositions.GetKeyArray(Allocator.TempJob);
+
+            // Need to remove any keys that are respawning.
+            foreach(var potentialTargetId in potentialTargetEntities)
+            {
+                workerSystem.TryGetEntity(potentialTargetId, out Entity targetEntity);
+
+                //CHeck if respawning
+                if (EntityManager.HasComponent<SpawnSchema.RespawnMetadata.Component>(targetEntity) && EntityManager.GetComponentData<SpawnSchema.PendingRespawn.Component>(targetEntity).RespawnActive)
+                {
+                    attackeePositions.Remove(potentialTargetId);
+                }
+            }
+            potentialTargetEntities.Dispose();
+
+            // This is soo intermangled jesus christ. But for the sake of parralelllll
+
+            tickAttackCoolDownHandle.Complete();
+            // Maybe make this a member variale instead of local. For now it's fine.
+            NativeQueue<AttackPayload> attackPayloads = new NativeQueue<AttackPayload>(Allocator.TempJob);
+            MoveToAttackTargetJob moveToAttackTargetJob = new MoveToAttackTargetJob
+            {
+                deltaTime = deltaTime,
+                attackerToAttackeePosition = attackeePositions,
+                attackPayloads = attackPayloads.AsParallelWriter(),
+                entityCommandBuffer = PostUpdateCommands.ToConcurrent()
+            };
+
+            JobHandle moveToAttackHandle = moveToAttackTargetJob.Schedule(attackQuery);
+          
+            // Letting go to next frame would be enxt step of optimization but holyyyy fuck.
+            moveToCollectHandle.Complete();
+            RunCollectCommandRequests();
+
+            moveToBuildHandle.Complete();
+            moveToDestHandle.Complete();
+            moveToAttackHandle.Complete();
+          
+            attackeePositions.Dispose();
+
+            Queue<PendingAttack> pendingAttacks = ProcessAttackPayloads(attackPayloads);
+            // While the jobs in the Queue are running, do other processing for build commands.
+
+            // Spawn Buildings
+            // Rename this to SpawnStructures.
+            SpawnBuildings(buildingUnits);
+            RunBuildCommandRequests();
+
+            ProcessPendingAttacks(pendingAttacks);
+        }
+
+
+        // To go even further beyond in parraelizing maybe seperate this to request for each command too.
+        private void RunCollectCommandRequests()
+        {
+                #region  Collect Command Request
+                while (pendingOccupy.Count > 0)
+                {
+                    var occupyPayload = pendingOccupy.Dequeue();
+                    resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
+                    {
+                        ResourceRequestType = ResourceRequestType.OCCUPY,
+                        OccupantId = occupyPayload.requestingOccupant,
+                        ResourceId = occupyPayload.resourceId,
+                        callback = HandleCollectCommandResponse,
+                    });
+                }
+                while (pendingCollects.Count > 0)
+                {
+                    var collectPayload = pendingCollects.Dequeue();
+                    resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
+                    {
+                        ResourceRequestType = ResourceRequestType.COLLECT,
+                        OccupantId = collectPayload.requestingOccupant,
+                        ResourceId = collectPayload.resourceId,
+                        callback = HandleCollectCommandResponse
+                    });
+                }
+                #endregion
+        }
+
+        private void RunBuildCommandRequests(){
+
+            
+        }
+
+        #region Response Callback Handlers
         private void HandleCollectCommandResponse(ResourceRequestSystem.ResourceRequestReponse receivedResponse)
         {
             // Simplest way is let them continue to it, then send occupy request and simply fail that way instead of interrupting mid way
@@ -442,108 +622,51 @@ namespace MDG.Invader.Systems
                 }
             }
         }
-
-
-
-
-        // Pretty unorgnaized and interwined sections for the purpose of parralelization
-        private void RunCommandJobs()
+        private void HandleStructureSpawned(EntityId spawned) 
         {
-            float deltaTime = Time.deltaTime;
 
-            CommonJobs.ClientJobs.TickAttackCooldownJob tickAttackCooldownJob = new CommonJobs.ClientJobs.TickAttackCooldownJob
-            {
-                deltaTime = deltaTime
-            };
-            JobHandle tickAttackCoolDownHandle = tickAttackCooldownJob.Schedule(this);
+        }
+        private void HandleBuildResponses()
+        {
 
-
-            NativeHashMap<EntityId, Vector3f> attackeePositions = new NativeHashMap<EntityId, Vector3f>(enemyQuery.CalculateEntityCount() , Allocator.TempJob);
-            GetTargetPositionsJob getTargetPositionsJob = new GetTargetPositionsJob
-            {
-                attackeePositions = attackeePositions.AsParallelWriter()
-            };
-
-            JobHandle getTargetPositionsHandle = getTargetPositionsJob.Schedule(enemyQuery);
-
-            MoveCommandJob moveCommandJob = new MoveCommandJob
-            {
-                deltaTime = deltaTime,
-                // Need to be able to get post update commands in client world in job component system.
-                entityCommandBuffer = PostUpdateCommands.ToConcurrent()
-            };
-            authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<MoveCommand>();
-            EntityQueryDesc entityQueryDesc = new EntityQueryDesc
-            {
-                All = authVelocityGroup
-            };
-            EntityQuery entityQuery = GetEntityQuery(entityQueryDesc);
-            entityQuery.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
-            moveCommandJob.Schedule(entityQuery).Complete();
-
-            authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<CollectCommand>();
-            authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
-
-            MoveToResourceJob moveToResourceJob = new MoveToResourceJob
-            {
-                deltaTime = deltaTime,
-                occupyPayloads = pendingOccupy.AsParallelWriter()
-            };
-            entityQuery = GetEntityQuery(entityQueryDesc);
-            // For each pending collect, send Collect request.
-            getTargetPositionsHandle.Complete();
-
-            var potentialTargetEntities = attackeePositions.GetKeyArray(Allocator.TempJob);
-
-            // Need to remove any keys that are respawning.
-            foreach(var potentialTargetId in potentialTargetEntities)
-            {
-                workerSystem.TryGetEntity(potentialTargetId, out Entity targetEntity);
-
-                //CHeck if respawning
-                if (EntityManager.HasComponent<SpawnSchema.RespawnMetadata.Component>(targetEntity) && EntityManager.GetComponentData<SpawnSchema.PendingRespawn.Component>(targetEntity).RespawnActive)
-                {
-                    attackeePositions.Remove(potentialTargetId);
-                }
-            }
-            potentialTargetEntities.Dispose();
-
-            moveToResourceJob.Schedule(entityQuery).Complete();
-
-            tickAttackCoolDownHandle.Complete();
-            // Maybe make this a member variale instead of local. For now it's fine.
-            NativeQueue<AttackPayload> attackPayloads = new NativeQueue<AttackPayload>(Allocator.TempJob);
-            MoveToAttackTargetJob moveToAttackTargetJob = new MoveToAttackTargetJob
-            {
-                deltaTime = deltaTime,
-                attackerToAttackeePosition = attackeePositions,
-                attackPayloads = attackPayloads.AsParallelWriter(),
-                entityCommandBuffer = PostUpdateCommands.ToConcurrent()
-            };
-
-            moveToAttackTargetJob.Schedule(attackQuery).Complete();
-            attackeePositions.Dispose();
-
+        }
+        #endregion
        
 
+        // Main issue with this is that it's doing too much.
+        // Tbh, for stuff like animations, it should be diff system also acting on CommandInterrupt.
+        private void ProcessInterruptedCommands()
+        {
+           Entities.With(interruptedGroup).ForEach((Entity entity, ref SpatialEntityId spatialEntityId,  ref CommandInterrupt commandInterrupted) =>
+           {
+               switch (commandInterrupted.interrupting)
+               {
+                   case Commands.CommandType.Attack:
+                      
+                   case Commands.CommandType.Collect:
+                       resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
+                       {
+                           OccupantId = spatialEntityId.EntityId,
+                           ResourceId = commandInterrupted.target.Value,
+                           ResourceRequestType = ResourceRequestType.RELEASE
+                       });
+                       break;
+                   case Commands.CommandType.Move:
+                       break;
+               }
+           });
+        }
 
+        #region  Attack Command Functions
+        private Queue<PendingAttack> ProcessAttackPayloads(NativeQueue<AttackPayload> attackPayloads)
+        {
             // Maybe list instead of queue, that way ca
             Queue<PendingAttack> pendingAttacks = new Queue<PendingAttack>(attackQuery.CalculateEntityCount());
             // Later check range or melee
             while (attackPayloads.Count > 0)
             {
                 AttackPayload attackPayload = attackPayloads.Dequeue();
-                
-
-
-                // Check if within line of sight first. Simply running ray cast job and checking if front of list
-                // is the target. If not, reroute. (Down line MAYBE check if what hit was also enemy. If so change target.
-                // BUT that is more specifics / polish.
-
                 int initialCapacity = enemyQuery.CalculateEntityCount() + attackQuery.CalculateEntityCount();
-
-
-
                 NativeQueue<CommonJobs.ClientJobs.RaycastHit> entitiesOnLineOfSight = new NativeQueue<CommonJobs.ClientJobs.RaycastHit>(Allocator.TempJob);
 
                 CommonJobs.ClientJobs.Raycast raycastJob = new CommonJobs.ClientJobs.Raycast
@@ -565,18 +688,18 @@ namespace MDG.Invader.Systems
                 });
             }
             attackPayloads.Dispose();
+            return pendingAttacks;
 
-            while (pendingAttacks.Count > 0)
+            // Some extra time to ru this one.
+        }
+
+        private void ProcessPendingAttacks(Queue<PendingAttack> pendingAttacks){
+
+              while (pendingAttacks.Count > 0)
             {
                 PendingAttack pendingAttack = pendingAttacks.Peek();
                 AttackPayload attackPayload = pendingAttack.attackPayload;
-
-             
-
-
                 pendingAttack.jobHandle.Complete();
-
-
 
                 workerSystem.TryGetEntity(attackPayload.attackerId, out Entity attackerEntity);
                 workerSystem.TryGetEntity(attackPayload.attackeeId, out Entity targetEntity);
@@ -678,58 +801,17 @@ namespace MDG.Invader.Systems
             }
         }
 
-        private void RunCommandRequests()
-        {
-            while (pendingOccupy.Count > 0)
-            {
-                var occupyPayload = pendingOccupy.Dequeue();
-                resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
-                {
-                    ResourceRequestType = ResourceRequestType.OCCUPY,
-                    OccupantId = occupyPayload.requestingOccupant,
-                    ResourceId = occupyPayload.resourceId,
-                    callback = HandleCollectCommandResponse,
-                });
-            }
-            while (pendingCollects.Count > 0)
-            {
-                var collectPayload = pendingCollects.Dequeue();
-                resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
-                {
-                    ResourceRequestType = ResourceRequestType.COLLECT,
-                    OccupantId = collectPayload.requestingOccupant,
-                    ResourceId = collectPayload.resourceId,
-                    callback = HandleCollectCommandResponse
-                });
-            }
+        #endregion
 
-        }
-
-        // Main issue with this is that it's doing too much.
-        // Tbh, for stuff like animations, it should be diff system also acting on CommandInterrupt.
-        private void ProcessInterruptedCommands()
+        private void SpawnBuildings(NativeHashMap<EntityId, BuildCommand> buildingUnits)
         {
-           Entities.With(interruptedGroup).ForEach((Entity entity, ref SpatialEntityId spatialEntityId,  ref CommandInterrupt commandInterrupted) =>
-           {
-               switch (commandInterrupted.interrupting)
-               {
-                   // Fall through because I am treating everything as a 'resource' so units focusing on an enemy
-                   // are 'occupying' it. When unit is disarming a trap, it is 'occupying' the resource.
-                   // Collect in itself is very generic just 'health' but health could mean anything.
-                   case Commands.CommandType.Attack:
-                      
-                   case Commands.CommandType.Collect:
-                       resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
-                       {
-                           OccupantId = spatialEntityId.EntityId,
-                           ResourceId = commandInterrupted.target.Value,
-                           ResourceRequestType = ResourceRequestType.RELEASE
-                       });
-                       break;
-                   case Commands.CommandType.Move:
-                       break;
-               }
-           });
+            var builderIds = buildingUnits.GetKeyArray(Allocator.TempJob);
+
+            foreach(Entityid builderId in builderIds){
+                // I should puysh whats here and let autocompelte hep now.
+            }
+            builderIds.Dispose();
+            buildingUnits.Dispose();
         }
     }
 }
