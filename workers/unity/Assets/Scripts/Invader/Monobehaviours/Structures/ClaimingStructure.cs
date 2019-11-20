@@ -21,11 +21,7 @@ namespace MDG.Invader.Monobehaviours.Structures
         LinkedEntityComponent linkedStructure;
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
-        // For knowing territory claiming.
-        [Require] StructureSchema.ClaimStructureReader claimStructureReader;
         Image claimProgressBar;
-
-        int claimRequestId = -1;
         public void Link(StructureBehaviour structureBehaviour)
         {
             LinkedEntityComponent linkedEntityComponent = structureBehaviour.GetComponent<LinkedEntityComponent>();
@@ -38,27 +34,30 @@ namespace MDG.Invader.Monobehaviours.Structures
         private void OnBuildComplete()
         {
             // This is fine.
-            Debug.Log($"Beginning claim on {claimStructureReader.Data.TerritoryClaiming}");
+            EntityManager entityManager = linkedStructure.World.EntityManager;
+            WorkerSystem workerSystem = linkedStructure.World.GetExistingSystem<WorkerSystem>();
+            workerSystem.TryGetEntity(linkedStructure.EntityId, out Entity entity);
+            
+            StructureSchema.ClaimStructure.Component claimStructureComponent = entityManager.GetComponentData<StructureSchema.ClaimStructure.Component>(entity);
+            StructureSchema.StructureMetadata.Component structureMetadata = entityManager.GetComponentData<StructureSchema.StructureMetadata.Component>(entity);
+
+            Debug.Log($"Beginning claim on {claimStructureComponent.TerritoryClaiming}");
             ClaimConfig claimConfig = new ClaimConfig{
-                territoryId = claimStructureReader.Data.TerritoryClaiming
+                territoryId = claimStructureComponent.TerritoryClaiming,
+                constructionTime = structureMetadata.ConstructionTime
             };
             StartJob(Converters.SerializeArguments<ClaimConfig>(claimConfig));
         }
-        // Create abstract class with startjob base sending StartJobRequest.
-        // Should be in structure interface called start job as common argumens.
-        // I don't think shop item would work makes no sense in context of claiming job.
+       
         public void StartJob(byte[] jobContext)
         {
-            // No need to deserialize it. Maybe to store which territorty trying to claim for soem reason.
-           // ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobContext);
-
-            // Don't care about the response right now.
+            ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobContext);
             commandSystem.SendCommand(new StructureSchema.Structure.StartJob.Request
             {
                 Payload = new StructureSchema.JobRequestPayload
                 {
                     JobData = jobContext
-                    EstimatedJobCompletion = shopUnit.ConstructTime,
+                    EstimatedJobCompletion = claimConfig.constructionTime
                 },
                 TargetEntityId = linkedStructure.EntityId
             });
@@ -70,11 +69,8 @@ namespace MDG.Invader.Monobehaviours.Structures
             StartCoroutine(HelperFunctions.UpdateFill(claimProgressBar, jobRunEvent.JobProgress / jobRunEvent.EstimatedJobCompletion));
         }
 
-        // This fine, then will have reader on claiming structure that once claimed is true update UI.
         public void CompleteJob(byte[] jobData)
         {
-            // Will be removed when I include spawnPos in the byte payload for spawnMetaData.
-            // Tbh don't even need to deserialize since have the reader. But good for adding more data.
             ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobData);
             claimRequestId = commandSystem.SendCommand(new TerritorySchema.TerritoryStatus.UpdateClaim.Request{
 
