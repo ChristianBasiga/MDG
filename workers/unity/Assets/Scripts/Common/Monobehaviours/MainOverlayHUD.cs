@@ -31,7 +31,6 @@ namespace MDG.Common.MonoBehaviours
             gameStatusHUD = GameObject.Find("GameStatusHUD");
             endGameText = gameStatusHUD.transform.GetChild(0).Find("EndGameText").GetComponent<Text>();
             timerText = gameStatusHUD.transform.GetChild(0).Find("Timer").GetComponent<Text>();
-            pointText = GameObject.Find("PointText").GetComponent<Text>();
 
             endGameText.gameObject.SetActive(false);    
             gameStatusHUD.SetActive(false);
@@ -40,7 +39,12 @@ namespace MDG.Common.MonoBehaviours
 
         public void UpdatePoints(int points)
         {
-
+            Debug.Log("Am I ever called??");
+            if (pointText == null)
+            {
+                pointText = GameObject.Find("PointText").GetComponent<Text>();
+            }
+            pointText.text = points.ToString();
         }
 
         public void UpdateTime(float time)

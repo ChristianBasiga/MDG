@@ -13,28 +13,29 @@ namespace MDG.Defender.Monobehaviours
         [Require] PointReader pointReader;
 
         // Need to get this as singleton later.
-        MainOverlayHUD uIManager;
+        MainOverlayHUD mainOverlayHUD;
 
 
         // Start is called before the first frame update
         void Start()
         {
+
+            mainOverlayHUD = GameObject.Find("ClientWorker").GetComponent<MainOverlayHUD>();
             // Subsribe to main overlay hud.
             DefenderSynchronizer defenderSynchronizer = GetComponent<DefenderSynchronizer>();
             defenderSynchronizer.OnLoseGame += DisplayLoseGameUI;
             defenderSynchronizer.OnWinGame += DisplayWinGameUI;
-
-            pointReader.OnValueUpdate += uIManager.UpdatePoints;
+            pointReader.OnValueUpdate += mainOverlayHUD.UpdatePoints;
         }
 
         private void DisplayLoseGameUI()
         {
-            uIManager.SetEndGameText("You failed to stop the invasion.", false);
+            mainOverlayHUD.SetEndGameText("You failed to stop the invasion.", false);
         }
 
         private void DisplayWinGameUI()
         {
-            uIManager.SetEndGameText("You have stopped the Invasion", true);
+            mainOverlayHUD.SetEndGameText("You have stopped the Invasion", true);
         }
 
         
