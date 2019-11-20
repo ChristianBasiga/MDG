@@ -25,9 +25,9 @@ namespace MDG.Common.MonoBehaviours.Structures
         void Start()
         {
             structureBehaviour.OnJobStarted += OnJobStarted;
-            structureBehaviour.OnJobRun += 
+            structureBehaviour.OnJobRun += OnJobRun;
             structureBehaviour.OnBuildComplete += OnFinishConstruction;
-            structureBehaviour.OnJobCompleted += StructureBehaviour_OnJobCompleted;
+            structureBehaviour.OnJobCompleted += OnFinishJob;
             structureBehaviour.OnError += DisplayErrorMessage;
         }
 

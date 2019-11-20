@@ -30,16 +30,18 @@ namespace MDG.Invader.Monobehaviours.Structures
             linkedStructure = linkedEntityComponent;
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
             componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
+            commandSystem = linkedEntityComponent.World.GetExistingSystem<CommandSystem>();
         }
         // Create abstract class with startjob base sending StartJobRequest.
         // Should be in structure interface called start job as common argumens.
         public void StartJob(byte[] jobContext)
         {
-            ShopUnit shopUnit = Converters.DeserializeArguments<ShopUnit>(jobContext);
+            PurchasePayload purchasePayload = Converters.DeserializeArguments<PurchasePayload>(jobContext);
+            ShopUnit shopUnit = purchasePayload.shopItem as ShopUnit;
             // So send run job requests with spawn request as serialzied payload.
             UnitConfig unitConfig = new UnitConfig
             {
-                ownerId = purchaser.EntityId.Id,
+                ownerId = purchasePayload.purchaserId,
                 position = HelperFunctions.Vector3fFromUnityVector(linkedStructure.transform.position + spawnOffset),
                 unitType = shopUnit.UnitType
             };

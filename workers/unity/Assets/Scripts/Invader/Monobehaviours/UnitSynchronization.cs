@@ -10,8 +10,8 @@ using SpawnSchema = MdgSchema.Common.Spawn;
 public class UnitSynchronization : MonoBehaviour
 {
 
-    [Require] EntityTransformReader positionReader;
-    [Require] SpawnSchema.PendingRespawnReader pendingRespawnReader;
+    [Require] EntityTransformReader positionReader = null;
+    [Require] SpawnSchema.PendingRespawnReader pendingRespawnReader = null;
 
     private void Start()
     {

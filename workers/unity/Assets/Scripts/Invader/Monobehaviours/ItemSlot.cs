@@ -7,8 +7,7 @@ namespace MDG.Common.MonoBehaviours
 {
     public class ItemSlot : MonoBehaviour
     {
-        [SerializeField]
-        Sprite blankSlotImage;
+        public Sprite blankSlotImage;
         Image itemImage;
         InventoryItem details;
 

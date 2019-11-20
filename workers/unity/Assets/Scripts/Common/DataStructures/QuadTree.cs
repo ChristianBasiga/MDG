@@ -21,6 +21,11 @@ namespace MDG.Common.Datastructures
                 && center.Equals(other.center)
                 && dimensions.Equals(other.dimensions);
         }
+
+        public override int GetHashCode()
+        {
+            return entityId.GetHashCode();
+        }
     }
     // This will be a quad tree with 
     public class QuadTree

@@ -29,9 +29,10 @@ namespace MDG.Defender.Monobehaviours
         void Start()
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
+            crossHairs = GameObject.Find("CrossHairs").transform;
+            shootOrigin = GameObject.Find("ShootOrigin").transform;
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
             GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
-
             weapon = Resources.Load("ScriptableObjects/Weapons/DefenderProjectile") as Weapon;
             Debug.Log(weapon.ToString());
 

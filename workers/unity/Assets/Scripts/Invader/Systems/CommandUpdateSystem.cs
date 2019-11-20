@@ -67,7 +67,7 @@ namespace MDG.Invader.Systems
 
         private EntityQuery collectorGroup;
 
-        private bool assignedJobHandle = false;
+
         private JobHandle collectJobHandle;
         private NativeQueue<CollectPayload> pendingOccupy;
         private NativeQueue<CollectPayload> pendingCollects;

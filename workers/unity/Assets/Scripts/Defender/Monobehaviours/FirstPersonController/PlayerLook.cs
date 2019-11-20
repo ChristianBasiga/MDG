@@ -9,11 +9,11 @@ namespace MDG.Defender.Monobehaviours
     // Update this to be on body and reference camera.
     public class PlayerLook : MonoBehaviour
     {
-        [SerializeField] private string mouseXInput, mouseYInput;
-        [SerializeField] private float mouseSensitivty;
+        [SerializeField] private string mouseXInput = "MouseX", mouseYInput = "MouseY";
+        [SerializeField] private float mouseSensitivty = 100.0f;
         [SerializeField] private GameObject playerCamera;
         public Transform crossHairs;
-        [Require] PositionSchema.AngularVelocityWriter angularVelocityWriter;
+        [Require] PositionSchema.AngularVelocityWriter angularVelocityWriter = null;
 
         private float xAxisClamp;
         private readonly float baseOffset = 360.0f;

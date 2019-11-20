@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using StructureSchema = MdgSchema.Common.Structure;
+using Improbable.Gdk.Core;
 
 // Move these comments to read me of dtos.
 // Move all DTOs to be scriptable objects instead.

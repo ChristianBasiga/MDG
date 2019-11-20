@@ -9,7 +9,7 @@ namespace MDG.Templates
     class StructureTemplates
     {
 
-        public static EntityTemplate GetStructureTemplate(byte[] structureArgs)
+        public static EntityTemplate GetStructureTemplate(string clientWorkerId, byte[] structureArgs)
         {
             string serverAttribute = UnityGameLogicConnector.WorkerType;
             EntityTemplate entityTemplate = new EntityTemplate();
@@ -18,21 +18,14 @@ namespace MDG.Templates
 
             switch (structureConfig.structureType)
             {
-                case StructureType.Spawning:
-                    GetSpawnStructureTemplate(template, Converters.DeserializeArguments<SpawnStructureConfig>(structureArgs), serverAttribute);
+                case StructureSchema.StructureType.Spawning:
+                    GetSpawnStructureTemplate(entityTemplate, Converters.DeserializeArguments<SpawnStructureConfig>(structureArgs), serverAttribute);
                 break;
 
-                case StructureType.Claiming:
-                    GetClaimStructureTempalte(template, Converters.DeserializeArguments<ClaimConfig>(structureArgs), serverAttribute);
+                case StructureSchema.StructureType.Claiming:
+                    GetClaimStructureTempalte(entityTemplate, Converters.DeserializeArguments<ClaimConfig>(structureArgs), serverAttribute);
                 break;
-                
-                default:
             }
-            entityTemplate.AddComponent(new InventorySchema.Inventory.Snapshot
-            {
-                InventorySize = structureConfig.inventoryConfig.inventorySize,
-                Inventory = structureConfig.inventoryConfig.itemToCost
-            }, serverAttribute);
 
             entityTemplate.AddComponent(new StructureSchema.StructureMetadata.Snapshot
             {
@@ -48,9 +41,9 @@ namespace MDG.Templates
             return entityTemplate;
         }
 
-        private static void GetSpawnStructureTemplate(Entitytempalte template, SpawnStructureConfig structureConfig, string serverAttribute)
+        private static void GetSpawnStructureTemplate(EntityTemplate template, SpawnStructureConfig structureConfig, string serverAttribute)
         {
-            entityTemplate.AddComponent(new InventorySchema.Inventory.Snapshot
+            template.AddComponent(new InventorySchema.Inventory.Snapshot
             {
                 InventorySize = structureConfig.inventoryConfig.inventorySize,
                 Inventory = structureConfig.inventoryConfig.itemToCost
@@ -59,8 +52,8 @@ namespace MDG.Templates
 
         private static void GetClaimStructureTempalte(EntityTemplate template, ClaimConfig claimConfig, string serverAttribute)
         {
-            entityTemplate.AddComponent(new StructureSchema.ClaimStructure.Snapshot{
-                TerritoryId = claimConfig.territoryId
+            template.AddComponent(new StructureSchema.ClaimStructure.Snapshot{
+                TerritoryClaiming = claimConfig.territoryId
             }, serverAttribute);
         }
 

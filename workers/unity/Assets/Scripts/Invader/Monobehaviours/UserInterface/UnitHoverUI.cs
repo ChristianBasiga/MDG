@@ -11,9 +11,9 @@ namespace MDG.Invader.Monobehaviours
 {
     public class UnitHoverUI : MonoBehaviour
     {
-        [Require] StatSchema.StatsReader statsReader;
+        [Require] StatSchema.StatsReader statsReader = null;
         // This shouldn't ever be changing, but it's fine.
-        [Require] StatSchema.StatsMetadataReader statsMetadataReader;
+        [Require] StatSchema.StatsMetadataReader statsMetadataReader = null;
 
 
         public Image healthbar;

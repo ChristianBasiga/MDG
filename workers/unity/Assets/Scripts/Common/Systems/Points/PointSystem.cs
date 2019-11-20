@@ -23,8 +23,6 @@ namespace MDG.Common.Systems.Point
         EntityQuery pointGroup;
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
-        int startingbuffer = 100;
-        // I should reserve these.
         EntityId pointWorkerId = new EntityId(4);
 
         float timeSinceIdleGain = 0;

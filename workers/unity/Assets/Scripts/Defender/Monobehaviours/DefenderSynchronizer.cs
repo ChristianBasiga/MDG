@@ -10,7 +10,7 @@ namespace MDG.Defender.Monobehaviours
     // Finish synchronization of defender.
     public class DefenderSynchronizer : MonoBehaviour
     {
-        [Require] SpawnSchema.PendingRespawnReader pendingRespawnReader;
+        [Require] SpawnSchema.PendingRespawnReader pendingRespawnReader = null;
         ComponentUpdateSystem componentUpdateSystem;
 
         public delegate void OnGameEndEventHandler();

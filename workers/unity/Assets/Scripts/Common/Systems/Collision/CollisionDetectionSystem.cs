@@ -31,8 +31,6 @@ namespace MDG.Common.Systems.Collision
         EntityQuery checkCollisionGroup;
         EntityQuery updateCollisionGroup;
 
-        readonly int collisionBuffer = 1000;
-
         public struct ColliderCheck
         {
             public EntityId entityId;

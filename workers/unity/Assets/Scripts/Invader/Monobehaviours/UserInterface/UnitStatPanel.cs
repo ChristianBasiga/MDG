@@ -32,6 +32,7 @@ namespace MDG.Invader.Monobehaviours
         void Start()
         {
             clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().clientGameObjectCreator;
+            healthbar = GameObject.Find("StatPanelHealthBar").GetComponent<Image>();
         }
 
         public void SetEntityTracking(EntityId entityId)

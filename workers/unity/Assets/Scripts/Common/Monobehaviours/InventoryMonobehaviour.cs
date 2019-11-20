@@ -9,7 +9,7 @@ namespace MDG.Common.MonoBehaviours
     
     public class InventoryMonobehaviour : MonoBehaviour
     {
-        [Require] InventorySchema.InventoryReader InventoryReader;
+        [Require] InventorySchema.InventoryReader InventoryReader = null;
         // This should be added via zenject later.
         InventoryItemFactory InventoryItemFactory;
         InventoryUI inventoryUI;

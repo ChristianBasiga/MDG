@@ -29,14 +29,6 @@ namespace MDG.Common.Systems.Position
             public EntityId EntityUpdating;
             public Vector3f NewPosition;
         }
-
-        struct BatchInformation
-        {
-            public Vector3f ChangedPosition;
-            // Frames passed with update to position.
-            public int updatesPending;
-        }
-
         JobHandle? spatialPosUpdateJobHandle;
 
         EntitySystem entitySystem;

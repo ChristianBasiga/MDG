@@ -1,6 +1,7 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
 using MDG.Common.MonoBehaviours.Shopping;
+using MDG.DTO;
 using MDG.ScriptableObjects.Items;
 using System;
 using System.Collections;
@@ -24,7 +25,6 @@ namespace MDG.Common.MonoBehaviours.Structures
     {
         // All logic is simply fetching data, so it's not pure visual since doing I/O
         // If need be move to structure base class, need to think about how to
-        public event Action<Queue<ShopItem>> OnJobQueueUpdate;
         public event Action<StructureSchema.BuildEventPayload> OnBuild;
         public event Action OnBuildComplete;
         public event Action<int, ShopItem, LinkedEntityComponent> OnJobStarted;
@@ -35,13 +35,15 @@ namespace MDG.Common.MonoBehaviours.Structures
         public int JobCapacity;
         ComponentUpdateSystem componentUpdateSystem;
         LinkedEntityComponent linkedEntityComponent;
-        [Require] StructureSchema.StructureReader structureReader;
+        [Require] StructureSchema.StructureReader structureReader = null;
 
         int jobIndex;
         private ShopItem[] jobQueue;
 
-        [SerializeField]
-        IStructure concreteStructureBehaviour;
+
+        // Gotta figure out how to assign this, prob though zenject as it shuldn't care what value is.
+        
+        public IStructure ConcreteStructureBehaviour { set; get; }
 
         // Wierd dependancy if do inheritance, think structure
         public virtual void Start()
@@ -49,10 +51,12 @@ namespace MDG.Common.MonoBehaviours.Structures
             jobIndex = 0;
             // Not Even relevant to smoe structures lmao. This is so shitty.
             jobQueue = new ShopItem[JobCapacity];
-            concreteStructureBehaviour.Link(this);
+            ConcreteStructureBehaviour.Link(this);
             ShopBehaviour shopBehaviour = GetComponent<ShopBehaviour>();
             shopBehaviour.OnPurchaseItem += StartJob;
             structureReader.OnConstructingUpdate += OnConstructingUpdate;
+            linkedEntityComponent = GetComponent<LinkedEntityComponent>();
+            componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
         }
 
         // Layered events but it's fine.
@@ -72,7 +76,12 @@ namespace MDG.Common.MonoBehaviours.Structures
             }
             else
             {
-                concreteStructureBehaviour.StartJob(shopItem, purchaser);
+                PurchasePayload purchasePayload = new PurchasePayload
+                {
+                    shopItem = shopItem,
+                    purchaserId = purchaser.EntityId.Id
+                };
+                ConcreteStructureBehaviour.StartJob(Converters.SerializeArguments<PurchasePayload>(purchasePayload));
                 OnJobStarted?.Invoke(jobIndex, shopItem, purchaser);
                 ++jobIndex;
             }
@@ -107,7 +116,7 @@ namespace MDG.Common.MonoBehaviours.Structures
                 if (jobCompleteEvents.Count > 0)
                 {
                     ref readonly var jobCompleteEvent = ref jobCompleteEvents[0];
-                    concreteStructureBehaviour.CompleteJob(jobCompleteEvent.Event.Payload.JobData);
+                    ConcreteStructureBehaviour.CompleteJob(jobCompleteEvent.Event.Payload.JobData);
                     OnJobCompleted?.Invoke(jobIndex, jobCompleteEvent.Event.Payload.JobData);
                     jobIndex = (jobIndex + 1) % JobCapacity;
                 }

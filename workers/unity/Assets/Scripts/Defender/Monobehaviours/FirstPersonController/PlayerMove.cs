@@ -13,18 +13,18 @@ namespace MDG.Defender.Monobehaviours {
         public delegate void PlayerMoveHandler(Vector3 position, Vector3 rotation);
         public event PlayerMoveHandler OnPlayerMove;
 
-        [SerializeField] private string horizInputName, vertInputName;
-        [SerializeField] private float speed = 20;
-        [Require] PositionSchema.LinearVelocityWriter linearVelocityWriter;
+        [SerializeField] private string horizInputName = "Horizontal", vertInputName = "Vertical";
+        [Require] PositionSchema.LinearVelocityWriter linearVelocityWriter = null;
         // Start is called before the first frame update
 
 
         //To be that accurate overtime and keep smooth is rough to do from scratch.
         [SerializeField] private AnimationCurve jumpFallOff;
-        private float timeInAir;
+
+        /*private float timeInAir;
         private float jumpSpeed = 5.0f;
         private bool isJumping;
-
+        */
         
         //This will have reference to the reader and writer of component.
         void Start()
@@ -72,7 +72,7 @@ namespace MDG.Defender.Monobehaviours {
 
         private void OnPlayerMoveHandler()
         {
-            //OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
+            OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
         }
     }
 }

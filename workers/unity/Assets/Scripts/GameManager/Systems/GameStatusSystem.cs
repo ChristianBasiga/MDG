@@ -101,6 +101,8 @@ namespace MDG.Game
                         }), spatialEntityId.EntityId);
                     }
                 });
+
+                // Then also need to check invader win condition. All three territories are claimed.
             }
         }
     }

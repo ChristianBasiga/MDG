@@ -161,6 +161,7 @@ namespace MDG.Invader.Systems
                                     case StatusCode.Success:
                                         if (response.ResponsePayload.HasValue && workerSystem.TryGetEntity(response.RequestPayload.CollectorId, out Unity.Entities.Entity entity))
                                         {
+                                            OnCollect?.Invoke(response.ResponsePayload.Value);
                                             /* No need anymore.
                                             PostUpdateCommands.AddComponent(entity, new PendingInventoryAddition
                                             {

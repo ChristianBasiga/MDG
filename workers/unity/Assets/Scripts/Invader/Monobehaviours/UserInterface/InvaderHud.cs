@@ -14,7 +14,7 @@ namespace MDG.Invader.Monobehaviours
 {
     public class InvaderHud : MonoBehaviour
     {
-        [Require] PointReader pointReader;
+        [Require] PointReader pointReader = null;
         ComponentUpdateSystem componentUpdateSystem;
 
         Text numberOfUnitsText;

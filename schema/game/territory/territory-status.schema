@@ -9,7 +9,7 @@ enum TerritoryStatusTypes{
 
 type UpdateTerritoryStatusRequest
 {
-   TerritoryStatusTypes status;
+   TerritoryStatusTypes status = 1;
 }
 
 type UpdateTerritoryStatusResponse

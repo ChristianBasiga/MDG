@@ -4,5 +4,5 @@ package mdg_schema.common.structure;
 component ClaimStructure
 {
     id = 953;
-    EntityId territory_claiming = 0;
+    EntityId territory_claiming = 1;
 }
