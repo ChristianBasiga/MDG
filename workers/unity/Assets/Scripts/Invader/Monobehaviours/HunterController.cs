@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using MDG.DTOs;
+using MDG.DTO;
 namespace MDG.Invader.Monobehaviours {
 
     public class HunterController : MonoBehaviour
@@ -32,8 +32,9 @@ namespace MDG.Invader.Monobehaviours {
         // maybe instead of dictionary just pass structure config itself.
         void OnSelectStructureToBuild(string structureName){
 
-            if (structureSelection.TryGetValue(structureName, out SelectedStructure)){
+            if (structureSelection.TryGetValue(structureName, out StructureConfig structureConfig)){
                 Debug.Log($"Selected structure {structureName}");
+                this.SelectedStructure = structureConfig;
             }
         }
         

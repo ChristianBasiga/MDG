@@ -256,7 +256,7 @@ namespace MDG.Invader.Systems
         }
         #endregion
 
-        # Build Command Jobs
+        #region Build Command Jobs
         struct MoveToBuildLocationJob: IJobForEach<SpatialEntityId, BuildCommand, PositionSchema.LinearVelocity.Component,
             EntityTransform.Component>
         {
@@ -265,13 +265,13 @@ namespace MDG.Invader.Systems
             [ReadOnly] ref EntityTransform.Component entityTransformComponent )
             {
                 float distance = HelperFunctions.Distance(buildCommand.buildLocation, entityTransformComponent.Position);
-                if (distance <= buildCommand.minDistanceToBuild && !buildCommand.building){
-                    buildCommand.building = true;
+                if (distance <= buildCommand.minDistanceToBuild && !buildCommand.isBuilding){
+                    buildCommand.isBuilding = true;
                     entitiesBuilding.TryAdd(spatialEntityId.EntityId, buildCommand);
                 }
                 else{
                     linearVelocityComponent.Velocity = buildCommand.buildLocation - entityTransformComponent.Position;
-                    buildCommand.building = false;
+                    buildCommand.isBuilding = false;
                 }
             }
         }
@@ -399,7 +399,7 @@ namespace MDG.Invader.Systems
             authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
             entityQuery = GetEntityQuery(entityQueryDesc);
 
-            NativeHashMap<EntityId, BuildCommand> buildingUnits = new NativeHashMap<EntityId, BuildCommand>()
+            NativeHashMap<EntityId, BuildCommand> buildingUnits = new NativeHashMap<EntityId, BuildCommand>();
             MoveToBuildLocationJob moveToBuildLocation = new MoveToBuildLocationJob{
                 entitiesBuilding = buildingUnits.AsParallelWriter()
             };
@@ -743,11 +743,11 @@ namespace MDG.Invader.Systems
                     // WOO them magic nums. Gotta update this.
                     // will retrieve this from scriptable object instead of hardcoding the nums here.
                     // Scriptable Object.
-                    ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(weapon as Projectile)
+                    ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(unitWeapon as Projectile);
                     projectileConfig.startingPosition = attackPayload.startingPosition;
                     projectileConfig. linearVelocity = sameYTarget - attackPayload.startingPosition;
 
-                    WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(weapon);
+                    WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(unitWeapon);
                     byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
                     byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
                     spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
@@ -769,7 +769,7 @@ namespace MDG.Invader.Systems
                     // HelperFunctions.IsLeftOfVector(attackPayload.positionToAttack, )
                     //Meh just try to go 45 degrees.
                     //angleOfTravel += 45 * Mathf.Deg2Rad;
-                    angleOfTravel += deltaTime;
+                    angleOfTravel += Time.deltaTime;
                     Debug.Log("Not in light of sight. Adding reroute component here");
                     Vector3f newVelocity = new Vector3f(Mathf.Cos(angleOfTravel), 0, Mathf.Sin(angleOfTravel)) * magnitude;
                     PostUpdateCommands.AddComponent(attackerEntity, new RerouteComponent
@@ -790,7 +790,7 @@ namespace MDG.Invader.Systems
         {
             var builderIds = buildingUnits.GetKeyArray(Allocator.TempJob);
 
-            foreach(Entityid builderId in builderIds){
+            foreach(EntityId builderId in builderIds){
                 // I should puysh whats here and let autocompelte hep now.
             }
             builderIds.Dispose();
