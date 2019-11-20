@@ -51,7 +51,9 @@ namespace MDG.Invader.Monobehaviours.Structures
             StructureSchema.StructureMetadata.Component structureMetadata = entityManager.GetComponentData<StructureSchema.StructureMetadata.Component>(entity);
 
             Debug.Log($"Beginning claim on {claimStructureComponent.TerritoryClaiming}");
-            ClaimConfig claimConfig = new ClaimConfig{
+
+            ClaimConfig claimConfig = new ClaimConfig
+            {
                 territoryId = claimStructureComponent.TerritoryClaiming,
                 constructionTime = structureMetadata.ConstructionTime
             };
