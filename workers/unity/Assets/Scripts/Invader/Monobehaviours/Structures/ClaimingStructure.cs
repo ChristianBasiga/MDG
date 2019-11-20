@@ -21,7 +21,8 @@ namespace MDG.Invader.Monobehaviours.Structures
         LinkedEntityComponent linkedStructure;
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
-
+        // For knowing territory claiming.
+        [Require] StructureSchema.ClaimStructureReader claimStructureReader;
         Image claimProgressBar;
 
         int claimRequestId = -1;
@@ -30,7 +31,18 @@ namespace MDG.Invader.Monobehaviours.Structures
             LinkedEntityComponent linkedEntityComponent = structureBehaviour.GetComponent<LinkedEntityComponent>();
             linkedStructure = linkedEntityComponent;
             componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
-            structureBehaviour.OnJobRun += 
+            structureBehaviour.OnJobRun += UpdateClaimProgress;
+            structureBehaviour.OnBuildComplete += OnBuildComplete;
+        }
+
+        private void OnBuildComplete()
+        {
+            // This is fine.
+            Debug.Log($"Beginning claim on {claimStructureReader.Data.TerritoryClaiming}");
+            ClaimConfig claimConfig = new ClaimConfig{
+                territoryId = claimStructureReader.Data.TerritoryClaiming
+            };
+            StartJob(Converters.SerializeArguments<ClaimConfig>(claimConfig));
         }
         // Create abstract class with startjob base sending StartJobRequest.
         // Should be in structure interface called start job as common argumens.
@@ -40,7 +52,6 @@ namespace MDG.Invader.Monobehaviours.Structures
             // No need to deserialize it. Maybe to store which territorty trying to claim for soem reason.
            // ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobContext);
 
-            byte[] jobPayload = Converters.SerializeArguments<UnitConfig>(unitConfig);
             // Don't care about the response right now.
             commandSystem.SendCommand(new StructureSchema.Structure.StartJob.Request
             {
@@ -63,6 +74,7 @@ namespace MDG.Invader.Monobehaviours.Structures
         public void CompleteJob(byte[] jobData)
         {
             // Will be removed when I include spawnPos in the byte payload for spawnMetaData.
+            // Tbh don't even need to deserialize since have the reader. But good for adding more data.
             ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobData);
             claimRequestId = commandSystem.SendCommand(new TerritorySchema.TerritoryStatus.UpdateClaim.Request{
 
@@ -70,8 +82,6 @@ namespace MDG.Invader.Monobehaviours.Structures
             }, claimConfig.territoryId);
 
             claimProgressBar.gameObject.SetActive(false);
-
-            // Update other UI
         }
     }
 }

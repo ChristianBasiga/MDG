@@ -12,14 +12,18 @@ namespace MDG.DTO
     [Serializable]
     public class StructureConfig
     {
-        public InventoryConfig inventoryConfig;
         public StructureSchema.StructureType structureType;
         public int constructionTime;
     }
 
+    [Serializable]
+    public class SpawnStructureConfig
+    {
+        public InventoryConfig inventoryConfig;
+    }
 
     [Serializable]
-    public class ClaimConfig
+    public class ClaimConfig : StructureConfig
     {
         public EntityId territoryId;
     }

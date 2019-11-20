@@ -58,7 +58,9 @@ namespace MDG.Common.MonoBehaviours.Structures
         // Layered events but it's fine.
         private void OnConstructingUpdate(bool constructing)
         {
-            OnBuildComplete?.Invoke();
+            if (!constructing){
+                OnBuildComplete?.Invoke();
+            }
         }
 
         // Need to set up a core UI error handler.
