@@ -41,7 +41,6 @@ namespace MDG.Common.MonoBehaviours
 
         public void UpdatePoints(int points)
         {
-            Debug.Log("Am I ever called??");
             if (pointText == null)
             {
                 pointText = GameObject.Find("PointText").GetComponent<Text>();
