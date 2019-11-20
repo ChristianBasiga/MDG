@@ -29,6 +29,9 @@ using MDG.Common;
 using MDG.Common.Systems.Spawn;
 using MDG.DTO;
 
+
+using MDG.ScriptableObjects.Weapons;
+
 // DEFINITELY CAN SEPERATE THIS INTO THREE DIFFERENT CLASSES.
 // OR AT THE VERY LEAST MOVE THE RESPECTIVE JOBS IN OWN CLASSES.
 namespace MDG.Invader.Systems
@@ -102,6 +105,8 @@ namespace MDG.Invader.Systems
         private EntityQuery attackQuery;
         public JobHandle CommandExecuteJobHandle { get; private set; }
 
+        // Change this to dictionary so that weapons of units more expandible.
+        Weapon unitWeapon;
 
 
         struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component, PositionSchema.LinearVelocity.Component,
@@ -275,7 +280,7 @@ namespace MDG.Invader.Systems
         protected override void OnCreate()
         {
             base.OnCreate();
-
+            unitWeapon = Resources.Load("ScriptableObjects/Weapons/UnitWorkerProjectile") as Weapon;
             combatStatsQuery = GetEntityQuery(
                ComponentType.ReadOnly<CombatMetadata>(),
                ComponentType.ReadWrite<CombatStats>()
@@ -415,8 +420,6 @@ namespace MDG.Invader.Systems
             }
             potentialTargetEntities.Dispose();
 
-            // This is soo intermangled jesus christ. But for the sake of parralelllll
-
             tickAttackCoolDownHandle.Complete();
             // Maybe make this a member variale instead of local. For now it's fine.
             NativeQueue<AttackPayload> attackPayloads = new NativeQueue<AttackPayload>(Allocator.TempJob);
@@ -440,6 +443,7 @@ namespace MDG.Invader.Systems
           
             attackeePositions.Dispose();
 
+            // maybe even do this run first as easily one of the biggest
             Queue<PendingAttack> pendingAttacks = ProcessAttackPayloads(attackPayloads);
             // While the jobs in the Queue are running, do other processing for build commands.
 
@@ -642,7 +646,7 @@ namespace MDG.Invader.Systems
                switch (commandInterrupted.interrupting)
                {
                    case Commands.CommandType.Attack:
-                      
+                      break;
                    case Commands.CommandType.Collect:
                        resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
                        {
@@ -660,7 +664,6 @@ namespace MDG.Invader.Systems
         #region  Attack Command Functions
         private Queue<PendingAttack> ProcessAttackPayloads(NativeQueue<AttackPayload> attackPayloads)
         {
-            // Maybe list instead of queue, that way ca
             Queue<PendingAttack> pendingAttacks = new Queue<PendingAttack>(attackQuery.CalculateEntityCount());
             // Later check range or melee
             while (attackPayloads.Count > 0)
@@ -735,33 +738,18 @@ namespace MDG.Invader.Systems
                         attackRange = stats.attackRange
                     });
 
-                    Debug.Log($"Starting position = {attackPayload.startingPosition} position to attack: {attackPayload.positionToAttack}");
                     Vector3f sameYTarget = new Vector3f(attackPayload.positionToAttack.X, attackPayload.startingPosition.Y, attackPayload.positionToAttack.Z);
 
                     // WOO them magic nums. Gotta update this.
                     // will retrieve this from scriptable object instead of hardcoding the nums here.
-                    // Scriptable Object
-                    ProjectileConfig projectileConfig = new ProjectileConfig
-                    {
-                        startingPosition = attackPayload.startingPosition,
-                        linearVelocity = sameYTarget - attackPayload.startingPosition,
-                        maximumHits = 1,
-                        damage = 1,
-                        projectileId = 1,
-                        dimensions = new Vector3f(15, 0, 15),
-                        lifeTime = 5.0f,
-                    };
+                    // Scriptable Object.
+                    ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(weapon as Projectile)
+                    projectileConfig.startingPosition = attackPayload.startingPosition;
+                    projectileConfig. linearVelocity = sameYTarget - attackPayload.startingPosition;
 
+                    WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(weapon);
                     byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
-
-                    WeaponMetadata weaponMetadata = new WeaponMetadata
-                    {
-                        weaponType = MdgSchema.Common.Weapon.WeaponType.Projectile,
-                        wielderId = attackPayload.attackerId.Id,
-                        attackCooldown = 1.0f
-                    };
                     byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
-
                     spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
                     {
                         Position = attackPayload.startingPosition,
@@ -773,11 +761,6 @@ namespace MDG.Invader.Systems
                 }
                 else
                 {
-                    // Otherwise if was not in line of sight apply reroute component.
-                    // Maybe instead of applying reroute component
-                    // Sub destination could be angle from 
-
-                    // This is so EXTRA, but good.
                     Vector3f currentVelocity = attackPayload.positionToAttack - attackPayload.startingPosition;
 
                     float angleOfTravel = Mathf.Atan2(currentVelocity.Z, currentVelocity.X);
@@ -787,7 +770,7 @@ namespace MDG.Invader.Systems
                     //Meh just try to go 45 degrees.
                     //angleOfTravel += 45 * Mathf.Deg2Rad;
                     angleOfTravel += deltaTime;
-                    Debug.Log("Adding reroute component here");
+                    Debug.Log("Not in light of sight. Adding reroute component here");
                     Vector3f newVelocity = new Vector3f(Mathf.Cos(angleOfTravel), 0, Mathf.Sin(angleOfTravel)) * magnitude;
                     PostUpdateCommands.AddComponent(attackerEntity, new RerouteComponent
                     {
