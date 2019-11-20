@@ -15,6 +15,7 @@ namespace MDG.Common.MonoBehaviours
     {
         GameObject roleSelectionUI;
         GameObject gameStatusHUD;
+        Text pointText;
         Text endGameText;
         Text timerText;
         public delegate void RoleSelectedHandler(GameEntityTypes type);
@@ -30,8 +31,16 @@ namespace MDG.Common.MonoBehaviours
             gameStatusHUD = GameObject.Find("GameStatusHUD");
             endGameText = gameStatusHUD.transform.GetChild(0).Find("EndGameText").GetComponent<Text>();
             timerText = gameStatusHUD.transform.GetChild(0).Find("Timer").GetComponent<Text>();
+            pointText = GameObject.Find("PointText").GetComponent<Text>();
+
             endGameText.gameObject.SetActive(false);    
             gameStatusHUD.SetActive(false);
+        }
+
+
+        public void UpdatePoints(int points)
+        {
+
         }
 
         public void UpdateTime(float time)

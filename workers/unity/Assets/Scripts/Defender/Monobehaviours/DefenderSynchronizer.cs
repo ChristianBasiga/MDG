@@ -20,7 +20,7 @@ namespace MDG.Defender.Monobehaviours
         public OnGameEndEventHandler OnWinGame;
         public OnGameEndEventHandler OnLoseGame;
         public OnGameEndEventHandler OnEndGame;
-        public EntityId gameManagerEntityId;
+        EntityId gameManagerEntityId;
 
         private void Start()
         {
@@ -34,7 +34,6 @@ namespace MDG.Defender.Monobehaviours
         {
             // For now just repeat this, later today move this to a common component
             var endGameEventMessages = componentUpdateSystem.GetEventsReceived<GameSchema.GameStatus.EndGame.Event>(gameManagerEntityId);
-
             if (endGameEventMessages.Count > 0)
             {
                 ref readonly var endGameEvent = ref endGameEventMessages[0];
@@ -55,7 +54,6 @@ namespace MDG.Defender.Monobehaviours
         private void OnRespawnActiveChange(bool respawning)
         {
             // Trigger other things.
-            Debug.Log("respawning " + respawning);
             gameObject.SetActive(!respawning);
         }
     }
