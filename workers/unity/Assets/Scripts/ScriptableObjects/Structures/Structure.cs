@@ -1,3 +1,4 @@
+using MDG.ScriptableObjects.Items;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace MDG.ScriptableObjects.Structures
     public class Structure : ScriptableObject
     {
         public StructureSchema.StructureType StructureType;
-        public float ConstructionTime;
+        public int ConstructionTime;
         public int MaximumConcurrentJobs;
         public int MaxJobsQueued;
         // Monobehaviour should load these in and populate them.

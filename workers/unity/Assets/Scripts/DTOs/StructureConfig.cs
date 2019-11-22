@@ -18,7 +18,7 @@ namespace MDG.DTO
     }
 
     [Serializable]
-    public class SpawnStructureConfig
+    public class SpawnStructureConfig : StructureConfig
     {
         public InventoryConfig inventoryConfig;
     }

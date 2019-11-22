@@ -5,7 +5,9 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using MDG.Common;
 using MDG.ScriptableObjects.Weapons;
+using MdgSchema.Common.Inventory;
 using StructureSchema = MdgSchema.Common.Structure;
+using ScriptableStructures = MDG.ScriptableObjects.Structures;
 namespace MDG.DTO
 {
     public class Converters
@@ -57,14 +59,14 @@ namespace MDG.DTO
             };
         }
 
-        public static StructureConfig StructureToStructureConfig(Structure structure)
+        public static StructureConfig StructureToStructureConfig(ScriptableStructures.Structure structure)
         {
             switch (structure.StructureType)
             {
-                case StructureSchema.Spawning:
-                    
-                    Dictionary<int, Item> inventory = new Dictionary<int, Item>();
-                    for (int i = 0; i < structure.Options.Length; ++i)
+                case StructureSchema.StructureType.Spawning:
+
+                    Dictionary< int, Item> inventory = new Dictionary<int, Item>();
+                    for (int i = 0; i < structure.options.Count; ++i)
                     {
                         inventory[i] = new Item 
                         {
@@ -77,25 +79,28 @@ namespace MDG.DTO
                     InventoryConfig inventoryConfig = new InventoryConfig
                     {
                         itemToCost = inventory,
-                        inventory = inventory.Length
+                        inventorySize = inventory.Count
                     };
                     
                     SpawnStructureConfig spawnConfig = new SpawnStructureConfig
                     {
+                        
                         structureType = structure.StructureType,
                         constructionTime = structure.ConstructionTime,
                         inventoryConfig = inventoryConfig
                     };
 
                     return spawnConfig;
-                case StructureSchema.Claiming:
+                case StructureSchema.StructureType.Claiming:
                     // Add other stuff.
                     ClaimConfig claimConfig = new ClaimConfig
                     {
-                         structureType = structure.StructureType,
+                        structureType = structure.StructureType,
                         constructionTime = structure.ConstructionTime,
                     };
-                break;
+                    return claimConfig;
+                default:
+                    throw new System.Exception();
             }
         }
     }

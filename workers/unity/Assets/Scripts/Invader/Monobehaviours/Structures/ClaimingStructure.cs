@@ -60,6 +60,7 @@ namespace MDG.Invader.Monobehaviours.Structures
             StartJob(Converters.SerializeArguments<ClaimConfig>(claimConfig));
         }
        
+        // I've tested none of this and don't even remember at what point I'm at.
         public void StartJob(byte[] jobContext)
         {
             ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobContext);
