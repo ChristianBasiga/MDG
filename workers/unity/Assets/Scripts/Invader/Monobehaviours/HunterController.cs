@@ -7,13 +7,17 @@ using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-
+using MDG.DTO;
 namespace MDG.Invader.Monobehaviours {
 
     public class HunterController : MonoBehaviour
     {
         LinkedEntityComponent linkedEntityComponent;
         Camera inputCamera;
+        public StructureConfig SelectedStructure {private set; get;}
+
+        Dictionary<string, StructureConfig> structureSelection;
+
         // Start is called before the first frame update
         void Start()
         {
@@ -22,6 +26,18 @@ namespace MDG.Invader.Monobehaviours {
             SelectionController selectionController = GetComponent<SelectionController>();
             selectionController.OnSelectionEnd += UpdateSelectionComponent;
         }
+
+
+        // Buttons will call this. Button the structure are attached to either pass themselves or string.
+        // maybe instead of dictionary just pass structure config itself.
+        void OnSelectStructureToBuild(string structureName){
+
+            if (structureSelection.TryGetValue(structureName, out StructureConfig structureConfig)){
+                Debug.Log($"Selected structure {structureName}");
+                this.SelectedStructure = structureConfig;
+            }
+        }
+        
 
         void UpdateSelectionComponent(SelectionController.SelectionPayload payload)
         {

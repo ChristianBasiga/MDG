@@ -3,7 +3,7 @@ using Improbable.Gdk.Core;
 using MDG.Invader.Commands;
 using Unity.Entities;
 using Unity.Mathematics;
-
+using StructureSchema = MdgSchema.Common.Structure;
 namespace MDG.Invader.Components
 {
     //Add more to these as needed.
@@ -28,6 +28,13 @@ namespace MDG.Invader.Components
         public bool IsAtResource;
         public bool IsCollecting;
         public bool GoingToResource;
+    }
+
+    public struct BuildCommand : IComponentData{
+        public StructureSchema.StructureType structureType;
+        public Vector3f buildLocation;
+        public float minDistanceToBuild;
+        public bool isBuilding;
     }
 
     [RemoveAtEndOfTick]
