@@ -6,5 +6,6 @@ import "improbable/standard_library.schema";
 component Territory {
     id = 504;
     int32 point_gain = 1;
-    float participation_radius = 2;
+    int32 territory_id = 2;
+    float participation_radius = 3;
 }

@@ -10,6 +10,7 @@ enum GameEntityTypes{
     Resource = 6;
     Structure = 7;
     Weapon = 8;
+    Territory = 9;
 }
 
 component GameMetadata{

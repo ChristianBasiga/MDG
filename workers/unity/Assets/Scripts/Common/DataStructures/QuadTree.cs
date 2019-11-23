@@ -144,9 +144,6 @@ namespace MDG.Common.Datastructures
             }
         }
 
-        // Instead of moving via initial and new, can just pass transformation?
-        // Actually no matter what may need to go back up tree, so traversing downward twice is fine just incase.
-        // Unless I have it be own
         public void MoveEntity(EntityId entityId, Vector3f originalPosition, Vector3f newPosition)
         {
             if (Remove(entityId, originalPosition))
@@ -161,9 +158,8 @@ namespace MDG.Common.Datastructures
 
             if (!quadNode.HasValue)
             {
-                throw new System.Exception($"Entity id: {entityId} isn't in any region in spatial partition structure");
+                return;
             }
-
 
             // See if new position would land within same region, if does no need for move.
             if (!HelperFunctions.IsWithinRegion(quadNode.Value.center, quadNode.Value.dimensions, newPosition))

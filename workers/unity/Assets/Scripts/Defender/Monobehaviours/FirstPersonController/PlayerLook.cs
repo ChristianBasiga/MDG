@@ -16,6 +16,8 @@ namespace MDG.Defender.Monobehaviours
         [Require] PositionSchema.AngularVelocityWriter angularVelocityWriter = null;
 
         private float xAxisClamp;
+        [SerializeField]
+        private float cameraLookSpeed;
         private readonly float baseOffset = 360.0f;
         private readonly float max = 40.0f;
 
@@ -49,7 +51,6 @@ namespace MDG.Defender.Monobehaviours
         {
 
             Cursor.lockState = CursorLockMode.Locked;
-            Debug.Log("I stay locked");
         }
 
         void CameraRotation()
@@ -73,8 +74,8 @@ namespace MDG.Defender.Monobehaviours
             {
                 xAxisClamp = max;
                 mouseY = 0;
-                //As we may be slightly off due to it being floats, we may go past point we want to lock, so this forces it.
-                //270 degrees in 90 degrees before full rotation on graph, ie: rotating fully up.
+                // As we may be slightly off due to it being floats, we may go past point we want to lock, so this forces it.
+                // 270 degrees in 90 degrees before full rotation on graph, ie: rotating fully up.
                 ClampXAxisRotation(baseOffset - max);
             }
             else if (xAxisClamp < -max)
@@ -87,12 +88,12 @@ namespace MDG.Defender.Monobehaviours
 
             // Hmm Ideally don't need camera to also be synced only part that does is animation down line
             // not hard to incorporate later
-            playerCamera.transform.Rotate(Vector3.left * mouseY);
+            playerCamera.transform.Rotate(Vector3.left * mouseY * cameraLookSpeed );
             //crossHairs.transform.RotateAround(playerCamera.transform.position, Vector3.left, mouseY);
 
             angularVelocityWriter.SendUpdate(new PositionSchema.AngularVelocity.Update
             {
-                AngularVelocity = HelperFunctions.Vector3fFromUnityVector(Vector3.up * mouseX / Time.deltaTime)
+                AngularVelocity = HelperFunctions.Vector3fFromUnityVector(Vector3.up * mouseX / Time.deltaTime) * cameraLookSpeed
             });
         }
 

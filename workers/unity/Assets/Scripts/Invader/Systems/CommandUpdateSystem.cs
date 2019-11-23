@@ -299,7 +299,8 @@ namespace MDG.Invader.Systems
             enemyQuery = GetEntityQuery(
                 ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<Enemy>(),
-                ComponentType.ReadOnly<EntityTransform.Component>()
+                ComponentType.ReadOnly<EntityTransform.Component>(),
+                ComponentType.ReadOnly<AttackCommand>()
                 );
             authVelocityGroup = new ComponentType[7]
             {
@@ -342,25 +343,23 @@ namespace MDG.Invader.Systems
         }
         
 
-
-        // Pretty unorgnaized and interwined sections for the purpose of parralelization
         private void RunCommandJobs()
         {
             float deltaTime = Time.deltaTime;
 
+            // Run tick cooldown and getting enemy positions jobs in background while running move, build, and collect jobs.
             CommonJobs.ClientJobs.TickAttackCooldownJob tickAttackCooldownJob = new CommonJobs.ClientJobs.TickAttackCooldownJob
             {
                 deltaTime = deltaTime
             };
             JobHandle tickAttackCoolDownHandle = tickAttackCooldownJob.Schedule(this);
-
-
             NativeHashMap<EntityId, Vector3f> attackeePositions = new NativeHashMap<EntityId, Vector3f>(enemyQuery.CalculateEntityCount() , Allocator.TempJob);
             GetTargetPositionsJob getTargetPositionsJob = new GetTargetPositionsJob
             {
                 attackeePositions = attackeePositions.AsParallelWriter()
             };
 
+            // It's read only thoughh
             JobHandle getTargetPositionsHandle = getTargetPositionsJob.Schedule(enemyQuery);
 
             MoveCommandJob moveCommandJob = new MoveCommandJob
@@ -375,7 +374,10 @@ namespace MDG.Invader.Systems
             };
             EntityQuery entityQuery = GetEntityQuery(entityQueryDesc);
             entityQuery.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
+
             JobHandle moveToDestHandle = moveCommandJob.Schedule(entityQuery);
+            tickAttackCoolDownHandle.Complete();
+            moveToDestHandle.Complete();
 
             authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<CollectCommand>();
             authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
@@ -391,18 +393,22 @@ namespace MDG.Invader.Systems
                 occupyPayloads = pendingOccupy.AsParallelWriter()
             };
             entityQuery = GetEntityQuery(entityQueryDesc);
-            // For each pending collect, send Collect request.
+            JobHandle moveToCollectHandle = moveToResourceJob.Schedule(entityQuery, getTargetPositionsHandle);
+
             getTargetPositionsHandle.Complete();
-            JobHandle moveToCollectHandle = moveToResourceJob.Schedule(entityQuery);
 
             authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<BuildCommand>();
             authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
             entityQuery = GetEntityQuery(entityQueryDesc);
 
-            NativeHashMap<EntityId, BuildCommand> buildingUnits = new NativeHashMap<EntityId, BuildCommand>();
+            NativeHashMap<EntityId, BuildCommand> buildingUnits = new NativeHashMap<EntityId, BuildCommand>(entityQuery.CalculateEntityCount(), Allocator.TempJob);
             MoveToBuildLocationJob moveToBuildLocation = new MoveToBuildLocationJob{
-                entitiesBuilding = buildingUnits.AsParallelWriter()
+                entitiesBuilding = buildingUnits.AsParallelWriter(),
+                
             };
+
+            moveToCollectHandle.Complete();
+
             JobHandle moveToBuildHandle = moveToBuildLocation.Schedule(entityQuery);
 
             var potentialTargetEntities = attackeePositions.GetKeyArray(Allocator.TempJob);
@@ -419,8 +425,6 @@ namespace MDG.Invader.Systems
                 }
             }
             potentialTargetEntities.Dispose();
-
-            tickAttackCoolDownHandle.Complete();
             // Maybe make this a member variale instead of local. For now it's fine.
             NativeQueue<AttackPayload> attackPayloads = new NativeQueue<AttackPayload>(Allocator.TempJob);
             MoveToAttackTargetJob moveToAttackTargetJob = new MoveToAttackTargetJob
@@ -431,30 +435,26 @@ namespace MDG.Invader.Systems
                 entityCommandBuffer = PostUpdateCommands.ToConcurrent()
             };
 
-            JobHandle moveToAttackHandle = moveToAttackTargetJob.Schedule(attackQuery);
-          
-            // Letting go to next frame would be enxt step of optimization but holyyyy fuck.
-            moveToCollectHandle.Complete();
-            RunCollectCommandRequests();
-
             moveToBuildHandle.Complete();
-            moveToDestHandle.Complete();
+
+            // Run moving to attack command job in background while process collect command requests.
+            // and sending build requests from build commands.
+            JobHandle moveToAttackHandle = moveToAttackTargetJob.Schedule(attackQuery);
+            RunCollectCommandRequests();
             moveToAttackHandle.Complete();
           
             attackeePositions.Dispose();
 
             // maybe even do this run first as easily one of the biggest
             Queue<PendingAttack> pendingAttacks = ProcessAttackPayloads(attackPayloads);
-            // While the jobs in the Queue are running, do other processing for build commands.
-
+            SpawnBuildings(buildingUnits);
+            buildingUnits.Dispose();
             // Spawn Buildings
             // Rename this to SpawnStructures.
-            SpawnBuildings(buildingUnits);
             RunBuildCommandRequests();
 
             ProcessPendingAttacks(pendingAttacks);
         }
-
 
         // To go even further beyond in parraelizing maybe seperate this to request for each command too.
         private void RunCollectCommandRequests()
@@ -794,7 +794,6 @@ namespace MDG.Invader.Systems
                 // I should puysh whats here and let autocompelte hep now.
             }
             builderIds.Dispose();
-            buildingUnits.Dispose();
         }
     }
 }

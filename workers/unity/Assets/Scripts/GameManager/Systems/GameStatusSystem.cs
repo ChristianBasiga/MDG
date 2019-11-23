@@ -9,6 +9,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using static Unity.Mathematics.math;
 using GameSchema = MdgSchema.Game;
+using TerritorySchema = MdgSchema.Game.Territory;
 namespace MDG.Game
 {
     [DisableAutoCreation]
@@ -22,7 +23,9 @@ namespace MDG.Game
         WorkerSystem workerSystem;
         EntityQuery gameStatusQuery;
         EntityQuery playerQuery;
+        EntityQuery territoryQuery;
         readonly int minPlayersToStart;
+        readonly int territoriesCount;
         bool startedGame = false;
 
 
@@ -47,6 +50,10 @@ namespace MDG.Game
         protected override void OnCreate()
         {
             base.OnCreate();
+            territoryQuery = GetEntityQuery(
+                ComponentType.ReadOnly<TerritorySchema.Territory.Component>(),
+                ComponentType.ReadOnly<TerritorySchema.TerritoryStatus.Component>()
+                );
             playerQuery = GetEntityQuery(ComponentType.ReadOnly<PlayerMetaData.Component>());
             gameStatusQuery = GetEntityQuery(
                 ComponentType.ReadOnly<SpatialEntityId>(),
@@ -76,7 +83,7 @@ namespace MDG.Game
                 // Short to test this.
                 EntityManager.SetComponentData(gameManagerEntity, new GameSchema.GameStatus.Component
                 {
-                    TimeLeft = 10.0f
+                    TimeLeft = 100.0f
                 });
                 return;
             }
@@ -101,6 +108,23 @@ namespace MDG.Game
                         }), spatialEntityId.EntityId);
                     }
                 });
+
+                int claimed = 0;
+                Entities.With(territoryQuery).ForEach((ref TerritorySchema.TerritoryStatus.Component territoryStatus) =>
+                {
+                    if (territoryStatus.Status == TerritorySchema.TerritoryStatusTypes.Claimed)
+                    {
+                        claimed += 1;
+                    }
+                });
+                // If all territories are claimed.
+                if (claimed == territoryQuery.CalculateEntityCount())
+                {
+                    componentUpdateSystem.SendEvent(new GameSchema.GameStatus.EndGame.Event(new GameSchema.GameEndEventPayload
+                    {
+                        WinConditionMet = GameSchema.WinConditions.TerritoriesClaimed
+                    }), new EntityId(3));
+                }
 
                 // Then also need to check invader win condition. All three territories are claimed.
             }

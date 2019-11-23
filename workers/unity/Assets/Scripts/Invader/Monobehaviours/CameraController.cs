@@ -27,7 +27,7 @@ namespace MDG.Invader.Monobehaviours
         }
         Settings cameraSettings;
         private readonly float minZoom = 20;
-        private readonly float maxZoom = 120;
+        private readonly float maxZoom = 10000;
         [SerializeField] private float worldWidth = 1000;
         [SerializeField] private float worldHeight = 1000;
         new Camera camera;

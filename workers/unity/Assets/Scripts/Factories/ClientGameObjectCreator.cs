@@ -84,9 +84,9 @@ namespace MDG
         };
         public List<Vector3f> initialUnitCoordinates = new List<Vector3f>
         {
-            new Vector3f( width + (width * 0.1f), 20, 0),
-            new Vector3f( width + (width * 0.1f), 20, (length * 0.6f)),
-            new Vector3f( width + (width * 0.1f), 20, -(length * 0.6f)),
+            new Vector3f( width + (width * 0.1f), 50, 0),
+            new Vector3f( width + (width * 0.1f), 50, (length * 0.6f)),
+            new Vector3f( width + (width * 0.1f), 50, -(length * 0.6f)),
         };
 
         //Look into being able to add multiple custom creators and see if can do that instead.   
@@ -114,6 +114,7 @@ namespace MDG
             Debug.Log($"creating {metaData.EntityType}");
             if (metaData.EntityType.Equals("Player"))
             {
+                string pathToPlayer = pathToEntity;
                 if (!entity.HasComponent<GameMetadata.Component>())
                 {
                     return;
@@ -135,7 +136,9 @@ namespace MDG
 
                 if (hasAuthority)
                 {
-                    pathToEntity = $"{pathToEntity}/Authoritative";
+                 
+
+                    pathToPlayer = $"{pathToPlayer}/Authoritative";
 
                     if (GameObject.FindGameObjectWithTag("MainCamera"))
                     {
@@ -188,10 +191,12 @@ namespace MDG
                 {
 
                 }
-                pathToEntity = $"{pathToEntity}/{type.ToString()}";
-                GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
+                pathToPlayer = $"{pathToPlayer}/{type.ToString()}";
+                GameObject created = CreateEntityObject(entity, linker, pathToPlayer, null, null);
                 Vector3 startingPoint = startingPoints[startingPointsUsed].ToUnityVector();
                 created.transform.position = startingPoint;
+                Object prefab = Resources.Load($"{pathToEntity}/FakeClientInput");
+                GameObject clientFaker = Object.Instantiate(prefab) as GameObject;
             }
             else if (metaData.EntityType.Equals("Unit"))
             {
@@ -231,6 +236,11 @@ namespace MDG
                 pathToEntity = $"{pathToEntity}/Weapons/{prefabName}";
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 created.tag = weaponComponent.  WeaponType.ToString();
+            }
+            else if (metaData.EntityType.Equals("Territory"))
+            {
+                // Don't neccessarily need to create prefabfor this, maybe down line, but just being within area is fine for testing.
+                //pathToEntity = $"{pathToEntity}/Territories/${}"
             }
             else
             {

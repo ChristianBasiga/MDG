@@ -50,7 +50,8 @@ namespace MDG.Common.Systems.Position
         Queue<EntityId> toPruneOff;
 
         // For updating spatialOS position component.
-        NativeHashMap<EntityId, Vector3f> entitiesThatMovedRegions;
+        Dictionary<EntityId, Vector3f> entitiesThatMovedRegionBuffer;
+        const int maxPositionUpdateBuffer = 10;
 
         readonly int shakesPerFrame = 5;
 
@@ -82,7 +83,7 @@ namespace MDG.Common.Systems.Position
             base.OnCreate();
             worker = World.GetExistingSystem<WorkerSystem>();
 
-            entitiesThatMovedRegions = new NativeHashMap<EntityId, Vector3f>(1000, Allocator.Persistent);
+            entitiesThatMovedRegionBuffer = new Dictionary<EntityId, Vector3f>();
             updateQueue = new NativeQueue<UpdatePayload>(Allocator.Persistent);
 
             commandSystem = World.GetExistingSystem<CommandSystem>();
@@ -123,18 +124,19 @@ namespace MDG.Common.Systems.Position
                 updateQueue.Dispose();
             }
             base.OnDestroy();
-
-            entitiesThatMovedRegions.Dispose();
         }
 
         #region Event Handlers
         private void OnMovedRegion(QuadNode quadNode)
         {
-            if (entitiesThatMovedRegions.TryGetValue(quadNode.entityId, out Vector3f updatedPosition))
+            if (entitiesThatMovedRegionBuffer.TryGetValue(quadNode.entityId, out Vector3f updatedPosition))
             {
-                entitiesThatMovedRegions[quadNode.entityId] = quadNode.position;
+                entitiesThatMovedRegionBuffer[quadNode.entityId] = quadNode.position;
             }
-            entitiesThatMovedRegions.TryAdd(quadNode.entityId, quadNode.position);
+            else
+            {
+                entitiesThatMovedRegionBuffer.Add(quadNode.entityId, quadNode.position);
+            }
         }
 
 
@@ -170,9 +172,10 @@ namespace MDG.Common.Systems.Position
                 [ReadOnly] ref PositionSchema.AngularVelocity.Component angularVelocityComponent,
                 ref EntityTransform.Component entityTransform)
             {
+                // Add extra speed to this.
                 entityTransform.Position += linearVelocityComponent.Velocity * deltaTime;
-               // entityTransform.Position = new Vector3f(entityTransform.Position.X, 0, entityTransform.Position.Z);
-                entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;   
+                // entityTransform.Position = new Vector3f(entityTransform.Position.X, 0, entityTransform.Position.Z);
+                entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;
                 if (!linearVelocityComponent.Velocity.Equals(Vector3f.Zero))
                 {
                     updateQueue.Enqueue(new UpdatePayload
@@ -195,13 +198,8 @@ namespace MDG.Common.Systems.Position
                 deltaTime = deltaTime,
                 updateQueue = updateQueue.AsParallelWriter()
             };
-
-            if (spatialPosUpdateJobHandle.HasValue)
-            {
-                spatialPosUpdateJobHandle.Value.Complete();
-                entitiesThatMovedRegions.Clear();
-            }
-
+            // Run apply velocity job in background while queue up removed entities to prune and transfer from buffer
+            // entities that ahve moved regions to native map.
             JobHandle applyVelocityHandle = applyVelocityJob.Schedule(applyVelocityQuery);
 
             // Getting entities removed to queue up to prune off of quad tree.
@@ -210,28 +208,31 @@ namespace MDG.Common.Systems.Position
             {
                 toPruneOff.Enqueue(removedEntity);
             }
-            ShakeQuadTree();
 
             AddNewEntitiesToQuadTree();
-
+            NativeHashMap<EntityId, Vector3f> entitiesThatMovedRegions = new NativeHashMap<EntityId, Vector3f>(applyVelocityQuery.CalculateEntityCount(), Allocator.TempJob);
+            foreach (KeyValuePair<EntityId, Vector3f> positionUpdate in entitiesThatMovedRegionBuffer)
+            {
+                entitiesThatMovedRegions.TryAdd(positionUpdate.Key, positionUpdate.Value);
+            }
             applyVelocityHandle.Complete();
-            UpdateEntitiesInTree();
-
-
-            // Update may cause updates to hash map at same time as job.. ACTUALLY that is fine cause job only read read only.
             if (entitiesThatMovedRegions.Length > 0)
             {
                 UpdateSpatialPositionJob updateSpatialPositionJob = new UpdateSpatialPositionJob
                 {
-                    toUpdate = entitiesThatMovedRegions 
+                    toUpdate = entitiesThatMovedRegions
                 };
+                // Runs updating spatialOS position with entity transform in background while update entities in tree
+                // and remove from quad tree removed entities.
                 spatialPosUpdateJobHandle = updateSpatialPositionJob.Schedule(updateSpatialPositionQuery);
-                spatialPosUpdateJobHandle.Value.Complete();
-                spatialPosUpdateJobHandle = null;
             }
-
-
-
+            UpdateEntitiesInTree();
+            ShakeQuadTree();
+            if (spatialPosUpdateJobHandle.HasValue)
+            {
+                spatialPosUpdateJobHandle.Value.Complete();
+            }
+            entitiesThatMovedRegions.Dispose();
         }
 
         // Iterates through newly added entities and inserts into quad tree.
@@ -255,17 +256,8 @@ namespace MDG.Common.Systems.Position
             // For each entityId to update, first check using the position to update to if still within region.
             while (updateQueue.IsCreated && updateQueue.TryDequeue(out UpdatePayload updatePayload))
             {
-                //And remove from last and insert in new.
-                try
-                {
-                    spatialPartitioning.MoveEntity(updatePayload.EntityUpdating, updatePayload.NewPosition);
-                }
-                catch (System.Exception error)
-                {
-                    Debug.Log(error);
-                }
+                spatialPartitioning.MoveEntity(updatePayload.EntityUpdating, updatePayload.NewPosition);
             }
-            
         }
 
         // Prunes tree of any entities in quad tree that are no longer active.
