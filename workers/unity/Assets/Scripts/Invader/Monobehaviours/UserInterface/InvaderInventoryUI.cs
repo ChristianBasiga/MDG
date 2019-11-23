@@ -12,10 +12,8 @@ namespace MDG.Invader.Monobehaviours
 {
     public class InvaderInventoryUI : MonoBehaviour
     {
-        [Require] InventorySchema.InventoryReader InventoryReader;
+        [Require] InventorySchema.InventoryReader InventoryReader = null;
 
-        [SerializeField]
-        Text resourceCount;
         
         InventoryItemFactory InventoryItemFactory;
 
@@ -34,7 +32,7 @@ namespace MDG.Invader.Monobehaviours
                 return item.Id.Equals(InventoryItemFactory.ResourceItemId);
             });
 
-            resourceCount.text = resourceItemCount.ToString();
+        //    resourceCount.text = resourceItemCount.ToString();
         }
 
         private void Update()

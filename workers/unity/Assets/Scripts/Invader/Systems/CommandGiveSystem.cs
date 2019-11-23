@@ -14,6 +14,7 @@ using Unity.Mathematics;
 using MdgSchema.Units;
 using Improbable.Gdk.Subscriptions;
 using Improbable;
+using MDG.Invader.Monobehaviours;
 
 namespace MDG.Invader.Systems
 {
@@ -78,6 +79,7 @@ namespace MDG.Invader.Systems
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(MoveCommand));
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(AttackCommand));
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(CollectCommand));
+                    entityCommandBuffer.RemoveComponent(index, entity, typeof(BuildCommand));
 
                     // Remove it, then add interrupt, to do rest of clean up.
                     entityCommandBuffer.AddComponent(index, entity, new CommandInterrupt
@@ -103,6 +105,27 @@ namespace MDG.Invader.Systems
                 }
             }
         }
+
+        // Quick bs dupe code way to do build command until I make more scalable. If can do bytes
+        public struct GiveBuildCommandJob : IJobForEachWithEntity<Clickable, MdgSchema.Units.Unit.Component, CommandListener>{
+
+            public EntityCommandBuffer.Concurrent entityCommandBuffer;
+            public EntityId hunterId;
+            public BuildCommand buildCommand;
+
+            public void Execute(Entity entity, int index, [ReadOnly] ref Clickable clicked, [ReadOnly] ref MdgSchema.Units.Unit.Component c1, ref CommandListener commandListener)
+            {
+                if (clicked.Clicked && clicked.ClickedEntityId.Equals(hunterId)){
+
+                    entityCommandBuffer.RemoveComponent(index, entity, typeof(MoveCommand));
+                    entityCommandBuffer.RemoveComponent(index, entity, typeof(AttackCommand));
+                    entityCommandBuffer.RemoveComponent(index, entity, typeof(CollectCommand));
+                    entityCommandBuffer.RemoveComponent(index, entity, typeof(BuildCommand));
+                    entityCommandBuffer.AddComponent(index, entity, buildCommand);
+                }
+            }
+        }
+
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -140,18 +163,46 @@ namespace MDG.Invader.Systems
             commandProcessJob.ScheduleSingle(this).Complete();
             CommandListener commandMetadata = commandGiven[0];
             // If right click did not overlap with any clickable, then it is a move command.
+
+            // temp dirty way
+            bool gaveBuildCommand =  false;
             if (commandMetadata.CommandType == CommandType.None)
             {
                 Vector3f convertedMousePos = new Vector3f(mousePos.x, 0, mousePos.z);
-                commandMetadata = new CommandListener { TargetPosition = convertedMousePos, CommandType = CommandType.Move };
+
+                // So here If clicked on nothing, check if have structure to build selected.
+                HunterController hunterController = hunter.GetComponent<HunterController>();
+                if (hunterController.SelectedStructure != null){
+                    BuildCommand buildCommand = new BuildCommand{
+                        structureType = hunterController.SelectedStructure.structureType,
+                        buildLocation = convertedMousePos
+                    };
+                    // Every type is same, so I load config from scriptable object when sending request. That's fine.
+                    // Will be a type to config mapping. So at this point I don't need to know that
+                    // cause that is static data for that kind of structure.
+                    GiveBuildCommandJob giveBuildCommand = new GiveBuildCommandJob
+                    {
+                        buildCommand = buildCommand,
+                        hunterId = hunterId,
+                        entityCommandBuffer = PostUpdateCommands.ToConcurrent()
+                    };
+                    giveBuildCommand.Schedule(this).Complete();
+                    gaveBuildCommand = true;
+                }
+                else{
+                    commandMetadata = new CommandListener { TargetPosition = convertedMousePos, CommandType = CommandType.Move };
+                }
             }
-            CommandGiveJob commandGiveJob = new CommandGiveJob
+            if (!gaveBuildCommand)
             {
-                commandGiven = commandMetadata,
-                entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
-                hunterId = hunterId
-            };
-            commandGiveJob.Schedule(this).Complete();
+                CommandGiveJob commandGiveJob = new CommandGiveJob
+                {
+                    commandGiven = commandMetadata,
+                    entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
+                    hunterId = hunterId
+                };
+                commandGiveJob.Schedule(this).Complete();
+            }
             commandGiven.Dispose();
             //inputCamera.depth = 0;
         }

@@ -13,18 +13,20 @@ namespace MDG.Defender.Monobehaviours {
         public delegate void PlayerMoveHandler(Vector3 position, Vector3 rotation);
         public event PlayerMoveHandler OnPlayerMove;
 
-        [SerializeField] private string horizInputName, vertInputName;
-        [SerializeField] private float speed = 20;
-        [Require] PositionSchema.LinearVelocityWriter linearVelocityWriter;
+        [SerializeField] private string horizInputName = "Horizontal", vertInputName = "Vertical";
+        [Require] PositionSchema.LinearVelocityWriter linearVelocityWriter = null;
         // Start is called before the first frame update
 
+        [SerializeField]
+        public int speed = 100;
 
         //To be that accurate overtime and keep smooth is rough to do from scratch.
         [SerializeField] private AnimationCurve jumpFallOff;
-        private float timeInAir;
+
+        /*private float timeInAir;
         private float jumpSpeed = 5.0f;
         private bool isJumping;
-
+        */
         
         //This will have reference to the reader and writer of component.
         void Start()
@@ -49,11 +51,13 @@ namespace MDG.Defender.Monobehaviours {
             float vertInput = Input.GetAxis(vertInputName);
             Vector3 forwardMovement = transform.forward * vertInput;
             Vector3 rightMovement = transform.right * horizInput;
+
             // Hmm, it does apply velocity, but tbh, it dies out literally right after sooo lol.
             // Well this is true though if send update every frame cause axis would be 0.
+            // Need to figure out how apply this.
             linearVelocityWriter.SendUpdate(new PositionSchema.LinearVelocity.Update
             {
-                Velocity = HelperFunctions.Vector3fFromUnityVector(forwardMovement + rightMovement)
+                Velocity = HelperFunctions.Vector3fFromUnityVector(forwardMovement + rightMovement) * speed
             });
 
             if (horizInput != 0 || vertInput != 0)
@@ -72,7 +76,7 @@ namespace MDG.Defender.Monobehaviours {
 
         private void OnPlayerMoveHandler()
         {
-            //OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
+            OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
         }
     }
 }

@@ -1590,7 +1590,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   horizInputName: Horizontal
   vertInputName: Vertical
-  speed: 5
+  speed: 100
   jumpFallOff:
     serializedVersion: 2
     m_Curve: []
@@ -1611,9 +1611,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mouseXInput: Mouse X
   mouseYInput: Mouse Y
-  mouseSensitivty: 200
+  mouseSensitivty: 50
   playerCamera: {fileID: 6326104654939109282}
   crossHairs: {fileID: 5735167402125903180}
+  cameraLookSpeed: 1
 --- !u!114 &789712602400511307
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -13,7 +13,7 @@ namespace MDG.DTO
     {
         public long ownerId;
         public int pointCost;
-        public uint inventorySize;
+        public int inventorySize;
         // This would be specific jobs to run in structure.
         public Dictionary<int, Item> itemToCost;
     }

@@ -25,8 +25,9 @@ namespace MDG.Common.MonoBehaviours.Structures
         void Start()
         {
             structureBehaviour.OnJobStarted += OnJobStarted;
+            structureBehaviour.OnJobRun += OnJobRun;
             structureBehaviour.OnBuildComplete += OnFinishConstruction;
-            structureBehaviour.OnJobCompleted += StructureBehaviour_OnJobCompleted;
+            structureBehaviour.OnJobCompleted += OnFinishJob;
             structureBehaviour.OnError += DisplayErrorMessage;
         }
 
@@ -35,9 +36,9 @@ namespace MDG.Common.MonoBehaviours.Structures
             jobQueueUI[jobIndex].sprite = jobInfo.ArtWork;
         }
 
-        private void StructureBehaviour_OnJobCompleted(int arg1, byte[] arg2)
+        private void OnJobRun(StructureSchema.JobRunEventPayload jobRunPayload)
         {
-            throw new System.NotImplementedException();
+            StartCoroutine(HelperFunctions.UpdateFill(jobProgressBar, jobRunPayload.JobProgress / jobRunPayload.EstimatedJobCompletion));
         }
 
         private void DisplayErrorMessage(string errorMessage)

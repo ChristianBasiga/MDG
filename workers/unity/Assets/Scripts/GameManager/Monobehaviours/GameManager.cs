@@ -24,7 +24,7 @@ namespace MDG.Game.Monobehaviours
     public class GameManager : MonoBehaviour
     {
 
-        [Require] GameSchema.GameStatusReader gameStatusReader;
+        [Require] GameSchema.GameStatusReader gameStatusReader = null;
 
 
         int levelWidth;

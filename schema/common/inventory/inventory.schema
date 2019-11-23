@@ -33,7 +33,7 @@ component Inventory {
     map<int32, Item> inventory = 1;
     // This meta data prob fine to just seperate into variables instead of doing bitwise stuff.
     // since it won't be changing often.
-    uint32 inventory_size = 2;
+    int32 inventory_size = 2;
     command InventoryServiceResponse add_item_to_inventory(InventoryAddItemRequest);
     command InventoryServiceResponse remove_item_from_inventory(InventoryRemoveItemRequest);
 }

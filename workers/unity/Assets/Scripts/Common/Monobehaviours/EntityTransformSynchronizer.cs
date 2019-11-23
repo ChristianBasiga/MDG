@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class EntityTransformSynchronizer : MonoBehaviour
 {
-    [Require] EntityTransformReader transformReader;
+    [Require] EntityTransformReader transformReader = null;
     // Start is called before the first frame update
     void Start()
     {

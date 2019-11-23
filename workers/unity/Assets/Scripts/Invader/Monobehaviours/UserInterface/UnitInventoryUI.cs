@@ -13,7 +13,7 @@ namespace MDG.Invader.Monobehaviours
    
     public class UnitInventoryUI : MonoBehaviour
     {
-        [Require] InventorySchema.InventoryReader InventoryReader;
+        [Require] InventorySchema.InventoryReader InventoryReader = null;
         InventoryItemFactory itemFactory;
 
         public GameObject InventoryPanel;

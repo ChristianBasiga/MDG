@@ -8,9 +8,10 @@ using GameSchema = MdgSchema.Game;
 namespace MDG.Defender.Monobehaviours
 {
     // Finish synchronization of defender.
+    // Change this to PlayerSynchronizer as common end game behaviour
     public class DefenderSynchronizer : MonoBehaviour
     {
-        [Require] SpawnSchema.PendingRespawnReader pendingRespawnReader;
+        [Require] SpawnSchema.PendingRespawnReader pendingRespawnReader = null;
         ComponentUpdateSystem componentUpdateSystem;
 
         public delegate void OnGameEndEventHandler();

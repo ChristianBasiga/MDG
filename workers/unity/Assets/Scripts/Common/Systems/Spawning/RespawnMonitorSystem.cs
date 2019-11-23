@@ -32,7 +32,6 @@ namespace MDG.Common.Systems.Spawn
         }
 
         //Here for now.
-        readonly int maxRespawnsPerFrame = 10;
         NativeQueue<RespawnPayload> queuedRespawns;
         Dictionary<long, RespawnPayload> pendingRespawnRequests;
         EntityQuery pendingRespawnGroup;

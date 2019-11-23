@@ -10,7 +10,7 @@ namespace MDG.Defender.Monobehaviours
 {
     public class DefenderHUD : MonoBehaviour
     {
-        [Require] PointReader pointReader;
+        [Require] PointReader pointReader = null;
 
         // Need to get this as singleton later.
         MainOverlayHUD mainOverlayHUD;

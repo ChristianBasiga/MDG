@@ -5,6 +5,9 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using MDG.Common;
 using MDG.ScriptableObjects.Weapons;
+using MdgSchema.Common.Inventory;
+using StructureSchema = MdgSchema.Common.Structure;
+using ScriptableStructures = MDG.ScriptableObjects.Structures;
 namespace MDG.DTO
 {
     public class Converters
@@ -55,7 +58,50 @@ namespace MDG.DTO
                 weaponType = weapon.weaponType
             };
         }
+
+        public static StructureConfig StructureToStructureConfig(ScriptableStructures.Structure structure)
+        {
+            switch (structure.StructureType)
+            {
+                case StructureSchema.StructureType.Spawning:
+
+                    Dictionary< int, Item> inventory = new Dictionary<int, Item>();
+                    for (int i = 0; i < structure.options.Count; ++i)
+                    {
+                        inventory[i] = new Item 
+                        {
+                            Id = i,
+                            // replace metadata with actual bit partitioned metadata. For now this is fine.
+                            // cost checks should be done on client side before server side checks.
+                            ItemMetadata = 0
+                        };
+                    }
+                    InventoryConfig inventoryConfig = new InventoryConfig
+                    {
+                        itemToCost = inventory,
+                        inventorySize = inventory.Count
+                    };
+                    
+                    SpawnStructureConfig spawnConfig = new SpawnStructureConfig
+                    {
+                        
+                        structureType = structure.StructureType,
+                        constructionTime = structure.ConstructionTime,
+                        inventoryConfig = inventoryConfig
+                    };
+
+                    return spawnConfig;
+                case StructureSchema.StructureType.Claiming:
+                    // Add other stuff.
+                    ClaimConfig claimConfig = new ClaimConfig
+                    {
+                        structureType = structure.StructureType,
+                        constructionTime = structure.ConstructionTime,
+                    };
+                    return claimConfig;
+                default:
+                    throw new System.Exception();
+            }
+        }
     }
-
-
 }

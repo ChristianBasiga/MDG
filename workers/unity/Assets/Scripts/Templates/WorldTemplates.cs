@@ -12,6 +12,7 @@ using MdgSchema.Common.Point;
 using MdgSchema.Game.Resource;
 using MdgSchema.Common.Spawn;
 using CollisionSchema = MdgSchema.Common.Collision;
+using TerritorySchema = MdgSchema.Game.Territory;
 namespace MDG.Templates
 {
     public class WorldTemplates
@@ -72,6 +73,40 @@ namespace MDG.Templates
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
 
+            return template;
+        }
+
+        public static EntityTemplate GetTerritoryTemplate(int territoryId, Vector3f position, Vector3f colliderDimensions)
+        {
+            EntityTemplate template = new EntityTemplate();
+            string serverAttribute = UnityGameLogicConnector.WorkerType;
+
+            CommonTemplates.AddRequiredSpatialComponents(template, "Territory");
+            CommonTemplates.AddRequiredGameEntityComponents(template, position, GameEntityTypes.Territory);
+
+            template.SetComponent(new Position.Snapshot
+            {
+                Coords = new Coordinates(position.X, position.Y, position.Z)
+            });
+            template.AddComponent(new TerritorySchema.Territory.Snapshot
+            {
+                PointGain = 1000,
+                TerritoryId = territoryId
+            }, serverAttribute);
+
+            template.AddComponent(new TerritorySchema.TerritoryStatus.Snapshot
+            {
+                Status = TerritorySchema.TerritoryStatusTypes.Released
+            }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                Dimensions = colliderDimensions,
+                IsTrigger = true,
+                Position = position
+            }, serverAttribute);
+
+            template.AddComponent(new Persistence.Snapshot(), serverAttribute);
             return template;
         }
     }

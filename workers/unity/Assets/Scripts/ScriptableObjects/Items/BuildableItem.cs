@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using MDG.DTO;
 // Factory should have all of these scriptable objects.
 namespace MDG.ScriptableObjects.Items
 {
@@ -9,6 +9,7 @@ namespace MDG.ScriptableObjects.Items
     public class BuildableItem : ShopItem
     {
         public int RequiredWorkersCount;
+        public StructureConfig StructureConfig;
         public override bool Equals(object other)
         {
             BuildableItem otherItem = other as BuildableItem;

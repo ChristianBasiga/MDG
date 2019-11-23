@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2738760533070011595}
   - component: {fileID: 7016739516165472436}
   m_Layer: 5
-  m_Name: Hunter
+  m_Name: Invader
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -145,7 +145,7 @@ GameObject:
   - component: {fileID: 7104264382336558177}
   - component: {fileID: 5089772245171131589}
   m_Layer: 5
-  m_Name: Hunted
+  m_Name: Defender
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -342,7 +342,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Hunted
+  m_Text: Defender
 --- !u!1 &5767035015209752580
 GameObject:
   m_ObjectHideFlags: 0
@@ -421,7 +421,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Hunter
+  m_Text: Invader
 --- !u!1 &7568412902758088317
 GameObject:
   m_ObjectHideFlags: 0
@@ -884,86 +884,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3217931128412830475, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3217931128412830475, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3217931128412830475, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3217931128412830475, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9164399390952666791, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9164399390952666791, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9164399390952666791, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9164399390952666791, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7206962298552988608, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7206962298552988608, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7206962298552988608, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7206962298552988608, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8319823948741184245, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8319823948741184245, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8319823948741184245, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8319823948741184245, guid: c8adc7dfcf4fea04399cfdd09efb7c88,
-        type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c8adc7dfcf4fea04399cfdd09efb7c88, type: 3}

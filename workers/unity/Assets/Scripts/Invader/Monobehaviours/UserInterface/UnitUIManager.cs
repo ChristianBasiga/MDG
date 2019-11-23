@@ -12,7 +12,7 @@ namespace MDG.ClientSide.UserInterface {
     public class UnitUIManager : MonoBehaviour
     {
         // GUI for signifying that this Unit has been selected.
-        [Require] EntityTransformReader EntityTransformReader;
+        [Require] EntityTransformReader EntityTransformReader = null;
         
         public Rect selectionRect;
         public GUIContent selectionSkin;
