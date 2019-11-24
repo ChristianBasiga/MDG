@@ -140,9 +140,6 @@ namespace MDG.Invader.Systems
         struct MoveToResourceJob : IJobForEachWithEntity<SpatialEntityId, CollectCommand, EntityTransform.Component, 
             PositionSchema.LinearVelocity.Component, CollisionSchema.BoxCollider.Component, CommandListener>
         {
-            // There is chance that the resource moving to is gone before get there.
-            // In that case collect command needs to removed on not just those ready to collect but on all.
-            public EntityCommandBuffer.Concurrent entityCommandBuffer;
             [WriteOnly]
             public NativeQueue<CollectPayload>.ParallelWriter occupyPayloads;
 
@@ -390,6 +387,7 @@ namespace MDG.Invader.Systems
 
             MoveToResourceJob moveToResourceJob = new MoveToResourceJob
             {
+
                 occupyPayloads = pendingOccupy.AsParallelWriter()
             };
             entityQuery = GetEntityQuery(entityQueryDesc);
