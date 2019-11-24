@@ -24,7 +24,7 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         Transform shootOrigin;
         [SerializeField]
-        float bulletSpeed = 50.0f;
+        float bulletSpeed = 100.0f;
         // Start is called before the first frame update
         void Start()
         {
@@ -47,9 +47,6 @@ namespace MDG.Defender.Monobehaviours
             Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(crossHairs.position);
             // Problem is that the sense of depth off.
             Vector3f bulletLinearVelocity = HelperFunctions.Vector3fFromUnityVector(crossHairs.forward * bulletSpeed);
-
-
-            // Worse case put this back as literal.
 
             ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(weapon as Projectile);
             projectileConfig.startingPosition = bulletStartingPosition;

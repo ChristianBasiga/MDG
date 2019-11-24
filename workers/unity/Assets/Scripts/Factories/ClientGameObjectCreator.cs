@@ -75,8 +75,7 @@ namespace MDG
         //Starting points will be 10% off whatever bounds are.
 
         
-        // These must be injected.
-        // Storing here si fine for now, def need to update values.
+        // Look at theseeeee.
         private static List<Coordinates> startingPoints = new List<Coordinates>
         {
             new Coordinates(width - (width * 0.1f), 100, length * 0.6),
