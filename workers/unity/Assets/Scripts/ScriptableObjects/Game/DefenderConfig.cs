@@ -12,5 +12,6 @@ namespace MDG.ScriptableObjects.Game
         public float MouseSensitivty;
         public float CameraMoveSpeed;
         public float MovementSpeed;
+        public float JumpSpeed;
     }
 }

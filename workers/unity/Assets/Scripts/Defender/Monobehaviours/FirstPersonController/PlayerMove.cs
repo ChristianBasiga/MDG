@@ -4,10 +4,6 @@ using UnityEngine;
 using PositionSchema = MdgSchema.Common.Position;
 namespace MDG.Defender.Monobehaviours {
     
-    /* Todo
-     * Add Writer to Velocity component.
-     * 
-     * */
     public class PlayerMove : MonoBehaviour
     {
         public delegate void PlayerMoveHandler(Vector3 position, Vector3 rotation);
