@@ -11,6 +11,7 @@ namespace MDG.ScriptableObjects.Weapons
     public class Projectile : Weapon
     {
         public float LifeTime;
+        public float ProjectileSpeed;
 
         public override bool Equals(object other)
         {

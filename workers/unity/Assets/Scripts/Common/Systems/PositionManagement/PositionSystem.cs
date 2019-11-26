@@ -10,6 +10,7 @@ using Improbable.Gdk.Core;
 using MdgSchema.Common;
 using PositionSchema = MdgSchema.Common.Position;
 using MDG.Common.Systems.Collision;
+using MDG.ScriptableObjects.Game;
 
 namespace MDG.Common.Systems.Position
 {
@@ -38,9 +39,6 @@ namespace MDG.Common.Systems.Position
         EntityQuery updateSpatialPositionQuery;
         EntityQuery toAddToTreeQuery;
         EntityQuery applyVelocityQuery;
-
-        public Vector3f RootDimensions { get; } = new Vector3f(1000, 0, 1000);
-        public int RegionCapacity { get; } = 50;
 
         QuadTree spatialPartitioning;
         // For batch updating tree.
@@ -90,7 +88,13 @@ namespace MDG.Common.Systems.Position
             entitySystem = World.GetExistingSystem<EntitySystem>();
 
             toPruneOff = new Queue<EntityId>();
-            spatialPartitioning = new QuadTree(RegionCapacity, RootDimensions, new Vector3f(0,0,0));
+
+            GameConfig gameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
+
+
+            spatialPartitioning = new QuadTree(gameConfig.CapicityPerRegion,
+                HelperFunctions.Vector3fFromUnityVector(gameConfig.WorldDimensions), Vector3f.Zero);
+
             spatialPartitioning.OnMovedRegions += OnMovedRegion;
 
 

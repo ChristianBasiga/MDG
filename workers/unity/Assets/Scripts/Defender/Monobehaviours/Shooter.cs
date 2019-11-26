@@ -16,15 +16,10 @@ namespace MDG.Defender.Monobehaviours
     {
         SpawnRequestSystem spawnRequestSystem;
 
-        // Need to figure out how this is set. I've got a trash project right now dude.
         Weapon weapon;
-
-        [SerializeField]
         Transform crossHairs;
-        [SerializeField]
         Transform shootOrigin;
-        [SerializeField]
-        float bulletSpeed = 100.0f;
+
         // Start is called before the first frame update
         void Start()
         {
@@ -34,8 +29,6 @@ namespace MDG.Defender.Monobehaviours
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
             GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
             weapon = Resources.Load("ScriptableObjects/Weapons/DefenderProjectile") as Weapon;
-            Debug.Log(weapon.ToString());
-
         }
 
         public void SpawnBullet()
@@ -45,10 +38,11 @@ namespace MDG.Defender.Monobehaviours
             // Ideally, show projectile coming from weapon, then continuing on from crosshairs forward. That's polish end result is cross hair forward and that
             // is enugh.
             Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(crossHairs.position);
-            // Problem is that the sense of depth off.
-            Vector3f bulletLinearVelocity = HelperFunctions.Vector3fFromUnityVector(crossHairs.forward * bulletSpeed);
 
-            ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(weapon as Projectile);
+            Projectile projectile = weapon as Projectile;
+            Vector3f bulletLinearVelocity = HelperFunctions.Vector3fFromUnityVector(crossHairs.forward) * projectile.ProjectileSpeed;
+
+            ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(projectile);
             projectileConfig.startingPosition = bulletStartingPosition;
             projectileConfig.linearVelocity = bulletLinearVelocity;
 
@@ -61,16 +55,11 @@ namespace MDG.Defender.Monobehaviours
             {
                 Position = bulletStartingPosition,
                 TypeToSpawn = MdgSchema.Common.GameEntityTypes.Weapon,
-                TypeId = 1,
-                Count = 1
             }, OnBulletSpawned, serializedWeaponMetadata, serializedWeapondata);
         }
 
         void OnBulletSpawned(EntityId entityId)
         {
-            // This would be for maybe adding  animation before hand, or querying remaining bullet
-            // etc.
-            Debug.Log("Spawned bullet");
         }
     }
 }

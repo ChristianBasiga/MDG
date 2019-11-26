@@ -11,6 +11,8 @@ namespace MDG.ScriptableObjects.Game
     {
         public string LeftClickAxis;
         public string RightClickAxis;
+        public string XMouseMovement;
+        public string YMouseMovement;
         public string HorizontalAxis;
         public string VerticalAxis;
     }

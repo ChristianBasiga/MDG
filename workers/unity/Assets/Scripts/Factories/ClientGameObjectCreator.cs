@@ -28,9 +28,6 @@ using MDG.Common;
 namespace MDG
 {
 
-    // This needs to be updated to do multiple things.
-    // 
-
     /// <summary>
     /// This creates corresponding game object to entity, as well as adds any extra ECS components
     /// an entity needs. Perhaps ladder can be moved to different.
@@ -38,19 +35,6 @@ namespace MDG
     // Use zenject to install stuff here.
     public class ClientGameObjectCreator : IEntityGameObjectCreator
     {
-        #region Prefab Mappings
-        // type, and id to get specific name, later on will be set via injection
-        private Dictionary<WeaponSchema.WeaponType, Dictionary<int, string>> weaponPrefabNames = new Dictionary<WeaponSchema.WeaponType, Dictionary<int, string>>
-        {
-            {
-                WeaponSchema.WeaponType.Projectile, new Dictionary<int, string>{
-                    { 1, "Bullet"}
-                }
-            }
-        };
-        #endregion
-
-
         public delegate void EntityChangeEventHandler(EntityId entityId);
 
         // For others to know when thish happens.
@@ -227,8 +211,8 @@ namespace MDG
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 worker.TryGetEntity(entity.SpatialOSEntityId, out Entity weaponEntity);
                 WeaponArchtypes.AddWeaponArchtype(_world.EntityManager, weaponEntity, hasAuthority);
-                string prefabName = weaponPrefabNames[weaponComponent.WeaponType][weaponComponent.WeaponId];
-                pathToEntity = $"{pathToEntity}/Weapons/{prefabName}";
+                pathToEntity = $"{pathToEntity}/Weapons/{weaponComponent.WeaponId}";
+
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 created.tag = weaponComponent.  WeaponType.ToString();
             }
@@ -246,10 +230,6 @@ namespace MDG
             OnEntityAdded?.Invoke(entity.SpatialOSEntityId);
         }
 
-        // Also needs to know about this when Units are deleted. Easieset is to just run qury.
-        // This might end up doing too much, but this could have ref to respective HUD
-        // then once one of these happens, checks if what was removed / added was unit and update accordingly.
-        // Feels like spaghetti tho.
         public void OnEntityRemoved(EntityId entityId)
         {
             _default.OnEntityRemoved(entityId);
