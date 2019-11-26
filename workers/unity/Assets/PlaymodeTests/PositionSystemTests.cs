@@ -115,6 +115,11 @@ namespace PlaymodeTests
             List<SpawnSchema.SpawnRequest> spawnedEntityToPayload = new List<SpawnSchema.SpawnRequest>();
             List<EntityId> entityIds = new List<EntityId>();
             // Spawns 4 entities halved randomly placed in what should be 2 seperate regions.
+           
+            
+            // Replace with loading in game config.
+
+            /*
             for (int i = 0; i < positionSystem.RegionCapacity * 2; ++i)
             {
                 float randomX = Random.Range(0, positionSystem.RootDimensions.X / 2);
@@ -140,6 +145,7 @@ namespace PlaymodeTests
                 yield return new WaitForEndOfFrame();
             }
 
+
             // Assert on same regions per half.
             List<QuadNode> leftHalfQuery = positionSystem.querySpatialPartition(spawnedEntityToPayload[0].Position);
             Assert.True(leftHalfQuery.Any((QuadNode qn) =>
@@ -159,6 +165,7 @@ namespace PlaymodeTests
                 return qn.entityId.Equals(entityIds[2]);
             }), "Left half placed and right half placed regions are grouped together. Not subdivided correctly");
             // Assert on diff regions between other halfs.
+            */
         }
 
         [UnityTest, Order(81)]

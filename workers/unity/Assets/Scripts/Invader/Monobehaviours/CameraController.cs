@@ -5,6 +5,7 @@ using Zenject;
 using Unity.Entities;
 using Improbable;
 using Unity.Rendering;
+using MDG.ScriptableObjects.Game;
 
 namespace MDG.Invader.Monobehaviours
 {
@@ -17,6 +18,7 @@ namespace MDG.Invader.Monobehaviours
             public Vector2 panningBounds;
             public float scrollSpeed;
 
+            // Border and bounds should prob be based on window size.
             public Settings(Vector2 panningBorder, Vector2 panningBounds, float panningSpeed, float scrollSpeed)
             {
                 this.panningBorder = panningBorder;
@@ -26,35 +28,25 @@ namespace MDG.Invader.Monobehaviours
             }
         }
         Settings cameraSettings;
-        private readonly float minZoom = 20;
-        private readonly float maxZoom = 10000;
-        [SerializeField] private float worldWidth = 1000;
-        [SerializeField] private float worldHeight = 1000;
-        new Camera camera;
-        Camera inputCamera;
-        //This way caninject new camera settings as needed.
-        [Inject]
-        public void Initialize(Settings cameraSettings)
-        {
-            this.cameraSettings = cameraSettings;
-        }
-
-        public void SetCameraSettings()
-        {
-            // Prob will instead listen for event, instead of UI having reference to this, it will subscribe at start then let callback handle it.
-        }
-       
+        private float minZoom;
+        private float maxZoom;
+        Camera viewCamera;
         private void Start()
         {
-            camera = GetComponent<Camera>();
-            if (cameraSettings == null)
-            {
-                cameraSettings = new Settings(new Vector2(Screen.width * 0.2f, Screen.height * 0.2f),
-                new Vector2(worldWidth, worldHeight),
-                50.0f,
-                50.0f);
-            }
+            viewCamera = GetComponent<Camera>();
+            // Loading all at once prob fine, for now but ideally I load in single place, and everywhere else reache sit
+            // to avoid I/O or move I/O fetches to async
+            InvaderConfig invaderConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseInvaderConfig") as InvaderConfig;
+            invaderConfig.PanningBorder = new Vector2(Screen.width * 0.2f, Screen.height * 0.2f);
+            invaderConfig.PanningBounds = new Vector2(Screen.width, Screen.height);
+            Debug.Log(invaderConfig);
+            Debug.Log(invaderConfig.PanningBorder);
+            minZoom = invaderConfig.MinZoom;
+            maxZoom = invaderConfig.MaxZoom;
+            Debug.Log($"width {Screen.width} and height {Screen.height}");
+            cameraSettings = new Settings(invaderConfig.PanningBorder, invaderConfig.PanningBounds, invaderConfig.CameraPanSpeed, invaderConfig.ScrollSpeed);
         }
+
         void Update()
         {
             Vector3 mousePosition = Input.mousePosition;
@@ -80,12 +72,11 @@ namespace MDG.Invader.Monobehaviours
                 newCameraPosition.x += -cameraSettings.panningSpeed * Time.deltaTime;
             }
             float scroll = Input.GetAxis("Mouse ScrollWheel");
-            camera.orthographicSize -= scroll * cameraSettings.scrollSpeed * 100.0f * Time.deltaTime;
-            camera.orthographicSize = Mathf.Clamp(camera.orthographicSize, minZoom, maxZoom);
+            viewCamera.orthographicSize -= scroll * cameraSettings.scrollSpeed * 100.0f * Time.deltaTime;
+            viewCamera.orthographicSize = Mathf.Clamp(viewCamera.orthographicSize, minZoom, maxZoom);
             newCameraPosition.x = Mathf.Clamp(newCameraPosition.x, -cameraSettings.panningBounds.x, cameraSettings.panningBounds.x);
             newCameraPosition.z = Mathf.Clamp(newCameraPosition.z, -cameraSettings.panningBounds.y, cameraSettings.panningBounds.y);
             transform.position = newCameraPosition;
-
         }
     }
 }

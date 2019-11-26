@@ -18,6 +18,7 @@ namespace MDG.ScriptableObjects.Weapons
         public int Durability;
         public float Range;
         public string Title;
+        public string PrefabPath;
         public Vector3 Dimensions;
 
         public override bool Equals(object other)

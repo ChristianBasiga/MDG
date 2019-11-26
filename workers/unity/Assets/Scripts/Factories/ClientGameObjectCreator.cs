@@ -22,12 +22,11 @@ using InvaderSystems =  MDG.Invader.Systems;
 using MdgSchema.Units;
 using MDG.Templates;
 using MDG.DTO;
+using GameScriptableObjects = MDG.ScriptableObjects.Game;
+using MDG.Common;
 
 namespace MDG
 {
-
-    // This needs to be updated to do multiple things.
-    // 
 
     /// <summary>
     /// This creates corresponding game object to entity, as well as adds any extra ECS components
@@ -36,19 +35,6 @@ namespace MDG
     // Use zenject to install stuff here.
     public class ClientGameObjectCreator : IEntityGameObjectCreator
     {
-        #region Prefab Mappings
-        // type, and id to get specific name, later on will be set via injection
-        private Dictionary<WeaponSchema.WeaponType, Dictionary<int, string>> weaponPrefabNames = new Dictionary<WeaponSchema.WeaponType, Dictionary<int, string>>
-        {
-            {
-                WeaponSchema.WeaponType.Projectile, new Dictionary<int, string>{
-                    { 1, "Bullet"}
-                }
-            }
-        };
-        #endregion
-
-
         public delegate void EntityChangeEventHandler(EntityId entityId);
 
         // For others to know when thish happens.
@@ -61,43 +47,40 @@ namespace MDG
         private readonly IEntityGameObjectCreator _default;
         private readonly Unity.Entities.World _world;
         private readonly string _workerType;
-
-        //Get from GameManager instanc later.
-        private static readonly int width = 100;
-        private static readonly int length = 100;
-
-        // Temporary, as dynamic may also change.
-        private static int startingPointsUsed = 0;
-
         private ComponentUpdateSystem ComponentUpdateSystem;
         SpawnSystems.SpawnRequestSystem spawnReqSystem;
 
-        //Starting points will be 10% off whatever bounds are.
-
-        
-        // These must be injected.
-        // Storing here si fine for now, def need to update values.
-        private static List<Coordinates> startingPoints = new List<Coordinates>
-        {
-            new Coordinates(width - (width * 0.1f), 100, length * 0.6),
-            new Coordinates((-width) + (width * 0.1f), 100, -length * 0.6),
-        };
-        public List<Vector3f> initialUnitCoordinates = new List<Vector3f>
-        {
-            new Vector3f( width + (width * 0.1f), 50, 0),
-            new Vector3f( width + (width * 0.1f), 50, (length * 0.6f)),
-            new Vector3f( width + (width * 0.1f), 50, -(length * 0.6f)),
-        };
+        private int defenderPointsUsed = 0;
+        // This actually shouldn't be here for player stuff but prior in selecting role.
+        private List<Coordinates> defenderStartingPoints;
+        private List<Vector3f> initialInvaderUnitPositions;
 
         //Look into being able to add multiple custom creators and see if can do that instead.   
         //I can still do factory plan this way.
 
         //Make worker type an enum to parse.
-        public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType)
+        public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType,
+            GameScriptableObjects.GameConfig gameConfig)
         {
             this._default = _default;
             this._world = world;
             this._workerType = workerType;
+
+            if (gameConfig != null)
+            {
+                this.defenderStartingPoints = new List<Coordinates>();
+                this.initialInvaderUnitPositions = new List<Vector3f>();
+                foreach (Vector3 pos in gameConfig.DefenderSpawnPoints)
+                {
+                    this.defenderStartingPoints.Add(HelperFunctions.CoordinatesFromUnityVector(pos));
+                }
+
+                foreach (Vector3 pos in gameConfig.InvaderUnitSpawnPoints)
+                {
+                    this.initialInvaderUnitPositions.Add(HelperFunctions.Vector3fFromUnityVector(pos));
+                }
+            }
+    
             EntityToGameObjects = new Dictionary<EntityId, GameObject>();
             ComponentUpdateSystem = _world.GetExistingSystem<ComponentUpdateSystem>();
             spawnReqSystem = _world.GetExistingSystem<SpawnSystems.SpawnRequestSystem>();
@@ -123,6 +106,7 @@ namespace MDG
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 worker.TryGetEntity(entity.SpatialOSEntityId, out Entity ecsEntity);
                 GameEntityTypes type = gameMetaData.Type;
+
                 if (type == GameEntityTypes.Hunter)
                 {
                     PlayerArchtypes.AddInvaderArchtype(worker.EntityManager, ecsEntity, hasAuthority);
@@ -146,18 +130,13 @@ namespace MDG
                     }
                     if (type == GameEntityTypes.Hunter)
                     {
-
-
-                        int multiplier = startingPointsUsed == 1 ? 1 : -1;
-
-                       
-                        for (int i = 0; i < initialUnitCoordinates.Count; ++i)
+                            for (int i = 0; i < initialInvaderUnitPositions.Count; ++i)
                         {
 
                             UnitConfig unitConfig = new UnitConfig
                             {
                                 ownerId = entity.SpatialOSEntityId.Id,
-                                position = initialUnitCoordinates[i],
+                                position = initialInvaderUnitPositions[i],
                                 unitType = UnitTypes.WORKER
                             };
 
@@ -165,7 +144,7 @@ namespace MDG
                             spawnReqSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                             {
                                 TypeToSpawn = GameEntityTypes.Unit,
-                                Position = initialUnitCoordinates[i],
+                                Position = initialInvaderUnitPositions[i],
                                 // Deperecate typeId, should all be serialized args for stuff like this.
                                 TypeId = (int)UnitTypes.WORKER,
                                 
@@ -193,7 +172,7 @@ namespace MDG
                 }
                 pathToPlayer = $"{pathToPlayer}/{type.ToString()}";
                 GameObject created = CreateEntityObject(entity, linker, pathToPlayer, null, null);
-                Vector3 startingPoint = startingPoints[startingPointsUsed].ToUnityVector();
+                Vector3 startingPoint = defenderStartingPoints[defenderPointsUsed].ToUnityVector();
                 created.transform.position = startingPoint;
                 Object prefab = Resources.Load($"{pathToEntity}/FakeClientInput");
                 GameObject clientFaker = Object.Instantiate(prefab) as GameObject;
@@ -232,8 +211,8 @@ namespace MDG
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 worker.TryGetEntity(entity.SpatialOSEntityId, out Entity weaponEntity);
                 WeaponArchtypes.AddWeaponArchtype(_world.EntityManager, weaponEntity, hasAuthority);
-                string prefabName = weaponPrefabNames[weaponComponent.WeaponType][weaponComponent.WeaponId];
-                pathToEntity = $"{pathToEntity}/Weapons/{prefabName}";
+                pathToEntity = $"{pathToEntity}/Weapons/{weaponComponent.WeaponId}";
+
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
                 created.tag = weaponComponent.  WeaponType.ToString();
             }
@@ -251,10 +230,6 @@ namespace MDG
             OnEntityAdded?.Invoke(entity.SpatialOSEntityId);
         }
 
-        // Also needs to know about this when Units are deleted. Easieset is to just run qury.
-        // This might end up doing too much, but this could have ref to respective HUD
-        // then once one of these happens, checks if what was removed / added was unit and update accordingly.
-        // Feels like spaghetti tho.
         public void OnEntityRemoved(EntityId entityId)
         {
             _default.OnEntityRemoved(entityId);

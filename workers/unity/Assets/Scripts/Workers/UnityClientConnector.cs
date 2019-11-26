@@ -16,6 +16,7 @@ using MDG.Common.Systems.Spawn;
 using MDG.Common.Systems.Point;
 using MDG.Common.Systems.Weapon;
 using MDG.Common.Systems.Structure;
+using MDG.ScriptableObjects.Game;
 namespace MDG
 {
     //Need to figure out spawnign stuff on server side and not.
@@ -23,7 +24,7 @@ namespace MDG
     {
         public const string WorkerType = "UnityClient";
         public ClientGameObjectCreator clientGameObjectCreator { get; private set; }
-
+        GameConfig gameConfig;
         private async void Start()
         {
             var connParams = CreateConnectionParameters(WorkerType);
@@ -57,6 +58,8 @@ namespace MDG
 
             PlayerLifecycleConfig.CreatePlayerEntityTemplate = PlayerTemplates.CreatePlayerEntityTemplate;
 
+            // Replace with loading config from connection param
+            gameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
             await Connect(builder, new ForwardingDispatcher()).ConfigureAwait(false);
         }
 
@@ -78,7 +81,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<UnitRerouteSystem>();
 
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-            clientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
+            clientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType, gameConfig);
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, clientGameObjectCreator);
         }
 

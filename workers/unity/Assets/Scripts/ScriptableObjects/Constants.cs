@@ -10,6 +10,7 @@ namespace MDG.ScriptableObjects
         public const string UnitPath = "Units";
         public const string ItemPath = "Items";
         public const string StructurePath = "Structures";
+        public const string GamePath = "Game";
         public enum ShopItemType
         {
             Buildable,

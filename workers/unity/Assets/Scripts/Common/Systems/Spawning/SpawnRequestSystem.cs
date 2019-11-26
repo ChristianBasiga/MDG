@@ -37,8 +37,6 @@ namespace MDG.Common.Systems.Spawn
         WorkerSystem workerSystem;
         Dictionary<long, SpawnRequestHeader> requestIdToPayload;
 
-
-
         public class SpawnRequestPayload
         {
             public SpawnSchema.SpawnRequest payload;
@@ -209,10 +207,11 @@ namespace MDG.Common.Systems.Spawn
                         break;
                     case CommonSchema.GameEntityTypes.Weapon:
                         WeaponMetadata weaponMetadata = Converters.DeserializeArguments<WeaponMetadata>(request.spawnMetaData);
+
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
                                 WeaponTemplates.GetWeaponEntityTemplate(workerSystem.WorkerId, weaponMetadata.weaponType,
-                                new EntityId(weaponMetadata.wielderId), request.spawnData
+                                new EntityId(weaponMetadata.wielderId), weaponMetadata.prefabName, request.spawnData
                                 )
                             ));
                         break;
@@ -249,16 +248,10 @@ namespace MDG.Common.Systems.Spawn
                 ref readonly var response = ref creationResponses[i];
                 if (requestIdToPayload.TryGetValue(response.RequestId, out SpawnRequestHeader spawnRequestHeader))
                 {
-                    // Callbacks are good enough to notify direct requester.
-                    // but events would also be good. Hmm I mean if Invader side is one making the request
-                    // can update unit count accordingly. Former more general and expansive
-                    // but latter is enough.
                     switch (response.StatusCode)
                     {
                         // Remove from request mappings and send response back.
                         case StatusCode.Success:
-                            // This callback. Instead of sending  event further.
-                            // Could attach in callback the call to update hud would be cleanest.
                             spawnRequestHeader.requestInfo.callback?.Invoke(response.EntityId.Value);
                             requestIdToPayload.Remove(response.RequestId);
                             break;

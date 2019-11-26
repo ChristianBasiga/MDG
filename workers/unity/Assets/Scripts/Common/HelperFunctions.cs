@@ -38,6 +38,11 @@ namespace MDG.Common
             return new Vector3f(unityVector.x, unityVector.y, unityVector.z);
         }
 
+        public static Coordinates CoordinatesFromUnityVector(Vector3 unityVector)
+        {
+            return new Coordinates(unityVector.x, unityVector.y, unityVector.z);
+        }
+
         public static float Slope(Vector3f p1, Vector3f p2)
         {
             return (p2.Z - p1.Z) / (p2.X - p1.X);

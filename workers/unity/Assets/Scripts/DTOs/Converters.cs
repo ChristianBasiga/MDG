@@ -55,7 +55,8 @@ namespace MDG.DTO
             return new WeaponMetadata
             {
                 attackCooldown = weapon.AttackCooldown,
-                weaponType = weapon.weaponType
+                weaponType = weapon.weaponType,
+                prefabName = weapon.PrefabPath
             };
         }
 

@@ -1,6 +1,7 @@
 ﻿using Improbable;
 using Improbable.Gdk.Subscriptions;
 using MDG.Common;
+using MDG.ScriptableObjects.Game;
 using UnityEngine;
 using PositionSchema = MdgSchema.Common.Position;
 
@@ -9,17 +10,17 @@ namespace MDG.Defender.Monobehaviours
     // Update this to be on body and reference camera.
     public class PlayerLook : MonoBehaviour
     {
-        [SerializeField] private string mouseXInput = "MouseX", mouseYInput = "MouseY";
-        [SerializeField] private float mouseSensitivty = 100.0f;
         [SerializeField] private GameObject playerCamera;
         public Transform crossHairs;
         [Require] PositionSchema.AngularVelocityWriter angularVelocityWriter = null;
 
+
         private float xAxisClamp;
-        [SerializeField]
-        private float cameraLookSpeed;
         private readonly float baseOffset = 360.0f;
-        private readonly float max = 40.0f;
+        private readonly float maxAngle = 30.0f;
+
+        DefenderConfig defenderConfig;
+        InputConfig inputConfig;
 
         private void Awake()
         {
@@ -40,6 +41,12 @@ namespace MDG.Defender.Monobehaviours
             };
         }
 
+
+        public void Init(DefenderConfig defenderConfig, InputConfig inputConfig)
+        {
+            this.inputConfig = inputConfig;
+            this.defenderConfig = defenderConfig;
+        }
         // Update is called once per frame
         void Update()
         {
@@ -64,36 +71,39 @@ namespace MDG.Defender.Monobehaviours
                 return;
             }
             //The angles of rotation.
-            float mouseX = Input.GetAxis(mouseXInput) * mouseSensitivty * Time.deltaTime;
-            float mouseY = Input.GetAxis(mouseYInput) * mouseSensitivty * Time.deltaTime;
+            float mouseX = Input.GetAxis(inputConfig.XMouseMovement) * defenderConfig.MouseSensitivty * Time.deltaTime;
+            float mouseY = Input.GetAxis(inputConfig.YMouseMovement) * defenderConfig.MouseSensitivty * Time.deltaTime;
 
             xAxisClamp += mouseY;
 
+            Debug.Log("xAxisClamp" + xAxisClamp);
+            // Stop wasting time on this, I need to help ben, and I also need to complet this.
+
             //Making sure we never moved more than 90 degrees in either direcion.
-            if (xAxisClamp > max)
+            if (xAxisClamp > maxAngle)
             {
-                xAxisClamp = max;
+                xAxisClamp = maxAngle;
                 mouseY = 0;
                 // As we may be slightly off due to it being floats, we may go past point we want to lock, so this forces it.
                 // 270 degrees in 90 degrees before full rotation on graph, ie: rotating fully up.
-                ClampXAxisRotation(baseOffset - max);
+                ClampXAxisRotation(baseOffset - maxAngle);
             }
-            else if (xAxisClamp < -max)
+            else if (xAxisClamp < -maxAngle)
             {
-                xAxisClamp = -max;
+                xAxisClamp = -maxAngle;
                 mouseY = 0;
                 //90 is rotating fully down, when aligned with y axis and in negative region.
-                ClampXAxisRotation(max);
+                ClampXAxisRotation(maxAngle);
             }
 
             // Hmm Ideally don't need camera to also be synced only part that does is animation down line
             // not hard to incorporate later
-            playerCamera.transform.Rotate(Vector3.left * mouseY * cameraLookSpeed );
+            playerCamera.transform.Rotate(Vector3.left * mouseY);
             //crossHairs.transform.RotateAround(playerCamera.transform.position, Vector3.left, mouseY);
 
             angularVelocityWriter.SendUpdate(new PositionSchema.AngularVelocity.Update
             {
-                AngularVelocity = HelperFunctions.Vector3fFromUnityVector(Vector3.up * mouseX / Time.deltaTime) * cameraLookSpeed
+                AngularVelocity = HelperFunctions.Vector3fFromUnityVector(Vector3.up * mouseX) *  defenderConfig.CameraMoveSpeed
             });
         }
 

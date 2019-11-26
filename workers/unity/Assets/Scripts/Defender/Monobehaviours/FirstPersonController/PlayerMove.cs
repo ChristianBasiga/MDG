@@ -1,27 +1,20 @@
 ﻿using Improbable.Gdk.Subscriptions;
 using MDG.Common;
+using MDG.ScriptableObjects.Game;
 using UnityEngine;
 using PositionSchema = MdgSchema.Common.Position;
 namespace MDG.Defender.Monobehaviours {
     
-    /* Todo
-     * Add Writer to Velocity component.
-     * 
-     * */
     public class PlayerMove : MonoBehaviour
     {
         public delegate void PlayerMoveHandler(Vector3 position, Vector3 rotation);
         public event PlayerMoveHandler OnPlayerMove;
 
-        [SerializeField] private string horizInputName = "Horizontal", vertInputName = "Vertical";
         [Require] PositionSchema.LinearVelocityWriter linearVelocityWriter = null;
-        // Start is called before the first frame update
-
-        [SerializeField]
-        public int speed = 100;
-
-        //To be that accurate overtime and keep smooth is rough to do from scratch.
         [SerializeField] private AnimationCurve jumpFallOff;
+
+        private InputConfig inputConfig;
+        private DefenderConfig defenderConfig;
 
         /*private float timeInAir;
         private float jumpSpeed = 5.0f;
@@ -36,6 +29,12 @@ namespace MDG.Defender.Monobehaviours {
             };
         }
 
+        public void Init(DefenderConfig defenderConfig, InputConfig inputConfig)
+        {
+            this.defenderConfig = defenderConfig;
+            this.inputConfig = inputConfig;
+        }
+
 
         // Update is called once per frame
         void Update()
@@ -47,8 +46,8 @@ namespace MDG.Defender.Monobehaviours {
         void PlayerMovement()
         {
 
-            float horizInput = Input.GetAxis(horizInputName);
-            float vertInput = Input.GetAxis(vertInputName);
+            float horizInput = Input.GetAxis(inputConfig.HorizontalAxis);
+            float vertInput = Input.GetAxis(inputConfig.VerticalAxis);
             Vector3 forwardMovement = transform.forward * vertInput;
             Vector3 rightMovement = transform.right * horizInput;
 
@@ -57,7 +56,7 @@ namespace MDG.Defender.Monobehaviours {
             // Need to figure out how apply this.
             linearVelocityWriter.SendUpdate(new PositionSchema.LinearVelocity.Update
             {
-                Velocity = HelperFunctions.Vector3fFromUnityVector(forwardMovement + rightMovement) * speed
+                Velocity = HelperFunctions.Vector3fFromUnityVector(forwardMovement + rightMovement) * defenderConfig.MovementSpeed
             });
 
             if (horizInput != 0 || vertInput != 0)

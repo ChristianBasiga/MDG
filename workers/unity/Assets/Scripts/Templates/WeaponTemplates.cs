@@ -16,7 +16,7 @@ namespace MDG.Templates
         // Passing in will be weapon type and wielder type. Could generate projectiles or whatever.
         // Will take in byte array that I'll deserialize accordingly. Is this extra for the time I have? Yes.
         public static EntityTemplate GetWeaponEntityTemplate(string workerId, WeaponSchema.WeaponType weaponType, EntityId wielder,
-            byte[] specificArguments)
+            string prefabName, byte[] specificArguments)
         {
             string clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
             string serverAttribute = UnityGameLogicConnector.WorkerType;
@@ -27,7 +27,7 @@ namespace MDG.Templates
             {
                 case WeaponSchema.WeaponType.Projectile:
                     ProjectileConfig projectileConfig = Converters.DeserializeArguments<ProjectileConfig>(specificArguments);
-                    AddProjectileComponents(clientAttribute, template, wielder, projectileConfig);
+                    AddProjectileComponents(clientAttribute, template, wielder, prefabName, projectileConfig);
                     break;
             }
 
@@ -44,7 +44,7 @@ namespace MDG.Templates
         }
 
         private static void AddProjectileComponents(string clientAttribute, EntityTemplate template,
-            EntityId wielder, ProjectileConfig projectileConfig)
+            EntityId wielder, string prefabName, ProjectileConfig projectileConfig)
         {
             CommonTemplates.AddRequiredGameEntityComponents(template, projectileConfig.startingPosition,
                 MdgSchema.Common.GameEntityTypes.Weapon, projectileConfig.projectileId);
@@ -54,7 +54,7 @@ namespace MDG.Templates
                 BaseDamage = projectileConfig.damage,
                 Durability = projectileConfig.maximumHits,
                 WielderId = wielder,
-                WeaponId = projectileConfig.projectileId,
+                WeaponId = prefabName,
                 WeaponType = WeaponSchema.WeaponType.Projectile
             }, UnityGameLogicConnector.WorkerType);
 
