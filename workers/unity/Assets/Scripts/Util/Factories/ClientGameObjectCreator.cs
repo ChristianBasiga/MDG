@@ -96,6 +96,7 @@ namespace MDG
             var hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
 
             Debug.Log($"creating {metaData.EntityType}");
+            // Prob switch on game entity type.
             if (metaData.EntityType.Equals("Player"))
             {
                 string pathToPlayer = pathToEntity;
@@ -222,6 +223,10 @@ namespace MDG
             {
                 // Don't neccessarily need to create prefabfor this, maybe down line, but just being within area is fine for testing.
                 //pathToEntity = $"{pathToEntity}/Territories/${}"
+            }
+            else if (metaData.EntityType.Equals("Structure"))
+            {
+
             }
             else
             {

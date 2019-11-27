@@ -10,6 +10,7 @@ using Improbable.Gdk.Core;
 // make testing UI alot easier as well as making these specific instances much more scalalbe.
 namespace MDG.DTO
 {
+    // Refactor these later.
     [Serializable]
     public class StructureConfig
     {
@@ -27,5 +28,11 @@ namespace MDG.DTO
     public class ClaimConfig : StructureConfig
     {
         public EntityId territoryId;
+    }
+
+    [Serializable]
+    public class TrapConfig : StructureConfig
+    {
+        public string trapId;
     }
 }

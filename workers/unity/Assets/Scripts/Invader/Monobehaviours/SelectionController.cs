@@ -29,6 +29,7 @@ namespace MDG.Invader.Monobehaviours
         }
         void Update()
         {
+            // Later on replace this with input config as well, not priority though.
             if (Input.GetMouseButtonDown(0))
             {
                 startSelection = Input.mousePosition;

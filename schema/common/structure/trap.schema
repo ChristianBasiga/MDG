@@ -1,0 +1,7 @@
+package mdg_schema.common.structure;
+
+component Trap
+{
+    id = 954;
+    string trap_id = 1;
+}

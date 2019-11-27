@@ -20,11 +20,13 @@ namespace MDG.Templates
             {
                 case StructureSchema.StructureType.Spawning:
                     GetSpawnStructureTemplate(entityTemplate, Converters.DeserializeArguments<SpawnStructureConfig>(structureArgs), serverAttribute);
-                break;
-
+                    break;
                 case StructureSchema.StructureType.Claiming:
-                    GetClaimStructureTempalte(entityTemplate, Converters.DeserializeArguments<ClaimConfig>(structureArgs), serverAttribute);
-                break;
+                    GetClaimStructureTemplate(entityTemplate, Converters.DeserializeArguments<ClaimConfig>(structureArgs), serverAttribute);
+                    break;
+                case StructureSchema.StructureType.Trap:
+                    GetTrapStructureTemplate(entityTemplate, Converters.DeserializeArguments<TrapConfig>(structureArgs), serverAttribute);
+                    break;
             }
 
             entityTemplate.AddComponent(new StructureSchema.StructureMetadata.Snapshot
@@ -50,12 +52,19 @@ namespace MDG.Templates
             }, serverAttribute);
         }
 
-        private static void GetClaimStructureTempalte(EntityTemplate template, ClaimConfig claimConfig, string serverAttribute)
+        private static void GetClaimStructureTemplate(EntityTemplate template, ClaimConfig claimConfig, string serverAttribute)
         {
             template.AddComponent(new StructureSchema.ClaimStructure.Snapshot{
                 TerritoryClaiming = claimConfig.territoryId
             }, serverAttribute);
         }
 
+        private static void GetTrapStructureTemplate(EntityTemplate template, TrapConfig trapConfig, string serverAttribute)
+        {
+            template.AddComponent(new StructureSchema.Trap.Snapshot
+            {
+                TrapId = trapConfig.trapId,
+            }, serverAttribute);
+        }
     }
 }
