@@ -4,13 +4,12 @@ package mdg_schema.common;
 // specific resources & specific buildings.
 enum GameEntityTypes{
     Hunted = 1;
-    Hunter = 3;
-    Unit = 4;
-    Invalid = 5;
-    Resource = 6;
-    Structure = 7;
-    Weapon = 8;
-    Territory = 9;
+    Hunter = 2;
+    Unit = 3;
+    Resource = 4;
+    Structure = 5;
+    Weapon = 6;
+    Territory = 7;
 }
 
 component GameMetadata{

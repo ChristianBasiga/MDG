@@ -27,6 +27,7 @@ using MDG.Common;
 
 namespace MDG
 {
+    // Note: Refactor this to use pool later.
 
     /// <summary>
     /// This creates corresponding game object to entity, as well as adds any extra ECS components
@@ -151,6 +152,7 @@ namespace MDG
                             }, null, Converters.SerializeArguments<UnitConfig>(unitConfig));
                         }
                         /* systems not being added during here. Hmm.
+                        // Add event to add systems to world accordingly
                         spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.SelectionSystem>();
                         spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.CommandGiveSystem>();
                         spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.CommandUpdateSystem>();
