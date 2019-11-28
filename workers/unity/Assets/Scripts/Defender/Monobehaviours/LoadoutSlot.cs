@@ -11,13 +11,15 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         Image selectedIndicator;
         Image itemImage;
-
+        Text costText;
+       
 
         public bool Selected { private set; get; }
        
         public void SetItem(ScriptableStructures.Trap trap)
         {
             itemImage.gameObject.SetActive(true);
+            costText.text = trap.Cost.ToString();
             itemImage.sprite = trap.Thumbnail;
         }
 
@@ -36,12 +38,19 @@ namespace MDG.Defender.Monobehaviours
         public void Toggle(bool selected)
         {
             selectedIndicator.gameObject.SetActive(selected);
+            Selected = true;
         }
 
         private void Awake()
         {
             itemImage = transform.Find("ItemImage").GetComponent<Image>();
             selectedIndicator = transform.Find("SelectedIndicator").GetComponent<Image>();
+            costText = transform.Find("CostText").GetComponent<Text>();
+        }
+
+        private void Start()
+        {
+            selectedIndicator.gameObject.SetActive(false);
         }
     }
 }

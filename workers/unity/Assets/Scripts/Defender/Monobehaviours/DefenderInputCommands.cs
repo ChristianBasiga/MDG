@@ -24,6 +24,7 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         LoadoutSlot[] loadoutSlots;
 
+        int selectedSlot = 0;
         ScriptableStructures.Trap[] traps;
         // Start is called before the first frame update
         void Start()
@@ -32,10 +33,22 @@ namespace MDG.Defender.Monobehaviours
             GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
 
             // FOr now just load in all traps and set it.
-            traps = Resources.LoadAll("ScriptableObjects/Traps") as ScriptableStructures.Trap[];
-            for (int i = 0; i < traps.Length; ++i)
+            Object[] traps = Resources.LoadAll("ScriptableObjects/Traps");
+            if (traps != null)
             {
-                loadoutSlots[i].SetItem(traps[i]);
+                this.traps = new ScriptableStructures.Trap[traps.Length]; 
+                for (int i = 0; i < traps.Length; ++i)
+                {
+                    ScriptableStructures.Trap loadedInTrap = traps[i] as ScriptableStructures.Trap;
+                    Debug.Log(loadedInTrap);
+                    loadoutSlots[i].SetItem(loadedInTrap);
+                    this.traps[i] = loadedInTrap;
+                }
+                loadoutSlots[0].Toggle(true);
+            }
+            else
+            {
+                Debug.LogError("Failed to load traps");
             }
         }
 
@@ -48,17 +61,22 @@ namespace MDG.Defender.Monobehaviours
         void Update()
         {
 
-            for (int i = 0; i <= loadoutSlots.Length; ++i)
+            for (int i = 0; i < loadoutSlots.Length; ++i)
             {
-                loadoutSlots[i].Toggle(Input.GetKeyDown((i + 1).ToString()));
+                bool selectionMade = Input.GetKeyDown((i + 1).ToString());
+                if (selectionMade && i != selectedSlot)
+                {
+                    loadoutSlots[selectedSlot].Toggle(false);
+                    loadoutSlots[i].Toggle(true);
+                    selectedSlot = i;
+                }
             }
-
 
             if (Input.GetAxis(inputConfig.LeftClickAxis) != 0)
             {
                 shooter.SpawnBullet();
             }
-            else if (Input.GetAxis(inputConfig.RightClickAxis) != 0)
+            if (Input.GetAxis(inputConfig.RightClickAxis) != 0)
             {
                 TryPlaceTrap();
             }
@@ -66,8 +84,9 @@ namespace MDG.Defender.Monobehaviours
 
         void TryPlaceTrap()
         {
-            ScriptableStructures.Trap selected = traps[0];
-            for (int i = 0; i < loadoutSlots.Length; ++i)
+            ScriptableStructures.Trap selected = null;
+            /*
+            for (int i = 0; i < loadoutSlots.Length && i < traps.Length; ++i)
             {
                 if (loadoutSlots[i].Selected)
                 {
@@ -76,6 +95,11 @@ namespace MDG.Defender.Monobehaviours
                 }
             }
 
+            if (selected == null)
+            {
+                Debug.Log("Nothing has been selected");
+                return;
+            }
             if (pointReader.Data.Value < selected.Cost)
             {
                 // Should be thrown as erro then caught by hud instead
@@ -84,7 +108,7 @@ namespace MDG.Defender.Monobehaviours
             else
             {
                 PlaceTrap(selected);
-            }
+            }*/
         }
 
         void PlaceTrap(ScriptableStructures.Trap trap)

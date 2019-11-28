@@ -31,13 +31,6 @@ namespace MDG.Defender.Monobehaviours
             componentUpdateSystem = GetComponent<LinkedEntityComponent>().World.GetExistingSystem<ComponentUpdateSystem>();
             // Soo how should bullets be handled in ecs? I'm pretty sure they HAVE to be tempaltes.
             gameManagerEntityId = GameObject.FindGameObjectWithTag("GameManager").GetComponent<LinkedEntityComponent>().EntityId;
-
-            DefenderConfig defenderConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseDefenderConfig") as DefenderConfig;
-            InputConfig inputConfig = Resources.Load("ScriptableObjects/GameConfigs/MouseKeyInputConfig") as InputConfig;
-
-            GetComponent<PlayerLook>().Init(defenderConfig, inputConfig);
-            GetComponent<DefenderInputCommands>().Init(inputConfig);
-            GetComponent<PlayerMove>().Init(defenderConfig, inputConfig);
         }
 
         private void Update()
