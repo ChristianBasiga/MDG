@@ -7,10 +7,9 @@ namespace MDG.Defender.Monobehaviours
 {
     public class LoadoutSlot : MonoBehaviour
     {
-
+        // Fields set in editor.
+        [SerializeField]
         Image selectedIndicator;
-        Image defaultBackground;
-        Image currentBackground;
         Image itemImage;
 
 
@@ -36,15 +35,13 @@ namespace MDG.Defender.Monobehaviours
 
         public void Toggle(bool selected)
         {
-            Selected = selected;
-            if (selected)
-            {
-                currentBackground.sprite = selectedIndicator.sprite;
-            }
-            else
-            {
-                currentBackground.sprite = currentBackground.sprite;
-            }
+            selectedIndicator.gameObject.SetActive(selected);
+        }
+
+        private void Awake()
+        {
+            itemImage = transform.Find("ItemImage").GetComponent<Image>();
+            selectedIndicator = transform.Find("SelectedIndicator").GetComponent<Image>();
         }
     }
 }

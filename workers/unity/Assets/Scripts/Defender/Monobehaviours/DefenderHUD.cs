@@ -28,6 +28,8 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         Text errorText;
 
+        IEnumerator errorClearRoutine;
+
         // Start is called before the first frame update
         void Start()
         {
@@ -39,14 +41,34 @@ namespace MDG.Defender.Monobehaviours
             defenderSynchronizer.OnWinGame += DisplayWinGameUI;
             pointReader.OnValueUpdate += mainOverlayHUD.UpdatePoints;
             statsReader.OnHealthUpdate += UpdateHealthBar;
+            errorText.gameObject.SetActive(false);
         }
 
 
         // Need more granular way to do this.
         public void SetErrorText(string errorMsg)
         {
+            errorText.gameObject.SetActive(true);
             errorText.text = errorMsg;
+            if (errorClearRoutine == null)
+            {
+                errorClearRoutine = ClearError();
+                StartCoroutine(errorClearRoutine);
+            }
+            else
+            {
+                errorClearRoutine.Reset();
+            }
+
         }
+
+        IEnumerator ClearError()
+        {
+            yield return new WaitForSeconds(3.0f);
+            errorText.gameObject.SetActive(false);
+            errorClearRoutine = null;
+        }
+
 
         void UpdateHealthBar(int health)
         {
