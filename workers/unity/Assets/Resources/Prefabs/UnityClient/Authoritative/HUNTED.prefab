@@ -2225,6 +2225,7 @@ GameObject:
   - component: {fileID: 2551712303415243267}
   - component: {fileID: 4766110679049099297}
   - component: {fileID: 5722566590806495034}
+  - component: {fileID: 3842309053585260245}
   m_Layer: 0
   m_Name: HUNTED
   m_TagString: Player
@@ -2483,6 +2484,19 @@ MonoBehaviour:
   - {fileID: 1267397016002823288}
   - {fileID: 3718647463456299756}
   - {fileID: 6159782030515039756}
+--- !u!114 &3842309053585260245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4071108399794402137}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6930cf128017874f9687ea3bbb40f78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SelectionGrid: {fileID: 0}
 --- !u!1 &4111081282993250725
 GameObject:
   m_ObjectHideFlags: 0

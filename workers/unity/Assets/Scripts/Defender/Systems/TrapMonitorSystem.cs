@@ -9,6 +9,7 @@ using CollisionSchema = MdgSchema.Common.Collision;
 
 namespace MDG.Defender.Systems
 {
+    [DisableAutoCreation]
     public class TrapMonitorSystem : ComponentSystem
     {
 
@@ -52,8 +53,6 @@ namespace MDG.Defender.Systems
             };
             getTrapsJob.Schedule(trapQuery).Complete();
 
-            //
-            var collisionEvents = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.OnCollision.Event>();
         }
     }
 }

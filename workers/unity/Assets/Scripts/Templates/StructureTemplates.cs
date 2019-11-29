@@ -75,12 +75,14 @@ namespace MDG.Templates
             }, serverAttribute);
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {
-                Dimensions = trapConfig.ColliderDimensions
+                Dimensions = trapConfig.ColliderDimensions,
+                IsTrigger = true
             }, serverAttribute);
 
             template.AddComponent(new CollisionSchema.Collision.Snapshot
             {
-                Collisions = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>()
+                Collisions = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>(),
+                Triggers = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>()
             }, serverAttribute);
         }
     }

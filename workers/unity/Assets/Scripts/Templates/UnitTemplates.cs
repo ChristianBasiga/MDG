@@ -46,7 +46,8 @@ namespace MDG.Templates
 
             template.AddComponent(new CollisionSchema.Collision.Snapshot
             {
-                Collisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>()
+                Collisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>(),
+                Triggers = new Dictionary<EntityId, CollisionSchema.CollisionPoint>()
             }, serverAttribute);
 
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot

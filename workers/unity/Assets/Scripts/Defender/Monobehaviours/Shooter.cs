@@ -16,7 +16,7 @@ namespace MDG.Defender.Monobehaviours
     {
         SpawnRequestSystem spawnRequestSystem;
 
-        Weapon weapon;
+        public Weapon Weapon { private set; get; }
         Transform crossHairs;
         Transform shootOrigin;
 
@@ -28,10 +28,10 @@ namespace MDG.Defender.Monobehaviours
             shootOrigin = GameObject.Find("ShootOrigin").transform;
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
             GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
-            weapon = Resources.Load("ScriptableObjects/Weapons/DefenderProjectile") as Weapon;
+            Weapon = Resources.Load("ScriptableObjects/Weapons/DefenderProjectile") as Weapon;
         }
 
-        public void SpawnBullet()
+        public void Shoot()
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             // rest should be derived from scriptble object shooter has. For now setting here.
@@ -39,14 +39,14 @@ namespace MDG.Defender.Monobehaviours
             // is enugh.
             Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(crossHairs.position);
 
-            Projectile projectile = weapon as Projectile;
+            Projectile projectile = Weapon as Projectile;
             Vector3f bulletLinearVelocity = HelperFunctions.Vector3fFromUnityVector(crossHairs.forward) * projectile.ProjectileSpeed;
 
             ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(projectile);
             projectileConfig.startingPosition = bulletStartingPosition;
             projectileConfig.linearVelocity = bulletLinearVelocity;
 
-            WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(weapon);
+            WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(Weapon);
             weaponMetadata.wielderId = linkedEntityComponent.EntityId.Id;
 
             byte[] serializedWeapondata = Converters.SerializeArguments<ProjectileConfig>(projectileConfig);

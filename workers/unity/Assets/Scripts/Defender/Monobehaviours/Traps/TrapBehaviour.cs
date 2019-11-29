@@ -32,7 +32,7 @@ namespace MDG.Defender.Monobehaviours.Traps
             structureReader.OnJobCompleteEvent += OnJobComplete;
 
             //ew, woops.
-            collisionReader.OnOnCollisionEvent += OnTrapCollision;
+            collisionReader.OnCollisionHappenEvent += OnTrapCollision;
             linkedEntityComponent.Worker.TryGetEntity(linkedEntityComponent.EntityId, out Unity.Entities.Entity entity);
             structureMetadata = linkedEntityComponent.World.EntityManager.GetComponentData<StructureSchema.StructureMetadata.Component>(entity);
         }

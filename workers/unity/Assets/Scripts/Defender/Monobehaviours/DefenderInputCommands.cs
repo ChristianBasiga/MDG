@@ -18,6 +18,7 @@ namespace MDG.Defender.Monobehaviours
 {
     public class DefenderInputCommands : MonoBehaviour
     {
+        TrapPlacer trapPlacer;
         Shooter shooter;
         LinkedEntityComponent linkedEntityComponent;
         InputConfig inputConfig;
@@ -28,25 +29,25 @@ namespace MDG.Defender.Monobehaviours
         LoadoutSlot[] loadoutSlots;
 
         int selectedSlot = 0;
-        ScriptableStructures.Trap[] traps;
         // Start is called before the first frame update
         void Start()
         {
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             shooter = GetComponent<Shooter>();
+            trapPlacer = GetComponent<TrapPlacer>();
+
             GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
 
             // FOr now just load in all traps and set it.
             Object[] traps = Resources.LoadAll("ScriptableObjects/Traps");
             if (traps != null)
             {
-                this.traps = new ScriptableStructures.Trap[traps.Length]; 
                 for (int i = 0; i < traps.Length; ++i)
                 {
                     ScriptableStructures.Trap loadedInTrap = traps[i] as ScriptableStructures.Trap;
-                    loadoutSlots[i].SetItem(loadedInTrap);
-                    this.traps[i] = loadedInTrap;
+                    loadoutSlots[i + 1].SetItem(loadedInTrap);
                 }
+                loadoutSlots[0].SetItem(GetComponent<Shooter>().Weapon);
                 loadoutSlots[0].Toggle(true);
             }
             else
@@ -75,69 +76,38 @@ namespace MDG.Defender.Monobehaviours
                 }
             }
 
-            if (Input.GetAxis(inputConfig.LeftClickAxis) != 0)
+            if (Input.GetButtonDown(inputConfig.LeftClickAxis))
             {
-                shooter.SpawnBullet();
+                ProcessSelection();
             }
             if (Input.GetAxis(inputConfig.RightClickAxis) != 0)
             {
-                TryPlaceTrap();
+                //TryPlaceTrap();
             }
         }
 
-        void TryPlaceTrap()
+
+        void ProcessSelection()
         {
-            if (selectedSlot >= traps.Length)
+            LoadoutSlot selectedLoadoutSlot = loadoutSlots[selectedSlot];
+
+            switch (selectedLoadoutSlot.SlotType)
             {
-                Debug.Log("Here???");
-                GetComponent<DefenderHUD>().SetErrorText("Nothing has been selected");
-            }
-            else
-            {
-                ScriptableStructures.Trap selected = traps[selectedSlot];
-                if (pointReader.Data.Value < selected.Cost)
-                {
-                    // Should be thrown as erro then caught by hud instead
-                    GetComponent<DefenderHUD>().SetErrorText("Not enough points");
-                }
-                else
-                {
-                    PointRequestSystem pointRequestSystem = linkedEntityComponent.World.GetExistingSystem<PointRequestSystem>();
-                    pointRequestSystem.AddPointRequest(new PointRequest
-                    {
-                        EntityUpdating = linkedEntityComponent.EntityId,
-                        PointUpdate = -selected.Cost
-                    });
-                    PlaceTrap(selected);
-                }
+                case LoadoutSlot.SlotOptions.Weapon:
+                    // More later.
+                    shooter.Shoot();
+                    break;
+                case LoadoutSlot.SlotOptions.Trap:
+                    // Slots should be interchangable so as it is not really built for that
+                    // unless I store it in the slot itself. Which is feasible.
+
+                    // Traps will be one off loadout slots due to weapon. 
+                    //trapPlacer.TryPlaceTrap(traps[selectedSlot - 1]);
+                    trapPlacer.TryPlaceTrap(selectedLoadoutSlot.Trap);
+                    break;
             }
         }
 
-        void PlaceTrap(ScriptableStructures.Trap trap)
-        {
-            SpawnRequestSystem spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
-            
-            TrapConfig trapConfig = new TrapConfig
-            {
-                trapId = trap.PrefabPath,
-                Damage = trap.Damage,
-                structureType = MdgSchema.Common.Structure.StructureType.Trap,
-                ColliderDimensions = HelperFunctions.Vector3fFromUnityVector(trap.ColliderDimensions),
-                constructionTime = trap.SetupTime,
-            };
-            // How i get this position prod needs to change.
-            Vector3 worldCoords = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector3f trapPosition = new Vector3f(worldCoords.x, 10, worldCoords.z);
-            spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
-            {
-                Position = trapPosition,
-                TypeToSpawn = MdgSchema.Common.GameEntityTypes.Structure,
-            }, OnTrapSpawned, Converters.SerializeArguments(trapConfig));
-        }
-
-        public void OnTrapSpawned(EntityId entityId) 
-        {
-            Debug.Log($"Spawned trap with entity id = {entityId}");
-        }
+        
     }
 }

@@ -110,10 +110,13 @@ namespace MDG.Common.Systems.Collision
             {
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> previousCollisions = collisionComponent.Collisions;
                 Dictionary<EntityId, CollisionSchema.CollisionPoint> newCollisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>();
+
+                Dictionary<EntityId, CollisionSchema.CollisionPoint> prevTriggers = collisionComponent.Triggers;
+                Dictionary<EntityId, CollisionSchema.CollisionPoint> newTriggers = new Dictionary<EntityId, CollisionSchema.CollisionPoint>();
                 List<QuadNode> potentialCollisions = positionSystem.querySpatialPartition(entityTransform.Position);
                 //Theoritically could jobify this loop I think.
                 foreach (QuadNode potentialCollision in potentialCollisions)
-                {
+                { 
                     if (workerSystem.TryGetEntity(potentialCollision.entityId, out Entity entity) && EntityManager.HasComponent<CollisionSchema.BoxCollider.Component>(entity))
                     {
                         CollisionSchema.BoxCollider.Component otherBoxCollider = EntityManager.GetComponentData<CollisionSchema.BoxCollider.Component>(entity);
@@ -123,11 +126,24 @@ namespace MDG.Common.Systems.Collision
                             if (HelperFunctions.Intersect(potentialCollision.position - otherBoxCollider.Position, otherBoxCollider.Dimensions,
                                 entityTransform.Position - boxCollider.Position, boxCollider.Dimensions))
                             {
-                                newCollisions[potentialCollision.entityId] = new CollisionSchema.CollisionPoint
+                                // If other I collided with was trigger, it gets added to my triggers list.
+                                // else for example if I am trigger, non triggers goes in my colliders list.
+                                if (otherBoxCollider.IsTrigger)
                                 {
-                                    CollidingWith = potentialCollision.entityId,
-                                    Distance = potentialCollision.position - entityTransform.Position
-                                };
+                                    newTriggers[potentialCollision.entityId] = new CollisionSchema.CollisionPoint
+                                    {
+                                        CollidingWith = potentialCollision.entityId,
+                                        Distance = potentialCollision.position - entityTransform.Position
+                                    };
+                                }
+                                else
+                                {
+                                    newCollisions[potentialCollision.entityId] = new CollisionSchema.CollisionPoint
+                                    {
+                                        CollidingWith = potentialCollision.entityId,
+                                        Distance = potentialCollision.position - entityTransform.Position
+                                    };
+                                }
                             }
                             else
                             {
@@ -135,14 +151,21 @@ namespace MDG.Common.Systems.Collision
                             }
                         }
 
-
                         if (newCollisions.Count > 0)
                         {
-                            componentUpdateSystem.SendEvent(new CollisionSchema.Collision.OnCollision.Event(new CollisionSchema.CollisionEventPayload
+                            componentUpdateSystem.SendEvent(new CollisionSchema.Collision.CollisionHappen.Event(new CollisionSchema.CollisionEventPayload
                             {
                                 CollidedWith = newCollisions
                             }), spatialEntityId.EntityId);
                         }
+                        if (newTriggers.Count > 0)
+                        {
+                            componentUpdateSystem.SendEvent(new CollisionSchema.Collision.TriggerHappen.Event(new CollisionSchema.CollisionEventPayload
+                            {
+                                CollidedWith = newTriggers
+                            }), spatialEntityId.EntityId);
+                        }
+                        collisionComponent.Triggers = newTriggers;
                         collisionComponent.Collisions = newCollisions;
                     }
                 }

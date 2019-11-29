@@ -165,6 +165,7 @@ GameObject:
   - component: {fileID: 5338896855398986366}
   - component: {fileID: 1135165568990295210}
   - component: {fileID: 5159809085012641639}
+  - component: {fileID: -6194306666198491414}
   m_Layer: 0
   m_Name: SpikeTrap
   m_TagString: Untagged
@@ -211,6 +212,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c885d8c83c3c46442af0a716c1c939ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-6194306666198491414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8956757783640227949}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c025beae939ba54a91a665f7c624431, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &9149711739066230354

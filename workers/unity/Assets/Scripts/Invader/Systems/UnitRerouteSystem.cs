@@ -178,7 +178,7 @@ namespace MDG.Invader.Systems
             framesSinceUpdate = 0;
 
             #region Processing Collision Events
-            var events = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.OnCollision.Event>();
+            var events = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.CollisionHappen.Event>();
             Queue<ScheduleRedirectJobInfo> scheduledJobs = new Queue<ScheduleRedirectJobInfo>();
             Dictionary<EntityId, NativeQueue<Vector3f>> entityIdToPotentialRedirects = new Dictionary<EntityId, NativeQueue<Vector3f>>();
             Dictionary<EntityId, NativeQueue<Vector3f>> allPotentialReroutes = new Dictionary<EntityId, NativeQueue<Vector3f>>();
