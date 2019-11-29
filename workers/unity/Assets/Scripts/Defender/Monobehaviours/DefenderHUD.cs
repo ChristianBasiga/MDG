@@ -28,7 +28,10 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         Text errorText;
 
+        bool newErrorPassed = false;
+        string text;
         IEnumerator errorClearRoutine;
+
 
         // Start is called before the first frame update
         void Start()
@@ -55,16 +58,20 @@ namespace MDG.Defender.Monobehaviours
                 errorClearRoutine = ClearError();
                 StartCoroutine(errorClearRoutine);
             }
-            else
-            {
-                errorClearRoutine.Reset();
-            }
-
         }
 
         IEnumerator ClearError()
         {
-            yield return new WaitForSeconds(3.0f);
+            float timePassed = 0;
+            while (timePassed < 1.0f)
+            {
+                timePassed += Time.deltaTime;
+                if (newErrorPassed)
+                {
+                    timePassed = 0;
+                }
+                yield return null;
+            }
             errorText.gameObject.SetActive(false);
             errorClearRoutine = null;
         }

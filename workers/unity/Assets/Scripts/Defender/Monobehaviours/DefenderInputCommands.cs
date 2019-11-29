@@ -1,7 +1,9 @@
 ﻿using Improbable;
 using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
+using MDG.Common;
 using MDG.Common.MonoBehaviours;
+using MDG.Common.Systems.Point;
 using MDG.Common.Systems.Spawn;
 using MDG.DTO;
 using MDG.ScriptableObjects.Game;
@@ -17,6 +19,7 @@ namespace MDG.Defender.Monobehaviours
     public class DefenderInputCommands : MonoBehaviour
     {
         Shooter shooter;
+        LinkedEntityComponent linkedEntityComponent;
         InputConfig inputConfig;
 
         [Require] PointReader pointReader = null;
@@ -29,6 +32,7 @@ namespace MDG.Defender.Monobehaviours
         // Start is called before the first frame update
         void Start()
         {
+            linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             shooter = GetComponent<Shooter>();
             GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
 
@@ -40,7 +44,6 @@ namespace MDG.Defender.Monobehaviours
                 for (int i = 0; i < traps.Length; ++i)
                 {
                     ScriptableStructures.Trap loadedInTrap = traps[i] as ScriptableStructures.Trap;
-                    Debug.Log(loadedInTrap);
                     loadoutSlots[i].SetItem(loadedInTrap);
                     this.traps[i] = loadedInTrap;
                 }
@@ -84,47 +87,44 @@ namespace MDG.Defender.Monobehaviours
 
         void TryPlaceTrap()
         {
-            ScriptableStructures.Trap selected = null;
-            /*
-            for (int i = 0; i < loadoutSlots.Length && i < traps.Length; ++i)
+            if (selectedSlot >= traps.Length)
             {
-                if (loadoutSlots[i].Selected)
-                {
-                    selected = traps[i];
-                    break;
-                }
-            }
-
-            if (selected == null)
-            {
-                Debug.Log("Nothing has been selected");
-                return;
-            }
-            if (pointReader.Data.Value < selected.Cost)
-            {
-                // Should be thrown as erro then caught by hud instead
-                GetComponent<DefenderHUD>().SetErrorText("Not enough points");
+                Debug.Log("Here???");
+                GetComponent<DefenderHUD>().SetErrorText("Nothing has been selected");
             }
             else
             {
-                PlaceTrap(selected);
-            }*/
+                ScriptableStructures.Trap selected = traps[selectedSlot];
+                if (pointReader.Data.Value < selected.Cost)
+                {
+                    // Should be thrown as erro then caught by hud instead
+                    GetComponent<DefenderHUD>().SetErrorText("Not enough points");
+                }
+                else
+                {
+                    PointRequestSystem pointRequestSystem = linkedEntityComponent.World.GetExistingSystem<PointRequestSystem>();
+                    pointRequestSystem.AddPointRequest(new PointRequest
+                    {
+                        EntityUpdating = linkedEntityComponent.EntityId,
+                        PointUpdate = -selected.Cost
+                    });
+                    PlaceTrap(selected);
+                }
+            }
         }
 
         void PlaceTrap(ScriptableStructures.Trap trap)
         {
-            SpawnRequestSystem spawnRequestSystem = GetComponent<LinkedEntityComponent>().World.GetExistingSystem<SpawnRequestSystem>();
+            SpawnRequestSystem spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
             
-            // Idk if traps should be structures by their nature.
-            // like the 'job' structure is kind of a stretch lol.
-            // just let it do animation.
             TrapConfig trapConfig = new TrapConfig
             {
                 trapId = trap.PrefabPath,
+                Damage = trap.Damage,
                 structureType = MdgSchema.Common.Structure.StructureType.Trap,
+                ColliderDimensions = HelperFunctions.Vector3fFromUnityVector(trap.ColliderDimensions),
                 constructionTime = trap.SetupTime,
             };
-
             // How i get this position prod needs to change.
             Vector3 worldCoords = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector3f trapPosition = new Vector3f(worldCoords.x, 10, worldCoords.z);

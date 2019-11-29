@@ -10,6 +10,8 @@ using Unity.Jobs;
 
 namespace MDG.Common.Systems.Structure
 {
+    [DisableAutoCreation]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class StructureMonitorSystem : ComponentSystem
     {
         EntityQuery runningJobQuery;
@@ -155,9 +157,9 @@ namespace MDG.Common.Systems.Structure
             float deltaTime = Time.deltaTime;
 
 
-            NativeHashMap<EntityId, StructureComponents.BuildingComponent> constructingStructures = new NativeHashMap<EntityId, StructureComponents.BuildingComponent>(
-                    notConstructingQuery.CalculateEntityCount(), 
-                    Allocator.TempJob);
+         //   NativeHashMap<EntityId, StructureComponents.BuildingComponent> constructingStructures = new NativeHashMap<EntityId, StructureComponents.BuildingComponent>(
+           //         notConstructingQuery.CalculateEntityCount(), 
+             //       Allocator.TempJob);
 
 
             NativeQueue<JobEventPayloadHeader> jobsToSendEventsFor = new NativeQueue<JobEventPayloadHeader>(Allocator.TempJob);
@@ -176,6 +178,7 @@ namespace MDG.Common.Systems.Structure
 
             JobHandle tickJobsHandle = tickActiveJobsJob.Schedule(runningJobQuery);
             NativeQueue<ConstructionPayloadHeader> constructionsToSendEventsFor = new NativeQueue<ConstructionPayloadHeader>(Allocator.TempJob);
+            tickJobsHandle.Complete();
 
             // I make this last the longest but it is significantly smallet set executing on than ticking.
             // May not be able to actually run this together due to both using command buffer.
@@ -183,7 +186,10 @@ namespace MDG.Common.Systems.Structure
             {
                 entityCommandBuffer = PostUpdateCommands.ToConcurrent()
             };
+
+
             JobHandle startConstructionJobHandle = startConstructingStructuresJob.Schedule(notConstructingQuery);
+            startConstructionJobHandle.Complete();
 
 
             NativeHashMap<EntityId, int> structureIdToBuildSpeed = ProcessBuildRequests();
@@ -195,7 +201,6 @@ namespace MDG.Common.Systems.Structure
             };
 
             JobHandle tickConstructionJobHandle = tickConstructionJob.Schedule(constructingQuery);
-            tickJobsHandle.Complete();
 
             #endregion
 
@@ -236,7 +241,6 @@ namespace MDG.Common.Systems.Structure
 
             #endregion
 
-            startConstructionJobHandle.Complete();
             constructionsToSendEventsFor.Dispose();
             structureIdToBuildSpeed.Dispose();
         }

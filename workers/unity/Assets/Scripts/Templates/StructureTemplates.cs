@@ -2,14 +2,14 @@
 using Improbable.Gdk.Core;
 using InventorySchema = MdgSchema.Common.Inventory;
 using StructureSchema = MdgSchema.Common.Structure;
+using CollisionSchema = MdgSchema.Common.Collision;
 using MDG.DTO;
 
 namespace MDG.Templates
 {
     class StructureTemplates
     {
-
-        public static EntityTemplate GetStructureTemplate(string clientWorkerId, byte[] structureArgs)
+        public static EntityTemplate GetStructureTemplate(string clientWorkerId, byte[] structureArgs, Vector3f position)
         {
             string serverAttribute = UnityGameLogicConnector.WorkerType;
             EntityTemplate entityTemplate = new EntityTemplate();
@@ -29,6 +29,13 @@ namespace MDG.Templates
                     break;
             }
 
+            CommonTemplates.AddRequiredSpatialComponents(entityTemplate, "Structure");
+            CommonTemplates.AddRequiredGameEntityComponents(entityTemplate, position, MdgSchema.Common.GameEntityTypes.Structure);
+
+            entityTemplate.SetComponent(new Position.Snapshot
+            {
+                Coords = new Coordinates(position.X, position.Y, position.Z)
+            });
             entityTemplate.AddComponent(new StructureSchema.StructureMetadata.Snapshot
             {
                 StructureType = structureConfig.structureType,
@@ -64,6 +71,16 @@ namespace MDG.Templates
             template.AddComponent(new StructureSchema.Trap.Snapshot
             {
                 TrapId = trapConfig.trapId,
+                Damage = trapConfig.Damage
+            }, serverAttribute);
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                Dimensions = trapConfig.ColliderDimensions
+            }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.Collision.Snapshot
+            {
+                Collisions = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>()
             }, serverAttribute);
         }
     }

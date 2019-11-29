@@ -218,7 +218,7 @@ namespace MDG.Common.Systems.Spawn
                     case CommonSchema.GameEntityTypes.Structure:
                         requestId = commandSystem.SendCommand(
                            new WorldCommands.CreateEntity.Request(
-                               EntityTemplates.StructureTemplates.GetStructureTemplate(workerSystem.WorkerId, request.spawnMetaData)));
+                               EntityTemplates.StructureTemplates.GetStructureTemplate(workerSystem.WorkerId, request.spawnMetaData, request.payload.Position)));
                         break;
                         
                 }

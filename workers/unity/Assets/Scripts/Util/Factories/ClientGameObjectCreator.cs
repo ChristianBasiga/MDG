@@ -12,6 +12,7 @@ using MDG.Invader.Components;
 using MDG.Invader.Commands;
 using UnitSchema = MdgSchema.Units;
 using WeaponSchema = MdgSchema.Common.Weapon;
+using StructureSchema = MdgSchema.Common.Structure;
 using MdgSchema.Common;
 using Unity.Transforms;
 using Unity.Rendering;
@@ -226,7 +227,16 @@ namespace MDG
             }
             else if (metaData.EntityType.Equals("Structure"))
             {
-
+                string structurePath = $"{pathToEntity}/Structures";
+                StructureSchema.StructureMetadata.Component structureMetaData = entity.GetComponent<StructureSchema.StructureMetadata.Component>();
+                switch (structureMetaData.StructureType)
+                {
+                    case StructureSchema.StructureType.Trap:
+                        StructureSchema.Trap.Component trapComponent = entity.GetComponent<StructureSchema.Trap.Component>();
+                        string trapPath = $"{structurePath}/Traps/{trapComponent.TrapId}";
+                        CreateEntityObject(entity, linker, trapPath);
+                        break;
+                }
             }
             else
             {

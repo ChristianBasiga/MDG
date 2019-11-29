@@ -11,5 +11,7 @@ namespace MDG.ScriptableObjects.Structures
         public string PrefabPath;
         public int Cost;
         public int SetupTime;
+        public int Damage;
+        public Vector3 ColliderDimensions;
     }
 }

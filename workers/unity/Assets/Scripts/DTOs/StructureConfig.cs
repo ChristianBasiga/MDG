@@ -4,13 +4,14 @@ using UnityEngine;
 using System;
 using StructureSchema = MdgSchema.Common.Structure;
 using Improbable.Gdk.Core;
+using Improbable;
 
-// Move these comments to read me of dtos.
-// Move all DTOs to be scriptable objects instead.
-// make testing UI alot easier as well as making these specific instances much more scalalbe.
 namespace MDG.DTO
 {
-    // Refactor these later.
+
+    // Tbh what I'm doing is going from scriptable object, to dtos, to bytes, to dtos on server side
+    // to apply config. But config IS essentially the scriptable object minus sprite, etc. Actually with that 
+    // in mind, this is fine. Configs have only what's needed to create template.
     [Serializable]
     public class StructureConfig
     {
@@ -34,5 +35,7 @@ namespace MDG.DTO
     public class TrapConfig : StructureConfig
     {
         public string trapId;
+        public int Damage;
+        public Vector3f ColliderDimensions;
     }
 }

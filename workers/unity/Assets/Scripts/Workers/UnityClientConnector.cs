@@ -71,7 +71,6 @@ namespace MDG
             Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
             Worker.World.GetOrCreateSystem<PointRequestSystem>();
             Worker.World.GetOrCreateSystem<WeaponSystem>();
-            Worker.World.GetOrCreateSystem<StructureMonitorSystem>();
             //Invader systems.
             Worker.World.GetOrCreateSystem<SelectionSystem>();
             Worker.World.GetOrCreateSystem<CommandGiveSystem>();

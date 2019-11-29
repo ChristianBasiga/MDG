@@ -77,7 +77,7 @@ namespace MDG.Common.Systems.Point
                         switch (response.StatusCode)
                         {
                             case Improbable.Worker.CInterop.StatusCode.Success:
-                                pointRequest.callback.Invoke(response);
+                                pointRequest.callback?.Invoke(response);
                                 break;
                             case Improbable.Worker.CInterop.StatusCode.Timeout:
                                 // Requeue.
