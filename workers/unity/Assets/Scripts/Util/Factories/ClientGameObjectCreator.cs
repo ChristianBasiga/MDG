@@ -25,6 +25,7 @@ using MDG.Templates;
 using MDG.DTO;
 using GameScriptableObjects = MDG.ScriptableObjects.Game;
 using MDG.Common;
+using MDG.Common.MonoBehaviours;
 
 namespace MDG
 {
@@ -136,6 +137,7 @@ namespace MDG
                             for (int i = 0; i < initialInvaderUnitPositions.Count; ++i)
                         {
 
+                            Debug.Log(initialInvaderUnitPositions[i]);
                             UnitConfig unitConfig = new UnitConfig
                             {
                                 ownerId = entity.SpatialOSEntityId.Id,
@@ -227,13 +229,16 @@ namespace MDG
             }
             else if (metaData.EntityType.Equals("Structure"))
             {
-                string structurePath = $"{pathToEntity}/Structures";
+                string structurePath =  hasAuthority ? $"{pathToEntity}/Authoritative/Structures" : $"{pathToEntity}/Structures";
                 StructureSchema.StructureMetadata.Component structureMetaData = entity.GetComponent<StructureSchema.StructureMetadata.Component>();
                 switch (structureMetaData.StructureType)
                 {
                     case StructureSchema.StructureType.Trap:
                         StructureSchema.Trap.Component trapComponent = entity.GetComponent<StructureSchema.Trap.Component>();
                         string trapPath = $"{structurePath}/Traps/{trapComponent.TrapId}";
+                        WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
+                        worker.TryGetEntity(entity.SpatialOSEntityId, out Entity trapEntity);
+                        Templates.StructureArchtypes.AddStructureArchtype(_world.EntityManager, trapEntity, hasAuthority);
                         CreateEntityObject(entity, linker, trapPath);
                         break;
                 }
@@ -254,7 +259,12 @@ namespace MDG
 
             if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObject))
             {
-                linkedGameObject.SetActive(false);
+                // Perhaps custom death and / or death behaviour that plays specific animation.
+                // Or both. Regardless doesn't just make it dissapear.
+                if (linkedGameObject.GetComponent<HealthSynchronizer>() == null)
+                {
+                    linkedGameObject.SetActive(false);
+                }
             }
             EntityToGameObjects.Remove(entityId);
             OnEntityDeleted?.Invoke(entityId);

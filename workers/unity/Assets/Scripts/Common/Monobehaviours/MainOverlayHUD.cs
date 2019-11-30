@@ -29,7 +29,7 @@ namespace MDG.Common.MonoBehaviours
         private void Start()
         {
             roleSelectionUI = GameObject.Find("RoleSelectionUI");
-            gameStatusHUD = GameObject.Find("GameStatusHUD");
+            gameStatusHUD = GameObject.Find("GameStatusCanvas");
             exitGameButton = GameObject.Find("LeaveGame").GetComponent<Button>();
             endGameText = gameStatusHUD.transform.GetChild(0).Find("EndGameText").GetComponent<Text>();
             timerText = gameStatusHUD.transform.GetChild(0).Find("Timer").GetComponent<Text>();

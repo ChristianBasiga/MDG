@@ -47,7 +47,6 @@ namespace MDG.Common.Systems.Point
                 EntityId entityId = spatialEntityId.EntityId;
                 IEnumerable<PointRequestPayload> pointRequestPayloads = pointRequests.Where((PointRequestPayload p) =>
                 {
-                    UnityEngine.Debug.Log(p.payload.EntityUpdating.Equals(entityId));
                     return p.payload.EntityUpdating.Equals(entityId);
                 });
 

@@ -133,10 +133,10 @@ RectTransform:
   m_Father: {fileID: 4772236845133816421}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 60, y: -25}
+  m_SizeDelta: {x: 100, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5269232021076753113
 CanvasRenderer:
@@ -229,8 +229,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5ba2a4d61d35fc45b2146807f4c551b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  worldWidth: 1000
-  worldHeight: 1000
 --- !u!114 &1010388938218021553
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -337,7 +335,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4772236845133816421}
   - component: {fileID: 6008877866431262700}
-  - component: {fileID: 6259396836696301750}
   m_Layer: 0
   m_Name: UnitCountPanel
   m_TagString: Untagged
@@ -373,30 +370,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1964487893843593026}
   m_CullTransparentMesh: 0
---- !u!114 &6259396836696301750
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1964487893843593026}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -2095666955, guid: f70555f144d8491a825f0804e09c671c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Padding:
-    m_Left: 10
-    m_Right: 0
-    m_Top: 15
-    m_Bottom: 0
-  m_ChildAlignment: 0
-  m_StartCorner: 0
-  m_StartAxis: 0
-  m_CellSize: {x: 100, y: 20}
-  m_Spacing: {x: 0, y: 0}
-  m_Constraint: 0
-  m_ConstraintCount: 2
 --- !u!1 &5631502929629302078
 GameObject:
   m_ObjectHideFlags: 0
@@ -408,7 +381,6 @@ GameObject:
   - component: {fileID: 5287895755350894674}
   - component: {fileID: 4349686248375239568}
   - component: {fileID: 4359402407925969985}
-  - component: {fileID: 4640061685433259611}
   m_Layer: 0
   m_Name: InvaderHUD
   m_TagString: Untagged
@@ -479,23 +451,6 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
---- !u!114 &4640061685433259611
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5631502929629302078}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 1301386320, guid: f70555f144d8491a825f0804e09c671c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreReversedGraphics: 1
-  m_BlockingObjects: 0
-  m_BlockingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
 --- !u!1 &6699098013449028524
 GameObject:
   m_ObjectHideFlags: 0
@@ -528,10 +483,10 @@ RectTransform:
   m_Father: {fileID: 3265423418538888468}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 60, y: -40}
+  m_SizeDelta: {x: 100, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3993914897694254034
 CanvasRenderer:
@@ -585,7 +540,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3265423418538888468}
   - component: {fileID: 1106409924866214325}
-  - component: {fileID: 6233212743168286238}
   m_Layer: 0
   m_Name: PointPanel
   m_TagString: Untagged
@@ -621,27 +575,3 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8027372280012483017}
   m_CullTransparentMesh: 0
---- !u!114 &6233212743168286238
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8027372280012483017}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -2095666955, guid: f70555f144d8491a825f0804e09c671c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Padding:
-    m_Left: 10
-    m_Right: 0
-    m_Top: 15
-    m_Bottom: 0
-  m_ChildAlignment: 0
-  m_StartCorner: 0
-  m_StartAxis: 0
-  m_CellSize: {x: 100, y: 50}
-  m_Spacing: {x: 0, y: 0}
-  m_Constraint: 0
-  m_ConstraintCount: 2

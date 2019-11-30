@@ -37,5 +37,6 @@ namespace MDG.DTO
         public string trapId;
         public int Damage;
         public Vector3f ColliderDimensions;
+        public bool OneTimeUse;
     }
 }

@@ -4,6 +4,9 @@ using InventorySchema = MdgSchema.Common.Inventory;
 using StructureSchema = MdgSchema.Common.Structure;
 using CollisionSchema = MdgSchema.Common.Collision;
 using MDG.DTO;
+using Improbable.Gdk.PlayerLifecycle;
+using Unity.Entities;
+using MDG.Common;
 
 namespace MDG.Templates
 {
@@ -25,7 +28,7 @@ namespace MDG.Templates
                     GetClaimStructureTemplate(entityTemplate, Converters.DeserializeArguments<ClaimConfig>(structureArgs), serverAttribute);
                     break;
                 case StructureSchema.StructureType.Trap:
-                    GetTrapStructureTemplate(entityTemplate, Converters.DeserializeArguments<TrapConfig>(structureArgs), serverAttribute);
+                    GetTrapStructureTemplate(entityTemplate, Converters.DeserializeArguments<TrapConfig>(structureArgs), clientWorkerId, serverAttribute);
                     break;
             }
 
@@ -66,12 +69,15 @@ namespace MDG.Templates
             }, serverAttribute);
         }
 
-        private static void GetTrapStructureTemplate(EntityTemplate template, TrapConfig trapConfig, string serverAttribute)
+        private static void GetTrapStructureTemplate(EntityTemplate template, TrapConfig trapConfig, string workerId, string serverAttribute)
         {
+            PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
+
             template.AddComponent(new StructureSchema.Trap.Snapshot
             {
                 TrapId = trapConfig.trapId,
-                Damage = trapConfig.Damage
+                Damage = trapConfig.Damage,
+                OneTimeUse = trapConfig.OneTimeUse
             }, serverAttribute);
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {
@@ -86,4 +92,16 @@ namespace MDG.Templates
             }, serverAttribute);
         }
     }
+
+    class StructureArchtypes
+    {
+        public static void AddStructureArchtype(EntityManager entityManager, Entity entity, bool authoritative)
+        {
+            if (!authoritative)
+            {
+                entityManager.AddComponent<Enemy>(entity);
+            }
+        }
+    }
+
 }

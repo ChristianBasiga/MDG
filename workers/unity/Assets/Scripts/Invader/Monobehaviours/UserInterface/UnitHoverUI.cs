@@ -5,33 +5,42 @@ using UnityEngine;
 using StatSchema = MdgSchema.Common.Stats;
 using UnityEngine.UI;
 using MDG.Common;
-
+using MDG.Common.MonoBehaviours;
 
 namespace MDG.Invader.Monobehaviours
 {
-    public class UnitHoverUI : MonoBehaviour
+    public class UnitHoverUI : HealthSynchronizer
     {
-        [Require] StatSchema.StatsReader statsReader = null;
-        // This shouldn't ever be changing, but it's fine.
-        [Require] StatSchema.StatsMetadataReader statsMetadataReader = null;
-
-
         public Image healthbar;
         // Make const later.
         [SerializeField]
         float updateSpeedInSeconds = 1.0f;
+        [Require] StatSchema.StatsReader statsReader = null;
 
-        // Start is called before the first frame update
-        void Start()
+        [Require] StatSchema.StatsMetadataReader statsMetaDataReader = null;
+
+
+        protected override void Start()
         {
             statsReader.OnHealthUpdate += OnHealthUpdate;
         }
 
         private void OnHealthUpdate(int newHealth)
         {
-            // Gotta update these so that health goes down fully before gets fully deleted.
-            float percentageHealth = newHealth / (float)statsMetadataReader.Data.Health;
-            StartCoroutine(HelperFunctions.UpdateFill(healthbar, percentageHealth, updateSpeedInSeconds));
+            OnHealthUpdate(newHealth, statsMetaDataReader.Data.Health);
+        }
+
+        protected override void OnHealthUpdate(int health, int maxHealth)
+        {
+            float percentageHealth = health / (float)maxHealth;
+            StartCoroutine(HelperFunctions.UpdateFill(healthbar, percentageHealth,(float pct) =>
+            {
+                Debug.Log("pct" + pct);
+                if (pct >= 1)
+                {
+                    this.gameObject.SetActive(false);
+                }
+            },updateSpeedInSeconds));
         }
     }
 }

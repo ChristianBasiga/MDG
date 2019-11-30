@@ -168,6 +168,7 @@ namespace MDG.Templates
         {
             if (!authoritative)
             {
+                Debug.Log("Adding enemy component to defender");
                 entityManager.AddComponent<Enemy>(entity);
                 entityManager.AddComponent<Clickable>(entity);
             }

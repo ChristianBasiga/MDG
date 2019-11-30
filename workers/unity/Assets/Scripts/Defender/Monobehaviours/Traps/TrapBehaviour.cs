@@ -25,13 +25,13 @@ namespace MDG.Defender.Monobehaviours.Traps
         [Require] StructureSchema.StructureReader structureReader = null;
         StructureSchema.StructureMetadata.Component structureMetadata;
         bool onCoolDown = false;
+        bool processingTrigger = false;
         // Start is called before the first frame update
         void Start()
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             structureReader.OnJobCompleteEvent += OnJobComplete;
 
-            //ew, woops.
             collisionReader.OnCollisionHappenEvent += OnTrapCollision;
             linkedEntityComponent.Worker.TryGetEntity(linkedEntityComponent.EntityId, out Unity.Entities.Entity entity);
             structureMetadata = linkedEntityComponent.World.EntityManager.GetComponentData<StructureSchema.StructureMetadata.Component>(entity);
@@ -39,6 +39,8 @@ namespace MDG.Defender.Monobehaviours.Traps
 
         private void OnTrapCollision(CollisionSchema.CollisionEventPayload obj)
         {
+            if (processingTrigger) return;
+            processingTrigger = true;
             if (!onCoolDown)
             {
                 HandleEnemyCollisions(obj.CollidedWith.Keys);
@@ -67,17 +69,20 @@ namespace MDG.Defender.Monobehaviours.Traps
                 CommandSystem commandSystem = linkedEntityComponent.World.GetExistingSystem<CommandSystem>();
                 commandSystem.SendCommand(new StructureSchema.Structure.StartJob.Request
                 {
+                    TargetEntityId = linkedEntityComponent.EntityId,
                     Payload = new StructureSchema.JobRequestPayload
                     {
-                        EstimatedJobCompletion = structureMetadata.ConstructionTime
+                        EstimatedJobCompletion = structureMetadata.ConstructionTime,
                     }
                 });
                 onCoolDown = true;
             }
+            processingTrigger = false;
         }
 
         private void OnJobComplete(StructureSchema.JobCompleteEventPayload obj)
         {
+            Debug.Log("Job ever complete??");
             onCoolDown = false;
         }
     }

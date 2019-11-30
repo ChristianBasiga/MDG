@@ -9,16 +9,15 @@ using UnityEngine.UI;
 using StatSchema = MdgSchema.Common.Stats;
 namespace MDG.Defender.Monobehaviours
 {
-    public class DefenderHUD : MonoBehaviour
+    public class DefenderHUD : HealthSynchronizer
     {
 
         // Component Readers
         [Require] PointReader pointReader = null;
+
         [Require] StatSchema.StatsReader statsReader = null;
+
         [Require] StatSchema.StatsMetadataReader statsMetaDataReader = null;
-
-
-        // Need to get this as singleton later.
         MainOverlayHUD mainOverlayHUD;
 
         // UI varaibles
@@ -34,7 +33,7 @@ namespace MDG.Defender.Monobehaviours
 
 
         // Start is called before the first frame update
-        void Start()
+        protected override void Start()
         {
 
             mainOverlayHUD = GameObject.Find("ClientWorker").GetComponent<MainOverlayHUD>();
@@ -43,8 +42,9 @@ namespace MDG.Defender.Monobehaviours
             defenderSynchronizer.OnLoseGame += DisplayLoseGameUI;
             defenderSynchronizer.OnWinGame += DisplayWinGameUI;
             pointReader.OnValueUpdate += mainOverlayHUD.UpdatePoints;
-            statsReader.OnHealthUpdate += UpdateHealthBar;
+            statsReader.OnHealthUpdate += OnHealthUpdate;
             errorText.gameObject.SetActive(false);
+            base.Start();
         }
 
 
@@ -77,10 +77,6 @@ namespace MDG.Defender.Monobehaviours
         }
 
 
-        void UpdateHealthBar(int health)
-        {
-            StartCoroutine(HelperFunctions.UpdateFill(healthBar, health / statsMetaDataReader.Data.Health));
-        }
 
         private void DisplayLoseGameUI()
         {
@@ -92,6 +88,23 @@ namespace MDG.Defender.Monobehaviours
             mainOverlayHUD.SetEndGameText("You have stopped the Invasion", true);
         }
 
-        
+
+        private void OnHealthUpdate(int newHealth)
+        {
+            OnHealthUpdate(newHealth, statsMetaDataReader.Data.Health);
+        }
+
+        protected override void OnHealthUpdate(int health, int maxHealth)
+        {
+            // Since doing this, need to handle respawning differently as shouldn't start ticking until health went down fully.
+            float percentageHealth = health / (float)maxHealth;
+            StartCoroutine(HelperFunctions.UpdateFill(healthBar, percentageHealth, (float pct) =>
+            {
+                if (pct == 1)
+                {
+                    this.gameObject.SetActive(false);
+                }
+            }));
+        }
     }
 }

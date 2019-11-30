@@ -13,5 +13,6 @@ namespace MDG.ScriptableObjects.Structures
         public int SetupTime;
         public int Damage;
         public Vector3 ColliderDimensions;
+        public bool OneTimeUse;
     }
 }

@@ -11,12 +11,12 @@ public class UnitSynchronization : MonoBehaviour
 {
 
     [Require] EntityTransformReader positionReader = null;
-    [Require] SpawnSchema.PendingRespawnReader pendingRespawnReader = null;
+    //[Require] SpawnSchema.PendingRespawnReader pendingRespawnReader = null;
 
     private void Start()
     {
         positionReader.OnPositionUpdate += PositionReader_OnPositionUpdate;
-        pendingRespawnReader.OnRespawnActiveUpdate += OnRespawnActiveChange;
+      //  pendingRespawnReader.OnRespawnActiveUpdate += OnRespawnActiveChange;
         
     }
 

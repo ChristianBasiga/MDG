@@ -121,7 +121,6 @@ namespace MDG.Common.Systems.Structure
         struct TickActiveJobsJob : IJobForEachWithEntity<SpatialEntityId, StructureComponents.RunningJobComponent>
         {
             public float deltaTime;
-            public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public NativeQueue<JobEventPayloadHeader>.ParallelWriter toSendEventsFor;
 
             public NativeQueue<CompleteJobPayload>.ParallelWriter completedJobPayloads;
@@ -134,13 +133,13 @@ namespace MDG.Common.Systems.Structure
                         entityId = spatialEntityId.EntityId,
                         jobId = runningJobComponent.jobId
                     });
-                    entityCommandBuffer.RemoveComponent<StructureComponents.RunningJobComponent>(index, entity);
                 }
                 else
                 {
                     float remainingTime = runningJobComponent.jobProgress + deltaTime;
                     // Bound it to estimated time incase a couple seconds off so that equality will go through properly.
                     remainingTime = Mathf.Min(remainingTime, runningJobComponent.estimatedJobCompletion);
+                    runningJobComponent.jobProgress = remainingTime;
                     // Queue to send event for.
                     toSendEventsFor.Enqueue(new JobEventPayloadHeader
                     {
@@ -156,12 +155,6 @@ namespace MDG.Common.Systems.Structure
         {
             float deltaTime = Time.deltaTime;
 
-
-         //   NativeHashMap<EntityId, StructureComponents.BuildingComponent> constructingStructures = new NativeHashMap<EntityId, StructureComponents.BuildingComponent>(
-           //         notConstructingQuery.CalculateEntityCount(), 
-             //       Allocator.TempJob);
-
-
             NativeQueue<JobEventPayloadHeader> jobsToSendEventsFor = new NativeQueue<JobEventPayloadHeader>(Allocator.TempJob);
             NativeQueue<CompleteJobPayload> completedJobPayloads = new NativeQueue<CompleteJobPayload>(Allocator.TempJob);
 
@@ -171,14 +164,13 @@ namespace MDG.Common.Systems.Structure
             TickActiveJobsJob tickActiveJobsJob = new TickActiveJobsJob
             {
                 deltaTime = deltaTime,
-                entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
                 toSendEventsFor = jobsToSendEventsFor.AsParallelWriter(),
                 completedJobPayloads = completedJobPayloads.AsParallelWriter()
             };
-
             JobHandle tickJobsHandle = tickActiveJobsJob.Schedule(runningJobQuery);
+            ProcessJobRequests();
+
             NativeQueue<ConstructionPayloadHeader> constructionsToSendEventsFor = new NativeQueue<ConstructionPayloadHeader>(Allocator.TempJob);
-            tickJobsHandle.Complete();
 
             // I make this last the longest but it is significantly smallet set executing on than ticking.
             // May not be able to actually run this together due to both using command buffer.
@@ -189,9 +181,9 @@ namespace MDG.Common.Systems.Structure
 
 
             JobHandle startConstructionJobHandle = startConstructingStructuresJob.Schedule(notConstructingQuery);
+            tickJobsHandle.Complete();
+
             startConstructionJobHandle.Complete();
-
-
             NativeHashMap<EntityId, int> structureIdToBuildSpeed = ProcessBuildRequests();
             TickConstructionJob tickConstructionJob = new TickConstructionJob
             {
@@ -201,9 +193,7 @@ namespace MDG.Common.Systems.Structure
             };
 
             JobHandle tickConstructionJobHandle = tickConstructionJob.Schedule(constructingQuery);
-
             #endregion
-
             #region Sending Events to Clients
             // Send all events for jobs progress to update UI.
             while (jobsToSendEventsFor.Count > 0)
@@ -217,18 +207,19 @@ namespace MDG.Common.Systems.Structure
 
             }
             jobsToSendEventsFor.Dispose();
+            tickConstructionJobHandle.Complete();
 
             while (completedJobPayloads.Count > 0)
             {
                 CompleteJobPayload jobPayload = completedJobPayloads.Dequeue();
+                workerSystem.TryGetEntity(jobPayload.entityId, out Entity entity);
+                PostUpdateCommands.RemoveComponent<StructureComponents.RunningJobComponent>(entity);
                 componentUpdateSystem.SendEvent(new StructureSchema.Structure.JobComplete.Event(new StructureSchema.JobCompleteEventPayload
                 {
                     JobData = jobIdToPayload[jobPayload.jobId],
                 }), jobPayload.entityId);
             }
             completedJobPayloads.Dispose();
-            tickConstructionJobHandle.Complete();
-
             while (constructionsToSendEventsFor.Count > 0)
             {
                 ConstructionPayloadHeader constructionPayloadHeader = constructionsToSendEventsFor.Dequeue();
@@ -238,9 +229,7 @@ namespace MDG.Common.Systems.Structure
                     EstimatedBuildCompletion = constructionPayloadHeader.buildInfo.estimatedBuildCompletion
                 }), constructionPayloadHeader.entityId);
             }
-
             #endregion
-
             constructionsToSendEventsFor.Dispose();
             structureIdToBuildSpeed.Dispose();
         }
@@ -278,8 +267,8 @@ namespace MDG.Common.Systems.Structure
             for (int i = 0; i < jobRequests.Count; ++i)
             {
                 ref readonly var jobRequest = ref jobRequests[i];
-
-                workerSystem.TryGetEntity(jobRequest.EntityId, out Entity structureEntity);
+                Debug.Log("Recieved startJob request requests");
+                Debug.Log(workerSystem.TryGetEntity(jobRequest.EntityId, out Entity structureEntity));
 
                 int jobId = randomNumberGenerator.Next();
                 jobIdToPayload[jobId] = jobRequest.Payload.JobData;
@@ -292,8 +281,13 @@ namespace MDG.Common.Systems.Structure
                 });
                 commandSystem.SendResponse(new StructureSchema.Structure.StartJob.Response
                 {
+                    Payload = new StructureSchema.JobResponsePayload
+                    {
+                        JobId = jobId
+                    },
                     RequestId = jobRequest.RequestId
                 });
+                Debug.Log("Get to here");
             }
         }
         #endregion
