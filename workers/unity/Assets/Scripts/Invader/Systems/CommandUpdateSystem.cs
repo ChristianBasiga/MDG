@@ -117,10 +117,10 @@ namespace MDG.Invader.Systems
                 ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider,
                 ref CommandListener commandListener)
             {
-                float3 pos = new float3(entityTransform.Position.X, entityTransform.Position.Y, entityTransform.Position.Z);
 
-                Vector3f direction = moveCommand.destination - entityTransform.Position;
-                float distance = HelperFunctions.Distance(moveCommand.destination, entityTransform.Position);
+                Vector3f sameY = new Vector3f(moveCommand.destination.X, entityTransform.Position.Y, moveCommand.destination.Z);
+                Vector3f direction = sameY - entityTransform.Position;
+                float distance = HelperFunctions.Distance(sameY, entityTransform.Position);
 
                 if (!moveCommand.applied)
                 {
@@ -147,7 +147,11 @@ namespace MDG.Invader.Systems
                 ref EntityTransform.Component entityTransform, ref PositionSchema.LinearVelocity.Component linearVelocityComponent,
                 [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider, ref CommandListener commandListener)
             {
-                Vector3f direction = collectCommand.destination - entityTransform.Position;
+                Vector3f sameY = new Vector3f(collectCommand.destination.X, entityTransform.Position.Y, collectCommand.destination.Z);
+                Vector3f direction = sameY - entityTransform.Position;
+                float distance = HelperFunctions.Distance(sameY, entityTransform.Position);
+
+
                 // Min distance should take really take into account collider, for now I'll fudg vaue
                 // DOwn line pass in NativeArray of BoxCollider. to more accurate.
                 const float bufferRoom = 1.0f;
@@ -156,8 +160,6 @@ namespace MDG.Invader.Systems
                 // When should I mark IsAtResource
                 if (!collectCommand.IsCollecting && !collectCommand.IsAtResource)
                 {
-                    float distance = direction.ToUnityVector().magnitude;
-
                     if (distance < minDistance)
                     {
                         collectCommand.IsAtResource = true;
@@ -191,7 +193,6 @@ namespace MDG.Invader.Systems
                 // Maybe add clickable and clicked.
                 if (attackeePositions.TryAdd(spatialEntityId.EntityId, entityTransform.Position))
                 {
-                    Debug.Log("Adding spatial id to map " + spatialEntityId.EntityId);
                 }
             }
         }
@@ -219,7 +220,9 @@ namespace MDG.Invader.Systems
 
                 if (attackerToAttackeePosition.TryGetValue(attackCommand.target, out Vector3f targetPosition))
                 {
-                    float distance = HelperFunctions.Distance(targetPosition, entityTransform.Position);
+                    Vector3f sameY = new Vector3f(targetPosition.X, entityTransform.Position.Y, targetPosition.Z);
+                    Vector3f direction = sameY - entityTransform.Position;
+                    float distance = HelperFunctions.Distance(sameY, entityTransform.Position);
                     if (distance <= combatStats.attackRange)
                     {
                         if (combatStats.attackCooldown == 0)
@@ -239,8 +242,7 @@ namespace MDG.Invader.Systems
                     {
                         // If no longer in range, stop attacking, start following again.
                         attackCommand.attacking = false;
-                        Vector3f velocity = targetPosition - entityTransform.Position;
-                        linearVelocityComponent.Velocity = velocity;
+                        linearVelocityComponent.Velocity = direction;
                     }
                 }
                 else
@@ -296,8 +298,7 @@ namespace MDG.Invader.Systems
             enemyQuery = GetEntityQuery(
                 ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<Enemy>(),
-                ComponentType.ReadOnly<EntityTransform.Component>(),
-                ComponentType.ReadOnly<AttackCommand>()
+                ComponentType.ReadOnly<EntityTransform.Component>()
                 );
             authVelocityGroup = new ComponentType[7]
             {
@@ -419,6 +420,7 @@ namespace MDG.Invader.Systems
                 //CHeck if respawning
                 if (EntityManager.HasComponent<SpawnSchema.RespawnMetadata.Component>(targetEntity) && EntityManager.GetComponentData<SpawnSchema.PendingRespawn.Component>(targetEntity).RespawnActive)
                 {
+                    Debug.Log("here??");
                     attackeePositions.Remove(potentialTargetId);
                 }
             }
@@ -664,6 +666,13 @@ namespace MDG.Invader.Systems
         {
             Queue<PendingAttack> pendingAttacks = new Queue<PendingAttack>(attackQuery.CalculateEntityCount());
             // Later check range or melee
+            EntityQuery lineOfSightQuery = GetEntityQuery(
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadOnly<CollisionSchema.BoxCollider.Component>(),
+                ComponentType.ReadOnly<EntityTransform.Component>(),
+                ComponentType.Exclude<StructureSchema.Trap.Component>()
+            );
+
             while (attackPayloads.Count > 0)
             {
                 AttackPayload attackPayload = attackPayloads.Dequeue();
@@ -684,7 +693,7 @@ namespace MDG.Invader.Systems
                 pendingAttacks.Enqueue(new PendingAttack
                 {
                     attackPayload = attackPayload,
-                    jobHandle = raycastJob.Schedule(this),
+                    jobHandle = raycastJob.Schedule(lineOfSightQuery),
                     InLineOfSight = entitiesOnLineOfSight,
                 });
             }
@@ -712,10 +721,12 @@ namespace MDG.Invader.Systems
                 while (pendingAttack.InLineOfSight.Count > 0)
                 {
                     CommonJobs.ClientJobs.RaycastHit raycastHit = pendingAttack.InLineOfSight.Dequeue();
-
+                    Debug.Log("Hit with raycast " + raycastHit.entityId);
                     float distanceFromHit = HelperFunctions.Distance(attackPayload.startingPosition, raycastHit.position);
                     if ( distanceFromHit < closestInLineOfSight)
                     {
+                        // First check if it is trap, / floored. Lol. TECHNICALLY, floored should just be ignored in line of sight.
+                        // for now just check if trap then ignore.
                         closestInLineOfSight = distanceFromHit;
                         closestEntity = raycastHit;
                     }
@@ -743,7 +754,7 @@ namespace MDG.Invader.Systems
                     // Scriptable Object.
                     ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(unitWeapon as Projectile);
                     projectileConfig.startingPosition = attackPayload.startingPosition;
-                    projectileConfig. linearVelocity = sameYTarget - attackPayload.startingPosition;
+                    projectileConfig.linearVelocity = sameYTarget - attackPayload.startingPosition;
 
                     WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(unitWeapon);
                     byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
@@ -769,7 +780,7 @@ namespace MDG.Invader.Systems
                     //angleOfTravel += 45 * Mathf.Deg2Rad;
                     angleOfTravel += Time.deltaTime;
                     Debug.Log("Not in light of sight. Adding reroute component here");
-                    Vector3f newVelocity = new Vector3f(Mathf.Cos(angleOfTravel), 0, Mathf.Sin(angleOfTravel)) * magnitude;
+                    Vector3f newVelocity = new Vector3f(Mathf.Cos(angleOfTravel), attackPayload.startingPosition.Y, Mathf.Sin(angleOfTravel)) * magnitude;
                     PostUpdateCommands.AddComponent(attackerEntity, new RerouteComponent
                     {
                         applied = false,

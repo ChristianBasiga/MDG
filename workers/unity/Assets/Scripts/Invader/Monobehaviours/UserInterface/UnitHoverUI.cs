@@ -35,8 +35,7 @@ namespace MDG.Invader.Monobehaviours
             float percentageHealth = health / (float)maxHealth;
             StartCoroutine(HelperFunctions.UpdateFill(healthbar, percentageHealth,(float pct) =>
             {
-                Debug.Log("pct" + pct);
-                if (pct >= 1)
+                if (pct == 0)
                 {
                     this.gameObject.SetActive(false);
                 }

@@ -99,7 +99,7 @@ namespace MDG.Templates
         {
             if (!authoritative)
             {
-                entityManager.AddComponent<Enemy>(entity);
+             //   entityManager.AddComponent<Enemy>(entity);
             }
         }
     }

@@ -100,7 +100,7 @@ namespace MDG.Defender.Monobehaviours
             float percentageHealth = health / (float)maxHealth;
             StartCoroutine(HelperFunctions.UpdateFill(healthBar, percentageHealth, (float pct) =>
             {
-                if (pct == 1)
+                if (pct == 0)
                 {
                     this.gameObject.SetActive(false);
                 }

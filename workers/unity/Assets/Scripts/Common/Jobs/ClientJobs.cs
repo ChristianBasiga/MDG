@@ -48,6 +48,7 @@ namespace MDG.Common.Jobs
             // Welp time to debug this...
             public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider, [ReadOnly] ref CommonSchema.EntityTransform.Component entityTransform)
             {
+
                 if (spatialEntityId.EntityId.Equals(checking))
                 {
                     return;
