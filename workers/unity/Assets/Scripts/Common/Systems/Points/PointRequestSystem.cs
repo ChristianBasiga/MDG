@@ -47,7 +47,6 @@ namespace MDG.Common.Systems.Point
                 EntityId entityId = spatialEntityId.EntityId;
                 IEnumerable<PointRequestPayload> pointRequestPayloads = pointRequests.Where((PointRequestPayload p) =>
                 {
-                    UnityEngine.Debug.Log(p.payload.EntityUpdating.Equals(entityId));
                     return p.payload.EntityUpdating.Equals(entityId);
                 });
 
@@ -77,7 +76,7 @@ namespace MDG.Common.Systems.Point
                         switch (response.StatusCode)
                         {
                             case Improbable.Worker.CInterop.StatusCode.Success:
-                                pointRequest.callback.Invoke(response);
+                                pointRequest.callback?.Invoke(response);
                                 break;
                             case Improbable.Worker.CInterop.StatusCode.Timeout:
                                 // Requeue.

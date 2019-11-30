@@ -12,6 +12,7 @@ using MDG.Invader.Components;
 using MDG.Invader.Commands;
 using UnitSchema = MdgSchema.Units;
 using WeaponSchema = MdgSchema.Common.Weapon;
+using StructureSchema = MdgSchema.Common.Structure;
 using MdgSchema.Common;
 using Unity.Transforms;
 using Unity.Rendering;
@@ -24,6 +25,7 @@ using MDG.Templates;
 using MDG.DTO;
 using GameScriptableObjects = MDG.ScriptableObjects.Game;
 using MDG.Common;
+using MDG.Common.MonoBehaviours;
 
 namespace MDG
 {
@@ -96,6 +98,7 @@ namespace MDG
             var hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
 
             Debug.Log($"creating {metaData.EntityType}");
+            // Prob switch on game entity type.
             if (metaData.EntityType.Equals("Player"))
             {
                 string pathToPlayer = pathToEntity;
@@ -134,6 +137,7 @@ namespace MDG
                             for (int i = 0; i < initialInvaderUnitPositions.Count; ++i)
                         {
 
+                            Debug.Log(initialInvaderUnitPositions[i]);
                             UnitConfig unitConfig = new UnitConfig
                             {
                                 ownerId = entity.SpatialOSEntityId.Id,
@@ -223,6 +227,22 @@ namespace MDG
                 // Don't neccessarily need to create prefabfor this, maybe down line, but just being within area is fine for testing.
                 //pathToEntity = $"{pathToEntity}/Territories/${}"
             }
+            else if (metaData.EntityType.Equals("Structure"))
+            {
+                string structurePath =  hasAuthority ? $"{pathToEntity}/Authoritative/Structures" : $"{pathToEntity}/Structures";
+                StructureSchema.StructureMetadata.Component structureMetaData = entity.GetComponent<StructureSchema.StructureMetadata.Component>();
+                switch (structureMetaData.StructureType)
+                {
+                    case StructureSchema.StructureType.Trap:
+                        StructureSchema.Trap.Component trapComponent = entity.GetComponent<StructureSchema.Trap.Component>();
+                        string trapPath = $"{structurePath}/Traps/{trapComponent.TrapId}";
+                        WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
+                        worker.TryGetEntity(entity.SpatialOSEntityId, out Entity trapEntity);
+                        Templates.StructureArchtypes.AddStructureArchtype(_world.EntityManager, trapEntity, hasAuthority);
+                        CreateEntityObject(entity, linker, trapPath);
+                        break;
+                }
+            }
             else
             {
                 _default.OnEntityCreated(entity, linker);
@@ -239,7 +259,12 @@ namespace MDG
 
             if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObject))
             {
-                linkedGameObject.SetActive(false);
+                // Perhaps custom death and / or death behaviour that plays specific animation.
+                // Or both. Regardless doesn't just make it dissapear.
+                if (linkedGameObject.GetComponent<HealthSynchronizer>() == null)
+                {
+                    linkedGameObject.SetActive(false);
+                }
             }
             EntityToGameObjects.Remove(entityId);
             OnEntityDeleted?.Invoke(entityId);

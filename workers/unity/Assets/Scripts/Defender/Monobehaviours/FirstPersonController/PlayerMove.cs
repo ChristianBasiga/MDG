@@ -27,6 +27,12 @@ namespace MDG.Defender.Monobehaviours {
             GetComponent<DefenderSynchronizer>().OnEndGame += () => {
                 this.enabled = false;
             };
+
+            defenderConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseDefenderConfig") as DefenderConfig;
+            // Oh I'm wylin, InputCommands has to take this.
+            inputConfig = Resources.Load("ScriptableObjects/GameConfigs/MouseKeyInputConfig") as InputConfig;
+            GetComponent<PlayerLook>().Init(defenderConfig, inputConfig);
+            GetComponent<DefenderInputCommands>().Init(inputConfig);
         }
 
         public void Init(DefenderConfig defenderConfig, InputConfig inputConfig)

@@ -1,4 +1,5 @@
 ﻿using Improbable;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -90,13 +91,13 @@ namespace MDG.Common
         #endregion
        
         #region UI related helper functions.
-        public static IEnumerator UpdateFill(UnityEngine.UI.Image image, float pct, float timeToUpdate = 2.2f)
+        public static IEnumerator UpdateFill(UnityEngine.UI.Image image, float pct, Action<float> OnFillUpdated = null, float timeToUpdate = 2.2f )
         {
             if (pct == image.fillAmount)
             {
                 yield return new WaitForEndOfFrame();
             }
-            {
+            else {
                 float elapsed = 0;
                 float currPercentage = image.fillAmount;
 
@@ -108,8 +109,9 @@ namespace MDG.Common
                 }
                 image.fillAmount = pct;
             }
+            OnFillUpdated?.Invoke(pct);
         }
-            #endregion
+        #endregion
     }
 
 }

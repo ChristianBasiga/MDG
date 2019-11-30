@@ -123,7 +123,6 @@ namespace MDG.Invader.Systems
                 {
                     totalAngleIncrement += incrementDirection;
                     float newAngle = initialAngle + totalAngleIncrement;
-
                     Vector3f newVelocity = new Vector3f(Mathf.Cos(newAngle), 0, Mathf.Sin(newAngle));
                     // Check dot product to see if still tends to direction of this collision.
                     float dotProduct = Vector3.Dot(collisionPointDistNormalized, newVelocity.ToUnityVector());
@@ -131,7 +130,9 @@ namespace MDG.Invader.Systems
                     // point not size of colliders in reroute
                     if (dotProduct < 0.8f)
                     {
-                        potentialRoutes.Enqueue(newVelocity * velocityMagnitude);
+                        Vector3f potentialReroute = newVelocity * velocityMagnitude;
+                        potentialReroute.Y = currentVelocity.Y;
+                        potentialRoutes.Enqueue(potentialReroute);
                         break;
                     }
                 } while (totalAngleIncrement < max);
@@ -178,7 +179,7 @@ namespace MDG.Invader.Systems
             framesSinceUpdate = 0;
 
             #region Processing Collision Events
-            var events = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.OnCollision.Event>();
+            var events = componentUpdateSystem.GetEventsReceived<CollisionSchema.Collision.CollisionHappen.Event>();
             Queue<ScheduleRedirectJobInfo> scheduledJobs = new Queue<ScheduleRedirectJobInfo>();
             Dictionary<EntityId, NativeQueue<Vector3f>> entityIdToPotentialRedirects = new Dictionary<EntityId, NativeQueue<Vector3f>>();
             Dictionary<EntityId, NativeQueue<Vector3f>> allPotentialReroutes = new Dictionary<EntityId, NativeQueue<Vector3f>>();

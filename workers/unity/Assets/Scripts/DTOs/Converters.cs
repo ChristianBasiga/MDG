@@ -100,6 +100,8 @@ namespace MDG.DTO
                         constructionTime = structure.ConstructionTime,
                     };
                     return claimConfig;
+
+
                 default:
                     throw new System.Exception();
             }

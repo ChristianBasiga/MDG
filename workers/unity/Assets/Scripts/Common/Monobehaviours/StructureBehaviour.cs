@@ -20,7 +20,10 @@ namespace MDG.Common.MonoBehaviours.Structures
         void CompleteJob(byte[] jobData);
     }
 
+
+    // Not all structures have multipe jobs as shop items, need to update this.
     [RequireComponent(typeof(ShopBehaviour))]
+    // For invader specifically.. Too general and too grand.
     public class StructureBehaviour : MonoBehaviour
     {
         // All logic is simply fetching data, so it's not pure visual since doing I/O
@@ -49,7 +52,6 @@ namespace MDG.Common.MonoBehaviours.Structures
         public virtual void Start()
         {
             jobIndex = 0;
-            // Not Even relevant to smoe structures lmao. This is so shitty.
             jobQueue = new ShopItem[JobCapacity];
             ConcreteStructureBehaviour.Link(this);
             ShopBehaviour shopBehaviour = GetComponent<ShopBehaviour>();

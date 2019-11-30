@@ -17,6 +17,7 @@ using MDG.Common.Systems.Point;
 using MDG.Common.Systems.Position;
 using MDG.Common.Systems.Stat;
 using MDG.Common.Systems.Weapon;
+using MDG.Common.Systems.Structure;
 
 namespace MDG
 {
@@ -61,6 +62,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<StatMonitorSystem>();
             Worker.World.GetOrCreateSystem<SystemCleanupSystem>();
+            Worker.World.GetOrCreateSystem<StructureMonitorSystem>();
             //Worker.World.GetOrCreateSystem<WeaponSystem>();
 
             Worker.World.GetOrCreateSystem<Game.GameStatusSystem>();

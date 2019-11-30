@@ -46,7 +46,8 @@ namespace MDG.Templates
 
             template.AddComponent(new CollisionSchema.Collision.Snapshot
             {
-                Collisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>()
+                Collisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>(),
+                Triggers = new Dictionary<EntityId, CollisionSchema.CollisionPoint>()
             }, serverAttribute);
 
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
@@ -73,21 +74,11 @@ namespace MDG.Templates
                 case UnitsSchema.UnitTypes.TANK:
                     break;
             }
-
-            template.AddComponent(new SpawnSchema.RespawnMetadata.Snapshot
-            {
-                BaseRespawnPosition = Vector3f.Zero,
-                BaseRespawnTime = 60.0f
-            }, serverAttribute);
-
-            template.AddComponent(new SpawnSchema.PendingRespawn.Snapshot
-            {
-                RespawnActive = false,
-            }, serverAttribute);
-
-
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
-            template.AddComponent(new Position.Snapshot(), serverAttribute);
+            template.AddComponent(new Position.Snapshot
+            {
+                Coords = new Coordinates(spawnPositon.X, spawnPositon.Y, spawnPositon.Z)
+            }, serverAttribute);
             template.SetReadAccess(clientAttribute, UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);
             return template;
@@ -145,10 +136,12 @@ namespace MDG.Templates
     {
         public static void AddUnitArchtype(EntityManager  entityManager, Entity entity, bool authoritative, UnitsSchema.UnitTypes type)
         {
+            // Either have this life cycle check on each weapon which I do have
+            // but that prob slows things down. It should be authority upon player not
+            // each entit
             if (authoritative)
             {
                 entityManager.AddComponentData(entity, new CommandListener { CommandType = MDG.Invader.Commands.CommandType.None });
-               
             }
             else
             {

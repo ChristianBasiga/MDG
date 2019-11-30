@@ -82,7 +82,8 @@ namespace MDG.Templates
 
             template.AddComponent(new CollisionSchema.Collision.Snapshot
             {
-                Collisions = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>()
+                Collisions = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>(),
+                Triggers = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>()
             }, UnityGameLogicConnector.WorkerType);
         }
     }

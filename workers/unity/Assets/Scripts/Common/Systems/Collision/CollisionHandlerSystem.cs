@@ -45,6 +45,8 @@ namespace MDG.Common.Systems.Collision {
             public void Execute([ReadOnly] ref SpatialEntityId c0, [ReadOnly] ref CollisionSchema.Collision.Component c1, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider,
                 [ReadOnly] ref PositionSchema.LinearVelocity.Component linearVelocity)
             {
+                // This only stops moving triggers from position being undone
+                // Not moving non triggers into triggers.
                 if (!boxCollider.IsTrigger && c1.Collisions.Count > 0)
                 {
                     bool add = false;
@@ -93,13 +95,14 @@ namespace MDG.Common.Systems.Collision {
             };
 
             inputDeps = getCollisionsJob.Schedule(this, inputDeps);
+            inputDeps.Complete();
+
 
             UndoPositionChangeJob undoPositionChangeJob = new UndoPositionChangeJob
             {
                 deltaTime = deltaTime,
                 toReverse = toReverse
             };
-            inputDeps.Complete();
             undoPositionJobHandle = undoPositionChangeJob.Schedule(authPosGroup, inputDeps);
             undoPositionJobHandle.Complete();
             toReverse.Dispose();

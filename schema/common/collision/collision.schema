@@ -20,7 +20,10 @@ type CollisionEventPayload{
 component Collision{
     id = 861;
     map<EntityId, CollisionPoint> collisions = 1;
-    event CollisionEventPayload on_collision;
+    map<EntityId, CollisionPoint> triggers = 2;
+
+    event CollisionEventPayload trigger_happen;
+    event CollisionEventPayload collision_happen;
 }
 
 

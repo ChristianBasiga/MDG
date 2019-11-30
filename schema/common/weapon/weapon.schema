@@ -6,6 +6,9 @@ enum WeaponType{
     Projectile = 1;
     Melee = 2;
 }
+
+// Prob create WeaponMetadata  that would have weapon type and weapon id sinc those don't change.
+// unless I do change it.
 component Weapon{
     id = 960;
     WeaponType weapon_type = 1;

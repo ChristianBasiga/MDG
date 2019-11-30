@@ -1,7 +1,5 @@
 package mdg_schema.common.structure;
 
-
-
 enum StructureType{
     Spawning = 1;
     Trap = 2;
@@ -11,5 +9,5 @@ enum StructureType{
 component StructureMetadata{
     id = 952;
     StructureType structure_type = 1;
-    int32 construction_time = 2;
+    int32 construction_time = 3;
 }

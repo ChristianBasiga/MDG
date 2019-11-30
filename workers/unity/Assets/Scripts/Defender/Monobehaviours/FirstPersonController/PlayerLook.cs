@@ -76,9 +76,6 @@ namespace MDG.Defender.Monobehaviours
 
             xAxisClamp += mouseY;
 
-            Debug.Log("xAxisClamp" + xAxisClamp);
-            // Stop wasting time on this, I need to help ben, and I also need to complet this.
-
             //Making sure we never moved more than 90 degrees in either direcion.
             if (xAxisClamp > maxAngle)
             {

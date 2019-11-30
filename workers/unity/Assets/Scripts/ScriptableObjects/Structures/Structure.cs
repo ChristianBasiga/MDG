@@ -12,6 +12,7 @@ namespace MDG.ScriptableObjects.Structures
     public class Structure : ScriptableObject
     {
         public StructureSchema.StructureType StructureType;
+        public Sprite Thumbnail;
         public int ConstructionTime;
         public int MaximumConcurrentJobs;
         public int MaxJobsQueued;
