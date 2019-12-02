@@ -44,7 +44,6 @@ namespace MDG.Invader.Systems {
                 // Gotta apply rotation here.
                 float3 botLeft = new float3(math.min(selection.StartPosition.x, selection.EndPosition.x), math.min(selection.StartPosition.z, selection.EndPosition.z), 0);
                 float3 topRight = new float3(math.max(selection.StartPosition.x, selection.EndPosition.x), math.max(selection.StartPosition.z, selection.EndPosition.z), 0);
-
                 
                 
                 // Down line move this to set selections part.

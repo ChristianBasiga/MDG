@@ -25,7 +25,13 @@ namespace MDG.Invader.Systems
     public class CommandGiveSystem : ComponentSystem
     {
 
-        private ResourceRequestSystem resourceRequestSystem;
+        EntityQuery commandListenerQuery;
+        EntityQuery workerUnitQuery;
+
+        LinkedEntityComponent invaderLink;
+
+        NativeQueue<EntityId> freeWorkers;
+        NativeQueue<EntityId> busyWorkers; 
 
         // Checks what command the right click signified,
         // This would be applying the command to each Unit.
@@ -44,7 +50,10 @@ namespace MDG.Invader.Systems
                 if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.z
                     && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.z)
                 {
-                    CommandListener command = new CommandListener { TargetId = spatialEntityId.EntityId, TargetPosition = entityTransform.Position };
+                    CommandListener command = new CommandListener {
+                        TargetId = spatialEntityId.EntityId,
+                        TargetPosition = entityTransform.Position
+                    };
                     switch (gameMetadata.Type)
                     {
                         case GameEntityTypes.Resource:
@@ -60,6 +69,27 @@ namespace MDG.Invader.Systems
                             break;
                     }
                     commandMetadata[0] = command;
+                }
+            }
+        }
+
+        // Maybe should also add worker component.
+        public struct GetWorkersJob : IJobForEachWithEntity<CommandListener, MdgSchema.Units.Unit.Component, 
+            SpatialEntityId, WorkerUnit>
+        {
+            public NativeQueue<EntityId>.ParallelWriter freeWorkers;
+            public NativeQueue<EntityId>.ParallelWriter busyWorkers;
+
+            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref CommandListener commandListener, [ReadOnly] ref Unit.Component unitComponent, 
+                [ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref WorkerUnit workerUnit)
+            {
+                if (commandListener.CommandType == CommandType.None)
+                {
+                    freeWorkers.Enqueue(spatialEntityId.EntityId);
+                }
+                else
+                {
+                    busyWorkers.Enqueue(spatialEntityId.EntityId);
                 }
             }
         }
@@ -106,105 +136,172 @@ namespace MDG.Invader.Systems
             }
         }
 
-        // Quick bs dupe code way to do build command until I make more scalable. If can do bytes
-        public struct GiveBuildCommandJob : IJobForEachWithEntity<Clickable, MdgSchema.Units.Unit.Component, CommandListener>{
-
+        // Build Command is a broadcast to available units.
+        public struct GiveBuildCommandJob : IJobForEachWithEntity<SpatialEntityId, Clickable, MdgSchema.Units.Unit.Component, 
+            CommandListener, WorkerUnit>
+        {
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
-            public EntityId hunterId;
             public BuildCommand buildCommand;
 
-            public void Execute(Entity entity, int index, [ReadOnly] ref Clickable clicked, [ReadOnly] ref MdgSchema.Units.Unit.Component c1, ref CommandListener commandListener)
+            [ReadOnly]
+            public NativeArray<EntityId> toAssignTo;
+            public void Execute(Entity entity, int index, [ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Clickable clicked,
+                [ReadOnly] ref MdgSchema.Units.Unit.Component c1, ref CommandListener commandListener,
+                [ReadOnly]  ref WorkerUnit workerUnit)
             {
-                if (clicked.Clicked && clicked.ClickedEntityId.Equals(hunterId)){
-
+                if (toAssignTo.Contains(spatialEntityId.EntityId))
+                {
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(MoveCommand));
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(AttackCommand));
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(CollectCommand));
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(BuildCommand));
                     entityCommandBuffer.AddComponent(index, entity, buildCommand);
+                    commandListener.CommandType = CommandType.Build;
                 }
             }
         }
 
+    
+        protected override void OnStartRunning()
+        {
+            base.OnStartRunning();
+            invaderLink = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<LinkedEntityComponent>();
+        }
         protected override void OnCreate()
         {
             base.OnCreate();
-            resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
+            commandListenerQuery = GetEntityQuery(
+                ComponentType.ReadWrite<CommandListener>(),
+                ComponentType.ReadOnly<Clickable>(),
+                ComponentType.ReadOnly<MdgSchema.Units.Unit.Component>()
+                );
+            workerUnitQuery = GetEntityQuery(
+                  ComponentType.ReadOnly<CommandListener>(),
+                ComponentType.ReadOnly<Clickable>(),
+                ComponentType.ReadOnly<MdgSchema.Units.Unit.Component>(),
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadOnly<WorkerUnit>()
+                );
+
+            freeWorkers = new NativeQueue<EntityId>(Allocator.Persistent);
+            busyWorkers = new NativeQueue<EntityId>(Allocator.Persistent);
+        }
+
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            freeWorkers.Dispose();
+            busyWorkers.Dispose();
         }
 
         protected override void OnUpdate()
         {
-            GameObject hunter = GameObject.FindGameObjectWithTag("MainCamera");
-            if (!hunter) return;
-            LinkedEntityComponent linkedEntityComponent = hunter.GetComponent<LinkedEntityComponent>();
-            if (linkedEntityComponent == null || !Input.GetMouseButtonDown(1))
+            if (workerUnitQuery.CalculateEntityCount() == 0 || !Input.GetMouseButtonDown(1))
             {
                 return;
             }
 
-            Camera inputCamera = hunter.transform.GetChild(0).GetComponent<Camera>();
-            EntityId hunterId = linkedEntityComponent.EntityId;
             float3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-            Debug.Log("mouse pos " + mousePos);
             // Creates bounding box for right click big enough to sense the click.
             // Maybe create alot of these / include botLeft and botRight in the NativeArray.
             float3 botLeft = mousePos + new float3(-10, 0, -10);// * (10 - Input.mousePosition.magnitude) * .5f;
             float3 topRight = mousePos + new float3(+10, 0, +10);// * (10 - Input.mousePosition.magnitude) * .5f;
 
             NativeArray<CommandListener> commandGiven = new NativeArray<CommandListener>(1, Allocator.TempJob);
-            commandGiven[0] = new CommandListener { CommandType = CommandType.None };
+            commandGiven[0] = new CommandListener
+            {
+                CommandType = CommandType.None
+            };
+
+            GetWorkersJob getWorkersJob = new GetWorkersJob
+            {
+                freeWorkers = freeWorkers.AsParallelWriter(),
+                busyWorkers = busyWorkers.AsParallelWriter()
+            };
+
+            JobHandle getWorkersJobHandle = getWorkersJob.Schedule(workerUnitQuery);
+
             CommandProcessJob commandProcessJob = new CommandProcessJob
             {
                 commandMetadata = commandGiven,
                 botLeft = botLeft,
                 topRight = topRight
             };
-            commandProcessJob.ScheduleSingle(this).Complete();
-            CommandListener commandMetadata = commandGiven[0];
-            // If right click did not overlap with any clickable, then it is a move command.
+            JobHandle commandProcessHandle = commandProcessJob.ScheduleSingle(this);
+            getWorkersJobHandle.Complete();
+            commandProcessHandle.Complete();
 
-            // temp dirty way
-            bool gaveBuildCommand =  false;
+            CommandListener commandMetadata = commandGiven[0];
+            // If right click did not overlap with any clickable, then it is a move or build command.
+            // temp dirty way till update CommandProcessJob to be more generic.
+
             if (commandMetadata.CommandType == CommandType.None)
             {
                 Vector3f convertedMousePos = new Vector3f(mousePos.x, 0, mousePos.z);
+                commandMetadata = new CommandListener
+                {
+                    TargetPosition = convertedMousePos,
+                    CommandType = CommandType.Move
+                };
+            }
 
-                // So here If clicked on nothing, check if have structure to build selected.
-                HunterController hunterController = hunter.GetComponent<HunterController>();
-                if (hunterController.SelectedStructure != null){
-                    BuildCommand buildCommand = new BuildCommand{
-                        structureType = hunterController.SelectedStructure.structureType,
-                        buildLocation = convertedMousePos
+            CommandGiveJob commandGiveJob = new CommandGiveJob
+            {
+                commandGiven = commandMetadata,
+                entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
+                hunterId = invaderLink.EntityId
+            };
+            JobHandle jobHandle = commandGiveJob.Schedule(commandListenerQuery);
+            freeWorkers.Clear();
+            busyWorkers.Clear();
+            commandGiven.Dispose();
+            jobHandle.Complete();
+        }
+
+        void ProcessBuildCommands()
+        {
+            GameObject hunter = GameObject.FindGameObjectWithTag("MainCamera");
+
+
+            HunterController hunterController = hunter.GetComponent<HunterController>();
+            if (hunterController.SelectedStructure != null)
+            {
+                var selectedStructure = hunterController.SelectedStructure;
+                if (freeWorkers.Count + busyWorkers.Count >= selectedStructure.WorkersRequired)
+                {
+                    BuildCommand buildCommand = new BuildCommand
+                    {
+                        structureType = selectedStructure.structureType,
                     };
-                    // Every type is same, so I load config from scriptable object when sending request. That's fine.
-                    // Will be a type to config mapping. So at this point I don't need to know that
-                    // cause that is static data for that kind of structure.
+
+                    NativeArray<EntityId> workersToAssign = new NativeArray<EntityId>(selectedStructure.WorkersRequired, Allocator.TempJob);
+
+                    int added = 0;
+
+                    while (added < selectedStructure.WorkersRequired && freeWorkers.Count > 0)
+                    {
+                        workersToAssign[added++] = freeWorkers.Dequeue();
+                    }
+
+                    while (added < selectedStructure.WorkersRequired && busyWorkers.Count > 0)
+                    {
+                        workersToAssign[added++] = busyWorkers.Dequeue();
+                    }
+
                     GiveBuildCommandJob giveBuildCommand = new GiveBuildCommandJob
                     {
                         buildCommand = buildCommand,
-                        hunterId = hunterId,
-                        entityCommandBuffer = PostUpdateCommands.ToConcurrent()
+                        entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
+                        toAssignTo = workersToAssign
                     };
-                    giveBuildCommand.Schedule(this).Complete();
-                    gaveBuildCommand = true;
-                }
-                else{
-                    commandMetadata = new CommandListener { TargetPosition = convertedMousePos, CommandType = CommandType.Move };
+                    JobHandle jobHandle = giveBuildCommand.Schedule(commandListenerQuery);
+                    freeWorkers.Clear();
+                    busyWorkers.Clear();
+                    jobHandle.Complete();
+                    workersToAssign.Dispose();
                 }
             }
-            if (!gaveBuildCommand)
-            {
-                CommandGiveJob commandGiveJob = new CommandGiveJob
-                {
-                    commandGiven = commandMetadata,
-                    entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
-                    hunterId = hunterId
-                };
-                commandGiveJob.Schedule(this).Complete();
-            }
-            commandGiven.Dispose();
-            //inputCamera.depth = 0;
         }
     }
 }

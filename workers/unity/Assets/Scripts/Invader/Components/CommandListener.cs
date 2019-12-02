@@ -12,4 +12,9 @@ namespace MDG.Invader.Components
         public EntityId TargetId;
         public Vector3f TargetPosition;
     }
+
+    public struct WorkerUnit : IComponentData
+    {
+
+    }
 }

@@ -18,7 +18,7 @@ namespace MDG.Common.MonoBehaviours
         public void UpdateSlot(InventoryItem inventoryItem)
         {
             details = inventoryItem;
-            itemImage.sprite = inventoryItem.ArtWork;
+            itemImage.sprite = inventoryItem.Thumbnail;
         }
 
         public void ClearSlot()
