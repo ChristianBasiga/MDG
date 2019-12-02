@@ -3,7 +3,6 @@ package mdg_schema.common.structure;
 component Trap
 {
     id = 954;
-    string trap_id = 1;
     int32 damage = 2;
     bool one_time_use = 3;
 }

@@ -174,6 +174,8 @@ namespace MDG.Templates
                     attackCooldown = 0,
                     attackRange = 90.0f
                 });
+
+                entityManager.AddComponentData(entity, new WorkerUnit());
             }
         }
     }

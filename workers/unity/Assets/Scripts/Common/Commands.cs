@@ -12,7 +12,8 @@ namespace MDG.Invader.Commands
         None,
         Move,
         Collect,
-        Attack
+        Attack,
+        Build
     }
 
 }

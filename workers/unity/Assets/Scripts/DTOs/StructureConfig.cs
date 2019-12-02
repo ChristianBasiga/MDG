@@ -16,11 +16,18 @@ namespace MDG.DTO
     public class StructureConfig
     {
         public StructureSchema.StructureType structureType;
+        public string prefabName;
         public int constructionTime;
     }
 
     [Serializable]
-    public class SpawnStructureConfig : StructureConfig
+    public class InvaderStructureConfig : StructureConfig
+    {
+        public int WorkersRequired;
+    }
+
+    [Serializable]
+    public class SpawnStructureConfig : InvaderStructureConfig
     {
         public InventoryConfig inventoryConfig;
     }
@@ -34,8 +41,7 @@ namespace MDG.DTO
     [Serializable]
     public class TrapConfig : StructureConfig
     {
-        public string trapId;
-        public int Damage;
+        public int Damage;  
         public Vector3f ColliderDimensions;
         public bool OneTimeUse;
     }

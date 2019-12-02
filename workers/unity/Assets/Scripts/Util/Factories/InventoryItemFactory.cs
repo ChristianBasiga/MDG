@@ -29,7 +29,7 @@ namespace MDG.Factories
 
             foreach (InventoryItem inventoryItem in items)
             {
-                itemsCanRender.Add(inventoryItem.ItemId, inventoryItem);
+               // temsCanRender.Add(inventoryItem.ItemId, inventoryItem);
             }
         }
     }

@@ -231,17 +231,21 @@ namespace MDG
             {
                 string structurePath =  hasAuthority ? $"{pathToEntity}/Authoritative/Structures" : $"{pathToEntity}/Structures";
                 StructureSchema.StructureMetadata.Component structureMetaData = entity.GetComponent<StructureSchema.StructureMetadata.Component>();
+
                 switch (structureMetaData.StructureType)
                 {
                     case StructureSchema.StructureType.Trap:
-                        StructureSchema.Trap.Component trapComponent = entity.GetComponent<StructureSchema.Trap.Component>();
-                        string trapPath = $"{structurePath}/Traps/{trapComponent.TrapId}";
-                        WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
-                        worker.TryGetEntity(entity.SpatialOSEntityId, out Entity trapEntity);
-                        Templates.StructureArchtypes.AddStructureArchtype(_world.EntityManager, trapEntity, hasAuthority);
-                        CreateEntityObject(entity, linker, trapPath);
+                        structurePath = $"{structurePath}/Traps/{structureMetaData.PrefabName}";
+                        break;
+                    case StructureSchema.StructureType.Spawning:
+                    case StructureSchema.StructureType.Claiming:
+                        structurePath = $"{structurePath}/InvaderStructures/{structureMetaData.PrefabName}";
                         break;
                 }
+                WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
+                worker.TryGetEntity(entity.SpatialOSEntityId, out Entity structureEntity);
+                Templates.StructureArchtypes.AddStructureArchtype(_world.EntityManager, structureEntity, hasAuthority);
+                CreateEntityObject(entity, linker, structurePath);
             }
             else
             {

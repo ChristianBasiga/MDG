@@ -1,7 +1,10 @@
 ﻿using Improbable;
+using Improbable.Gdk.Core;
+using MDG.Invader.Systems;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Entities;
 using UnityEngine;
 
 
@@ -12,8 +15,10 @@ namespace MDG.Common
     /// </summary>
     public class HelperFunctions
     {
+        #region ECS related operations
 
 
+        #endregion
         #region Vector Operations
 
         /// <summary>

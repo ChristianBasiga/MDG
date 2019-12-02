@@ -2,6 +2,7 @@
 using Improbable.Gdk.Subscriptions;
 using MDG.Common.MonoBehaviours.Shopping;
 using MDG.DTO;
+using MDG.Invader.Monobehaviours.UserInterface;
 using MDG.ScriptableObjects.Items;
 using System;
 using System.Collections;
@@ -23,6 +24,7 @@ namespace MDG.Common.MonoBehaviours.Structures
 
     // Not all structures have multipe jobs as shop items, need to update this.
     [RequireComponent(typeof(ShopBehaviour))]
+    [RequireComponent(typeof(BuildMenu))]
     // For invader specifically.. Too general and too grand.
     public class StructureBehaviour : MonoBehaviour
     {
@@ -44,8 +46,7 @@ namespace MDG.Common.MonoBehaviours.Structures
         private ShopItem[] jobQueue;
 
 
-        // Gotta figure out how to assign this, prob though zenject as it shuldn't care what value is.
-        
+        BuildMenu buildMenu;
         public IStructure ConcreteStructureBehaviour { set; get; }
 
         // Wierd dependancy if do inheritance, think structure
@@ -54,11 +55,20 @@ namespace MDG.Common.MonoBehaviours.Structures
             jobIndex = 0;
             jobQueue = new ShopItem[JobCapacity];
             ConcreteStructureBehaviour.Link(this);
+            buildMenu = GetComponent<BuildMenu>();
+            buildMenu.OnOptionSelected += BuildMenu_OnOptionSelected;
+            // Oh now it's all fucked lmao. I created shop behaviour already.
             ShopBehaviour shopBehaviour = GetComponent<ShopBehaviour>();
             shopBehaviour.OnPurchaseItem += StartJob;
             structureReader.OnConstructingUpdate += OnConstructingUpdate;
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
+        }
+
+        private void BuildMenu_OnOptionSelected(ShopItem obj)
+        {
+            ShopBehaviour shopBehaviour = GetComponent<ShopBehaviour>();
+            shopBehaviour.TryPurchase(obj, linkedEntityComponent);
         }
 
         // Layered events but it's fine.

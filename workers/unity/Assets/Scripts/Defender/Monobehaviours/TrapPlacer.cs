@@ -67,7 +67,7 @@ namespace MDG.Defender.Monobehaviours
 
             TrapConfig trapConfig = new TrapConfig
             {
-                trapId = trap.PrefabPath,
+                prefabName = trap.PrefabPath,
                 Damage = trap.Damage,
                 structureType = MdgSchema.Common.Structure.StructureType.Trap,
                 ColliderDimensions = HelperFunctions.Vector3fFromUnityVector(trap.ColliderDimensions),

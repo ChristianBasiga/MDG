@@ -27,14 +27,41 @@ namespace MDG.Common.MonoBehaviours.Shopping
         // Start is called before the first frame update
         void Start()
         {
+
+            // So really shop behaviour needs the build menu?????
+        }
+
+        public void TryPurchase(ShopItem shopItem, LinkedEntityComponent purchaser)
+        {
+            if (purchaser.Worker.TryGetEntity(purchaser.EntityId, out Unity.Entities.Entity purchaserEntity))
+            {
+                Point.Component pointComponent = purchaser.World.EntityManager.GetComponentData<Point.Component>(purchaserEntity);
+
+                if (pointComponent.Value <= shopItem.Cost)
+                {
+                    ShowCantPurchaseUI();
+                }
+                else
+                {
+                    // Otherwise send point request to decrease points
+                    // and invoke purchase handler.
+                    PointRequestSystem pointRequestSystem = purchaser.World.GetExistingSystem<PointRequestSystem>();
+
+                    pointRequestSystem.AddPointRequest(new PointRequest
+                    {
+                        EntityUpdating = purchaser.EntityId,
+                        PointUpdate = -shopItem.Cost
+                    }, OnPointRequestReturned);
+                    // Will handle purchase right away or on call back??
+                    purchaser.GetComponent<PurchaseHandlerMonobehaviour>().HandlePurchase(shopItem, this);
+                    OnPurchaseItem?.Invoke(shopItem, purchaser);
+                }
+            }
         }
 
         // So two things here, the shop item and the belonging shop gameobject.
         public void OnShopItem(ShopItem shopItem, LinkedEntityComponent purchaser)
         {
-            // Trigger callbacks for all actions done subscribed by other components on same object.
-            OnPurchaseItem?.Invoke(shopItem, purchaser);
-
             // Update Point and invoice PurchaseHandlers.
             LinkedEntityComponent linkedEntityComponent = purchaser.GetComponent<LinkedEntityComponent>();
 
@@ -59,6 +86,7 @@ namespace MDG.Common.MonoBehaviours.Shopping
                     }, OnPointRequestReturned);
                     // Will handle purchase right away or on call back??
                     purchaser.GetComponent<PurchaseHandlerMonobehaviour>().HandlePurchase(shopItem, this);
+                    OnPurchaseItem?.Invoke(shopItem, purchaser);
                 }
             }
 

@@ -41,6 +41,7 @@ namespace MDG.Templates
             });
             entityTemplate.AddComponent(new StructureSchema.StructureMetadata.Snapshot
             {
+                PrefabName = structureConfig.prefabName,
                 StructureType = structureConfig.structureType,
                 ConstructionTime = structureConfig.constructionTime
             }, serverAttribute);
@@ -75,7 +76,6 @@ namespace MDG.Templates
 
             template.AddComponent(new StructureSchema.Trap.Snapshot
             {
-                TrapId = trapConfig.trapId,
                 Damage = trapConfig.Damage,
                 OneTimeUse = trapConfig.OneTimeUse
             }, serverAttribute);

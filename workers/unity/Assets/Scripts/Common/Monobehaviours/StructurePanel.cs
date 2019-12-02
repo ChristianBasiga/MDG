@@ -33,7 +33,7 @@ namespace MDG.Common.MonoBehaviours.Structures
 
         private void OnJobStarted(int jobIndex, ShopItem jobInfo, LinkedEntityComponent arg2)
         {
-            jobQueueUI[jobIndex].sprite = jobInfo.ArtWork;
+            jobQueueUI[jobIndex].sprite = jobInfo.Thumbnail;
         }
 
         private void OnJobRun(StructureSchema.JobRunEventPayload jobRunPayload)

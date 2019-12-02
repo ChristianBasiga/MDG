@@ -8,6 +8,7 @@ enum StructureType{
 
 component StructureMetadata{
     id = 952;
-    StructureType structure_type = 1;
+    string prefab_name = 1;
+    StructureType structure_type = 2;
     int32 construction_time = 3;
 }
