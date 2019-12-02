@@ -166,15 +166,11 @@ namespace MDG.Invader.Systems
         {
             base.OnStartRunning();
             invaderLink = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<LinkedEntityComponent>();
-        }
-        protected override void OnCreate()
-        {
-            base.OnCreate();
             commandListenerQuery = GetEntityQuery(
-                ComponentType.ReadWrite<CommandListener>(),
-                ComponentType.ReadOnly<Clickable>(),
-                ComponentType.ReadOnly<MdgSchema.Units.Unit.Component>()
-                );
+              ComponentType.ReadWrite<CommandListener>(),
+              ComponentType.ReadOnly<Clickable>(),
+              ComponentType.ReadOnly<MdgSchema.Units.Unit.Component>()
+              );
             workerUnitQuery = GetEntityQuery(
                   ComponentType.ReadOnly<CommandListener>(),
                 ComponentType.ReadOnly<Clickable>(),
@@ -186,7 +182,6 @@ namespace MDG.Invader.Systems
             freeWorkers = new NativeQueue<EntityId>(Allocator.Persistent);
             busyWorkers = new NativeQueue<EntityId>(Allocator.Persistent);
         }
-
 
         protected override void OnDestroy()
         {

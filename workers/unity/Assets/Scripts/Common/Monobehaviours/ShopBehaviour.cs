@@ -39,70 +39,37 @@ namespace MDG.Common.MonoBehaviours.Shopping
 
                 if (pointComponent.Value <= shopItem.Cost)
                 {
-                    ShowCantPurchaseUI();
+                    ShowCantPurchaseUI("Not enough points");
                 }
                 else
                 {
                     // Otherwise send point request to decrease points
                     // and invoke purchase handler.
                     PointRequestSystem pointRequestSystem = purchaser.World.GetExistingSystem<PointRequestSystem>();
-
                     pointRequestSystem.AddPointRequest(new PointRequest
                     {
                         EntityUpdating = purchaser.EntityId,
                         PointUpdate = -shopItem.Cost
                     }, OnPointRequestReturned);
                     // Will handle purchase right away or on call back??
-                    purchaser.GetComponent<PurchaseHandlerMonobehaviour>().HandlePurchase(shopItem, this);
+                    //purchaser.GetComponent<PurchaseHandlerMonobehaviour>().HandlePurchase(shopItem, this);
                     OnPurchaseItem?.Invoke(shopItem, purchaser);
                 }
             }
-        }
-
-        // So two things here, the shop item and the belonging shop gameobject.
-        public void OnShopItem(ShopItem shopItem, LinkedEntityComponent purchaser)
-        {
-            // Update Point and invoice PurchaseHandlers.
-            LinkedEntityComponent linkedEntityComponent = purchaser.GetComponent<LinkedEntityComponent>();
-
-            if (linkedEntityComponent.Worker.TryGetEntity(linkedEntityComponent.EntityId, out Unity.Entities.Entity purchaserEntity))
-            {
-                Point.Component pointComponent = linkedEntityComponent.World.EntityManager.GetComponentData<Point.Component>(purchaserEntity);
-
-                if (pointComponent.Value <= shopItem.Cost)
-                {
-                    ShowCantPurchaseUI();
-                }
-                else
-                {
-                    // Otherwise send point request to decrease points
-                    // and invoke purchase handler.
-                    PointRequestSystem pointRequestSystem = linkedEntityComponent.World.GetExistingSystem<PointRequestSystem>();
-
-                    pointRequestSystem.AddPointRequest(new PointRequest
-                    {
-                        EntityUpdating = linkedEntityComponent.EntityId,
-                        PointUpdate = -shopItem.Cost
-                    }, OnPointRequestReturned);
-                    // Will handle purchase right away or on call back??
-                    purchaser.GetComponent<PurchaseHandlerMonobehaviour>().HandlePurchase(shopItem, this);
-                    OnPurchaseItem?.Invoke(shopItem, purchaser);
-                }
-            }
-
         }
 
         void OnPointRequestReturned(Point.UpdatePoints.ReceivedResponse receivedResponse)
         {
             if (receivedResponse.StatusCode != StatusCode.Success)
             {
-                Debug.LogError(receivedResponse.Message);
-                ShowCantPurchaseUI();
+                ShowCantPurchaseUI(receivedResponse.Message);
             }
         }
 
-        private void ShowCantPurchaseUI()
+        private void ShowCantPurchaseUI(string message)
         {
+            // Do this later.
+            Debug.Log($"Failed to purchase: {message}");
         }
     }
 }

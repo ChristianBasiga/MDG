@@ -28,12 +28,12 @@ namespace MDG.Invader.Systems {
             public bool onlySelectOne;
         }
 
-        protected override void OnCreate()
+        protected override void OnStartRunning()
         {
-            base.OnCreate();
+            base.OnStartRunning();
             selectorGroup = GetEntityQuery(typeof(Selection));
-            
         }
+
 
         public struct GetSelectedBounds : IJobForEach<SpatialEntityId, Selection>
         {

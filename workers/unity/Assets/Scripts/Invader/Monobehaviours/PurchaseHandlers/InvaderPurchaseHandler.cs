@@ -12,27 +12,25 @@ namespace MDG.Invader.Monobehaviours
     public class InvaderPurchaseHandler : PurchaseHandlerMonobehaviour
     {
         // Will be referencing Other handlers for managing spawning units, etc.
-        List<PurchaseHandler> purchaseHandlers;
+        List<IPurchaseHandler> purchaseHandlers;
        
         // Start is called before the first frame update
         void Start()
         {
-            purchaseHandlers = new List<PurchaseHandler>();
+            purchaseHandlers = new List<IPurchaseHandler>();
         }
 
         public override void HandlePurchase(ShopItem shopItem, ShopBehaviour shopObject)
         {
             // Let all purchase handlers... handle purchase, don't break cause may want to do more stuff for unit purchase.
-            foreach(PurchaseHandler purchaseHandler in purchaseHandlers)
+            for (int i = 0; i < purchaseHandlers.Count; ++i)
             {
-                if (purchaseHandler.HandlePurchase(shopItem, shopObject))
-                {
-                }
+                purchaseHandlers[i].HandlePurchase(shopItem, shopObject);
             }
             throw new System.Exception("No purchase handlers available to handle this purchase");
         }
 
-        public override void AddHandler(PurchaseHandler purchaseHandler)
+        public override void AddHandler(IPurchaseHandler purchaseHandler)
         {
             purchaseHandler.Handshake(GetComponent<LinkedEntityComponent>());
             purchaseHandlers.Add(purchaseHandler);

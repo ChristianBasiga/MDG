@@ -152,11 +152,8 @@ namespace MDG.Invader.Systems
                 float distance = HelperFunctions.Distance(sameY, entityTransform.Position);
 
 
-                // Min distance should take really take into account collider, for now I'll fudg vaue
-                // DOwn line pass in NativeArray of BoxCollider. to more accurate.
-                const float bufferRoom = 1.0f;
                 // Just magnitude prob fine, if all uniform, they won't be uniform though.
-                float minDistance = boxCollider.Dimensions.ToUnityVector().magnitude + bufferRoom;
+                float minDistance = boxCollider.Dimensions.ToUnityVector().magnitude;
                 // When should I mark IsAtResource
                 if (!collectCommand.IsCollecting && !collectCommand.IsAtResource)
                 {
@@ -276,9 +273,9 @@ namespace MDG.Invader.Systems
         }
         #endregion
 
-        protected override void OnCreate()
+        protected override void OnStartRunning()
         {
-            base.OnCreate();
+            base.OnStartRunning();
             unitWeapon = Resources.Load("ScriptableObjects/Weapons/UnitWorkerProjectile") as Weapon;
             combatStatsQuery = GetEntityQuery(
                ComponentType.ReadOnly<CombatMetadata>(),

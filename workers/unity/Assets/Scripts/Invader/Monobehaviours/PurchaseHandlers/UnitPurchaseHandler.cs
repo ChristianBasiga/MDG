@@ -11,7 +11,7 @@ using MDG.DTO;
 
 namespace MDG.Invader.Monobehaviours
 {
-    public class UnitPurchaseHandler : PurchaseHandler
+    public class UnitPurchaseHandler : IPurchaseHandler
     {
         SpawnSystems.SpawnRequestSystem spawnRequestSystem;
         EntityId purchaser;

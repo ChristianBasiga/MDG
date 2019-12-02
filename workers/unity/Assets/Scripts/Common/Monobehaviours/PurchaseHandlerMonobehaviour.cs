@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MDG.Common.MonoBehaviours.Shopping
 {
 
-    public interface PurchaseHandler
+    public interface IPurchaseHandler
     {
         bool HandlePurchase(ShopItem shopItem, ShopBehaviour shopObject);
         // To say that purchase handler is for that linked entity component
@@ -16,6 +16,6 @@ namespace MDG.Common.MonoBehaviours.Shopping
     public abstract class PurchaseHandlerMonobehaviour : MonoBehaviour
     {
         public abstract void HandlePurchase(ShopItem shopItem, ShopBehaviour shopObject);
-        public abstract void AddHandler(PurchaseHandler purchaseHandler);
+        public abstract void AddHandler(IPurchaseHandler purchaseHandler);
     }
 }

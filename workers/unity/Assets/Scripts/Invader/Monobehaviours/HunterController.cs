@@ -12,6 +12,7 @@ using MDG.Invader.Monobehaviours.UserInterface;
 using PointSchema = MdgSchema.Common.Point;
 using MDG.Common.MonoBehaviours.Shopping;
 using MDG.Common;
+using MDG.ScriptableObjects.Items;
 
 namespace MDG.Invader.Monobehaviours {
 
@@ -64,6 +65,8 @@ namespace MDG.Invader.Monobehaviours {
                 };
                 // Well okay, so since build command is really just a broadcast now irrelvant to right click.
                 SelectedStructure = structureConfig;
+
+                Debug.Log("Get to here");
             }
         }
 
@@ -75,6 +78,15 @@ namespace MDG.Invader.Monobehaviours {
                 float3 convertedScale = inputCamera.ScreenToWorldPoint(payload.scale);
                 linkedEntityComponent.World.EntityManager.AddComponentData(entity, new Selection { StartPosition = convertedStart, Scale = convertedScale, EndPosition = convertedEnd});
             }
+        }
+
+        public bool HandlePurchase(ShopItem shopItem, ShopBehaviour shopObject)
+        {
+            return true;
+        }
+
+        public void Handshake(LinkedEntityComponent linkedEntityComponent)
+        {
         }
     }
 }

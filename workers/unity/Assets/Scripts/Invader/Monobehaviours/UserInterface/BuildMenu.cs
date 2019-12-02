@@ -47,7 +47,6 @@ namespace MDG.Invader.Monobehaviours.UserInterface
                     case ShopItemType.Buildable:
                         ScriptableObjectStructures.Structure structure = resources[i] as ScriptableObjectStructures.Structure;
                         menuSlots[i].SetItem(structure);
-                        menuSlots[i].gameObject.SetActive(false);
                         break;
                     case ShopItemType.Unit:
                         // Do later.

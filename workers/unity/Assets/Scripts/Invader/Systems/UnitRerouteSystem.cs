@@ -140,17 +140,17 @@ namespace MDG.Invader.Systems
         }
 
 
-        protected override void OnCreate()
+        protected override void OnStartRunning()
         {
-            base.OnCreate();
+            base.OnStartRunning();
             rerouteGroup = GetEntityQuery(
-                ComponentType.ReadOnly<EntityTransform.Component>(),
-                ComponentType.ReadWrite<RerouteComponent>(),
-                ComponentType.ReadWrite<PositionSchema.LinearVelocity.Component>(),
-                ComponentType.ReadOnly<PositionSchema.LinearVelocity.ComponentAuthority>(),
-                ComponentType.ReadOnly<CollisionSchema.BoxCollider.Component>(),
-                ComponentType.ReadOnly<CommandListener>()
-                );
+              ComponentType.ReadOnly<EntityTransform.Component>(),
+              ComponentType.ReadWrite<RerouteComponent>(),
+              ComponentType.ReadWrite<PositionSchema.LinearVelocity.Component>(),
+              ComponentType.ReadOnly<PositionSchema.LinearVelocity.ComponentAuthority>(),
+              ComponentType.ReadOnly<CollisionSchema.BoxCollider.Component>(),
+              ComponentType.ReadOnly<CommandListener>()
+              );
 
             rerouteGroup.SetFilter(PositionSchema.LinearVelocity.ComponentAuthority.Authoritative);
 
