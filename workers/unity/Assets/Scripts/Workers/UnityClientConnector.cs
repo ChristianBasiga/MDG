@@ -72,16 +72,29 @@ namespace MDG
             Worker.World.GetOrCreateSystem<PointRequestSystem>();
             Worker.World.GetOrCreateSystem<WeaponSystem>();
             //Invader systems.
-            Worker.World.GetOrCreateSystem<SelectionSystem>();
-            Worker.World.GetOrCreateSystem<CommandGiveSystem>();
-            Worker.World.GetOrCreateSystem<CommandUpdateSystem>();
+
+            /*
+           
+
+            */
             Worker.World.GetOrCreateSystem<ResourceRequestSystem>();
             Worker.World.GetOrCreateSystem<ResourceMonitorSystem>();
-            Worker.World.GetOrCreateSystem<UnitRerouteSystem>();
-
+            Worker.World.GetOrCreateSystem<SelectionSystem>().Enabled = false; 
+            Worker.World.GetOrCreateSystem<CommandGiveSystem>().Enabled = false;
+            Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = false;
+            Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = false;
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
             clientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType, gameConfig);
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, clientGameObjectCreator);
+        }
+
+
+        public void AddInvaderSystems()
+        {
+            Worker.World.GetOrCreateSystem<SelectionSystem>().Enabled = true;
+            Worker.World.GetOrCreateSystem<CommandGiveSystem>().Enabled = true;
+            Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = true;
+            Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = true;
         }
 
         public void CloseConnection()

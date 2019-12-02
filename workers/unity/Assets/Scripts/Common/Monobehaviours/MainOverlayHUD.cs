@@ -21,6 +21,7 @@ namespace MDG.Common.MonoBehaviours
         Text timerText;
         public delegate void RoleSelectedHandler(GameEntityTypes type);
         public event RoleSelectedHandler OnRoleSelected;
+        GameEntityTypes roleSelected;
         private EntityId gameManagerEntityId = new EntityId(3);
 
 
@@ -81,6 +82,7 @@ namespace MDG.Common.MonoBehaviours
         {
             GameEntityTypes type = (GameEntityTypes) System.Enum.Parse(typeof(GameEntityTypes), role);
             OnRoleSelected?.Invoke(type);
+            roleSelected = type;
 
             UnityClientConnector clientConnector = GetComponent<UnityClientConnector>();
             var playerCreationSystem = clientConnector.Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
@@ -102,6 +104,11 @@ namespace MDG.Common.MonoBehaviours
             else
             {
                 Debug.Log("Created player succssfully");
+                UnityClientConnector clientConnector = GetComponent<UnityClientConnector>();
+
+                if (roleSelected == GameEntityTypes.Hunter) {
+                    clientConnector.AddInvaderSystems();
+                }
             }
         }
     }
