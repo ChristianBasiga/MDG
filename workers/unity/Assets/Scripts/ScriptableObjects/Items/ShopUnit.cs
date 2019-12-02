@@ -11,11 +11,7 @@ namespace MDG.ScriptableObjects.Items
     {
         public float ConstructTime;
         public UnitSchema.UnitTypes UnitType;
-        public override bool Equals(object other)
-        {
-            ShopItem otherItem = other as ShopItem;
-            return ItemId.Equals(otherItem.ItemId) && Title.Equals(otherItem.Title) && Cost.Equals(otherItem.Cost);
-        }
+      
 
         public override int GetHashCode()
         {

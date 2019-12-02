@@ -10,12 +10,6 @@ namespace MDG.ScriptableObjects.Items
     {
         public Constants.ShopItemType shopItemType;
         public int Cost;
-        public override bool Equals(object other)
-        {
-            ShopItem otherItem = other as ShopItem;
-            return ItemId.Equals(otherItem.ItemId) && Title.Equals(otherItem.Title) && Cost.Equals(otherItem.Cost);
-        }
-
         public override int GetHashCode()
         {
             return base.GetHashCode();

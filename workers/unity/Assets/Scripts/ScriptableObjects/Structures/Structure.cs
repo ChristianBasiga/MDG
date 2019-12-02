@@ -9,10 +9,10 @@ namespace MDG.ScriptableObjects.Structures
 {
 
     [CreateAssetMenu(menuName = Constants.RootMenuPath + "/" + Constants.StructurePath + "/Structure")]
-    public class Structure : ScriptableObject
+    public class Structure : ShopItem
     {
         public StructureSchema.StructureType StructureType;
-        public Sprite Thumbnail;
+        public int WorkersRequired;
         public int ConstructionTime;
         public int MaximumConcurrentJobs;
         public int MaxJobsQueued;

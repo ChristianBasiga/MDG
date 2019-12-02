@@ -8,14 +8,8 @@ namespace MDG.ScriptableObjects.Items
     [CreateAssetMenu(menuName = Constants.RootMenuPath + "/" + Constants.ItemPath + "/InventoryItem")]
     public class InventoryItem : ScriptableObject
     {
-        public Sprite ArtWork;
-        public int ItemId;
-        public string Title;
-        public override bool Equals(object other)
-        {
-            InventoryItem otherItem = other as InventoryItem;
-            return ItemId.Equals(otherItem.ItemId) && Title.Equals(otherItem.Title);
-        }
+        public Sprite Thumbnail;
+        public string PrefabPath;
 
         public override int GetHashCode()
         {

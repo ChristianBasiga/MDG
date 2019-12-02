@@ -10,12 +10,6 @@ namespace MDG.ScriptableObjects.Items
     {
         public int RequiredWorkersCount;
         public StructureConfig StructureConfig;
-        public override bool Equals(object other)
-        {
-            BuildableItem otherItem = other as BuildableItem;
-            return ItemId.Equals(otherItem.ItemId) && Title.Equals(otherItem.Title) && Cost.Equals(otherItem.Cost) &&
-                RequiredWorkersCount.Equals(otherItem.RequiredWorkersCount);
-        }
 
         public override int GetHashCode()
         {
