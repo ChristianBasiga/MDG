@@ -131,7 +131,7 @@ namespace MDG.Invader.Systems
                 {
                     Debug.Log("Finished moving");
                     linearVelocityComponent.Velocity = Vector3f.Zero;
-                    commandListener.CommandType = Commands.CommandType.None;
+                    commandListener.CommandType = CommandType.None;
                     entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(MoveCommand));
                 }
             }
@@ -642,9 +642,9 @@ namespace MDG.Invader.Systems
            {
                switch (commandInterrupted.interrupting)
                {
-                   case Commands.CommandType.Attack:
+                   case CommandType.Attack:
                       break;
-                   case Commands.CommandType.Collect:
+                   case CommandType.Collect:
                        resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
                        {
                            OccupantId = spatialEntityId.EntityId,
@@ -652,7 +652,7 @@ namespace MDG.Invader.Systems
                            ResourceRequestType = ResourceRequestType.RELEASE
                        });
                        break;
-                   case Commands.CommandType.Move:
+                   case CommandType.Move:
                        break;
                }
            });

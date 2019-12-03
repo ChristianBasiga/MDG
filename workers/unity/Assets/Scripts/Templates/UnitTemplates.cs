@@ -141,7 +141,7 @@ namespace MDG.Templates
             // each entit
             if (authoritative)
             {
-                entityManager.AddComponentData(entity, new CommandListener { CommandType = MDG.Invader.Commands.CommandType.None });
+                entityManager.AddComponentData(entity, new CommandListener { CommandType = CommandType.None });
             }
             else
             {

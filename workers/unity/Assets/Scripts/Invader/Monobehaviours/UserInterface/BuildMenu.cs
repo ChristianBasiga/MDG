@@ -16,9 +16,23 @@ namespace MDG.Invader.Monobehaviours.UserInterface
         MenuSlot[] menuSlots;
 
         public event Action<ShopItem> OnOptionSelected;
+
+        public event Action<ShopItem> OnOptionConfirmed;
+
+
+        public delegate bool ConfirmQuery();
+        private ConfirmQuery ConfirmCallback;
+
+        MenuSlot lastClicked;
         ResourceRequest menuSlotPrefabPromise;
 
         public string MenuContentsPath;
+
+
+        public void SetConfirmation(ConfirmQuery confirmationCall)
+        {
+            ConfirmCallback = confirmationCall;
+        }
 
         // Images set should be injected, but watcha gonna do.
         void Start()
@@ -56,9 +70,35 @@ namespace MDG.Invader.Monobehaviours.UserInterface
             }
         }
 
-        void OnSlotClicked(ShopItem shopItem)
+        void OnSlotClicked(MenuSlot menuSlot)
         {
-            OnOptionSelected?.Invoke(shopItem);
+            lastClicked = menuSlot;
+            OnOptionSelected?.Invoke(menuSlot.ShopItem);
+            if (ConfirmCallback == null)
+            {
+                StartCoroutine(ConfirmSelection());
+                OnOptionConfirmed?.Invoke(lastClicked.ShopItem);
+            }
+        }
+
+        IEnumerator ConfirmSelection()
+        {
+            yield return new WaitForEndOfFrame();
+            yield return new WaitForEndOfFrame();
+
+        }
+
+        private void Update()
+        {
+            if (lastClicked != null && lastClicked.Selected)
+            {
+                if (ConfirmCallback != null && ConfirmCallback())
+                {
+                    lastClicked.Selected = false;
+                    OnOptionConfirmed?.Invoke(lastClicked.ShopItem);
+                    lastClicked = null;
+                }
+            }
         }
     }
 }

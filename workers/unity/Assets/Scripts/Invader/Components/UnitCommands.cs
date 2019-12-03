@@ -1,11 +1,19 @@
 ﻿using Improbable;
 using Improbable.Gdk.Core;
-using MDG.Invader.Commands;
 using Unity.Entities;
 using Unity.Mathematics;
 using StructureSchema = MdgSchema.Common.Structure;
 namespace MDG.Invader.Components
 {
+
+    public enum CommandType
+    {
+        None,
+        Move,
+        Collect,
+        Attack,
+        Build
+    }
     //Add more to these as needed.
     public struct MoveCommand : IComponentData
     {

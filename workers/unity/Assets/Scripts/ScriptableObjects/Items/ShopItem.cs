@@ -10,6 +10,7 @@ namespace MDG.ScriptableObjects.Items
     {
         public Constants.ShopItemType shopItemType;
         public int Cost;
+        public bool RequiresConfirmation;
         public override int GetHashCode()
         {
             return base.GetHashCode();

@@ -53,7 +53,7 @@ namespace MDG.Invader.Systems
                 [ReadOnly] ref CommandListener commandListener)
             {
 
-                if (commandListener.CommandType == Commands.CommandType.None || linearVelocityComponent.Velocity == Vector3f.Zero)
+                if (commandListener.CommandType == CommandType.None || linearVelocityComponent.Velocity == Vector3f.Zero)
                 {
                     entityCommandBuffer.RemoveComponent(index, entity, typeof(RerouteComponent));
                     linearVelocityComponent.Velocity = Vector3f.Zero;
@@ -189,7 +189,7 @@ namespace MDG.Invader.Systems
             {
                 ref readonly var eventSent = ref events[i];
                 workerSystem.TryGetEntity(eventSent.EntityId, out Entity entity);
-                if (!EntityManager.HasComponent<CommandListener>(entity) || EntityManager.GetComponentData<CommandListener>(entity).CommandType == Commands.CommandType.None)
+                if (!EntityManager.HasComponent<CommandListener>(entity) || EntityManager.GetComponentData<CommandListener>(entity).CommandType == CommandType.None)
                 {
                     continue;
                 }

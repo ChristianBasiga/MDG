@@ -11,17 +11,21 @@ namespace MDG.Invader.Monobehaviours.UserInterface
     [RequireComponent(typeof(Button))]
     public class MenuSlot : MonoBehaviour
     {
-        public event Action<ShopItem> OnSlotClicked;
+        public event Action<MenuSlot> OnSlotClicked;
         Button button;
+
+        public ShopItem ShopItem { private set; get; }
+
+        // Should handle togglign of too.
+        public bool Selected { set; get; }
 
         [SerializeField]
         Image thumbnail;
-        ScriptableObjectStructures.Structure structure;
 
-        public void SetItem(ScriptableObjectStructures.Structure structure)
+        public void SetItem(ShopItem shopItem)
         {
-            thumbnail.sprite = structure.Thumbnail;
-            this.structure = structure;
+            thumbnail.sprite = shopItem.Thumbnail;
+            ShopItem = shopItem;
         }
 
         // Start is called before the first frame update
@@ -34,7 +38,8 @@ namespace MDG.Invader.Monobehaviours.UserInterface
 
         void OnButtonClicked()
         {
-            OnSlotClicked?.Invoke(structure);
+            Selected = true;
+            OnSlotClicked?.Invoke(this);
         }
     }
 }

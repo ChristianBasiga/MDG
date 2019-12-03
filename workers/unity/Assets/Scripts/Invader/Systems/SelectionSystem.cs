@@ -18,7 +18,9 @@ namespace MDG.Invader.Systems {
     {
         JobHandle selectedJobHandle;
         EntityQuery selectorGroup;
-        NativeHashMap<EntityId, SelectionBounds> idToSelectionBounds;   
+        NativeHashMap<EntityId, SelectionBounds> idToSelectionBounds;
+
+        public const float MinSelectionSize = 10;
 
         public struct SelectionBounds
         {
@@ -35,6 +37,7 @@ namespace MDG.Invader.Systems {
         }
 
 
+
         public struct GetSelectedBounds : IJobForEach<SpatialEntityId, Selection>
         {
             [WriteOnly]
@@ -48,13 +51,12 @@ namespace MDG.Invader.Systems {
                 
                 // Down line move this to set selections part.
                 // reason is min size depends on entity checking selection for.
-                float selectionAreaMinSize = 10;
                 float selectionArea = math.distance(botLeft, topRight);
                 bool onlySelectOne = false;
-                if (selectionArea < selectionAreaMinSize)
+                if (selectionArea < MinSelectionSize)
                 {
-                    botLeft += new float3(-5, -5, 0) * (selectionAreaMinSize - selectionArea) * .5f;
-                    topRight += new float3(+5, +5, 0) * (selectionAreaMinSize - selectionArea) * .5f;
+                    botLeft += new float3(-5, -5, 0) * (MinSelectionSize - selectionArea) * .5f;
+                    topRight += new float3(+5, +5, 0) * (MinSelectionSize - selectionArea) * .5f;
                     onlySelectOne = true;
                 }
                 idToSelectionBounds.TryAdd(spatialEntityId.EntityId, new SelectionBounds
@@ -88,10 +90,13 @@ namespace MDG.Invader.Systems {
         {
             [ReadOnly]
             public NativeHashMap<EntityId, SelectionBounds> idToSelectionBounds;
+
+            // Really only exists to see if I'e already selected one, an array purely incase
+            // more than one invader type player in game, I won't have that
+            // but capabilities are there.
             [DeallocateOnJobCompletion]
             [NativeDisableContainerSafetyRestriction]
             public NativeArray<EntityId> selected;
-
             public int index;
 
             // Instead of single, do double buffering, have a selected to read from, and one to writ eto?
@@ -118,6 +123,7 @@ namespace MDG.Invader.Systems {
                                 selected[index++] = selectorIds[i];
                             }
                         }
+
                     }
                 }
                 selectorIds.Dispose();
@@ -131,7 +137,6 @@ namespace MDG.Invader.Systems {
             {
                 return;
             }
-
             // If selector count isn't 0, then new selection has been made this frame, reset Clickables.
             ResetSelectedEntities resetSelectedEntitiesJob = new ResetSelectedEntities();
             resetSelectedEntitiesJob.Schedule(this).Complete();
@@ -147,7 +152,7 @@ namespace MDG.Invader.Systems {
             {
                 idToSelectionBounds = idToSelectionBounds,
                 selected = new NativeArray<EntityId>(selectorCount, Allocator.TempJob),
-                index = 0
+                index = 0,
             };
             selectedJobHandle = setSelectedEntities.Schedule(this, selectedBoundsJob);
             selectedJobHandle.Complete();

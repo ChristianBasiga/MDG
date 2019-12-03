@@ -30,9 +30,7 @@ namespace MDG.Invader.Systems
 
         LinkedEntityComponent invaderLink;
 
-        NativeQueue<EntityId> freeWorkers;
-        NativeQueue<EntityId> busyWorkers; 
-
+        BuildCommand? queuedBuildCommand;
         // Checks what command the right click signified,
         // This would be applying the command to each Unit.
         // what I really need to do first is process it.
@@ -99,8 +97,12 @@ namespace MDG.Invader.Systems
             public EntityId hunterId;
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public CommandListener commandGiven;
+
+            public BuildCommand? buildCommand;
+
             public void Execute(Entity entity, int index, [ReadOnly] ref Clickable clicked, [ReadOnly] ref MdgSchema.Units.Unit.Component c1, ref CommandListener commandListener)
             {
+                Debug.Log("I happen");
                 if (clicked.Clicked && clicked.ClickedEntityId.Equals(hunterId))
                 {
                     //Clean up and stop all command compnents on unit before adding a new one.
@@ -120,6 +122,8 @@ namespace MDG.Invader.Systems
                     commandListener.CommandType = commandGiven.CommandType;
                     commandListener.TargetPosition = commandGiven.TargetPosition;
                     commandListener.TargetId = commandGiven.TargetId;
+
+                    Debug.Log("I happen " + buildCommand);
                     switch (commandGiven.CommandType)
                     {
                         case CommandType.Move:
@@ -130,6 +134,10 @@ namespace MDG.Invader.Systems
                             break;
                         case CommandType.Collect:
                             entityCommandBuffer.AddComponent(index, entity, new CollectCommand { destination = commandGiven.TargetPosition, resourceId = commandGiven.TargetId });
+                            break;
+                        case CommandType.Build:
+                            Debug.Log("building");
+                            entityCommandBuffer.AddComponent(index, entity, buildCommand.Value);
                             break;
                     }
                 }
@@ -179,86 +187,101 @@ namespace MDG.Invader.Systems
                 ComponentType.ReadOnly<WorkerUnit>()
                 );
 
-            freeWorkers = new NativeQueue<EntityId>(Allocator.Persistent);
-            busyWorkers = new NativeQueue<EntityId>(Allocator.Persistent);
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            freeWorkers.Dispose();
-            busyWorkers.Dispose();
+        }
+
+
+        public void GiveBuildCommand(BuildCommand command)
+        {
+            queuedBuildCommand = command;
         }
 
         protected override void OnUpdate()
         {
-            if (workerUnitQuery.CalculateEntityCount() == 0 || !Input.GetMouseButtonDown(1))
-            {
-                return;
-            }
 
-            float3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            // Creates bounding box for right click big enough to sense the click.
-            // Maybe create alot of these / include botLeft and botRight in the NativeArray.
-            float3 botLeft = mousePos + new float3(-10, 0, -10);// * (10 - Input.mousePosition.magnitude) * .5f;
-            float3 topRight = mousePos + new float3(+10, 0, +10);// * (10 - Input.mousePosition.magnitude) * .5f;
+            // Handling queued commands.
 
             NativeArray<CommandListener> commandGiven = new NativeArray<CommandListener>(1, Allocator.TempJob);
             commandGiven[0] = new CommandListener
             {
                 CommandType = CommandType.None
             };
+            BuildCommand? buildCommand = queuedBuildCommand;
 
-            GetWorkersJob getWorkersJob = new GetWorkersJob
+            if (queuedBuildCommand.HasValue)
             {
-                freeWorkers = freeWorkers.AsParallelWriter(),
-                busyWorkers = busyWorkers.AsParallelWriter()
-            };
-
-            JobHandle getWorkersJobHandle = getWorkersJob.Schedule(workerUnitQuery);
-
-            CommandProcessJob commandProcessJob = new CommandProcessJob
-            {
-                commandMetadata = commandGiven,
-                botLeft = botLeft,
-                topRight = topRight
-            };
-            JobHandle commandProcessHandle = commandProcessJob.ScheduleSingle(this);
-            getWorkersJobHandle.Complete();
-            commandProcessHandle.Complete();
-
-            CommandListener commandMetadata = commandGiven[0];
-            // If right click did not overlap with any clickable, then it is a move or build command.
-            // temp dirty way till update CommandProcessJob to be more generic.
-
-            if (commandMetadata.CommandType == CommandType.None)
-            {
-                Vector3f convertedMousePos = new Vector3f(mousePos.x, 0, mousePos.z);
-                commandMetadata = new CommandListener
+                Debug.Log("here?");
+                commandGiven[0] = new CommandListener
                 {
-                    TargetPosition = convertedMousePos,
-                    CommandType = CommandType.Move
+                    CommandType = CommandType.Build
                 };
+                queuedBuildCommand = null;
+            }
+            else
+            {
+
+                // For handling click context commands.
+                if (workerUnitQuery.CalculateEntityCount() == 0 || !Input.GetMouseButtonDown(1))
+                {
+                    commandGiven.Dispose();
+                    return;
+                }
+
+                float3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                // Creates bounding box for right click big enough to sense the click.
+                // Maybe create alot of these / include botLeft and botRight in the NativeArray.
+                float3 botLeft = mousePos + new float3(-10, 0, -10);// * (10 - Input.mousePosition.magnitude) * .5f;
+                float3 topRight = mousePos + new float3(+10, 0, +10);// * (10 - Input.mousePosition.magnitude) * .5f;
+
+                CommandProcessJob commandProcessJob = new CommandProcessJob
+                {
+                    commandMetadata = commandGiven,
+                    botLeft = botLeft,
+                    topRight = topRight
+                };
+                JobHandle commandProcessHandle = commandProcessJob.ScheduleSingle(this);
+                //getWorkersJobHandle.Complete();
+                commandProcessHandle.Complete();
+
+
+                // If right click did not overlap with any clickable and build command not queued, it is move command.
+                if (commandGiven[0].CommandType == CommandType.None)
+                {
+                    Vector3f convertedMousePos = new Vector3f(mousePos.x, 0, mousePos.z);
+                    commandGiven[0] = new CommandListener
+                    {
+                        TargetPosition = convertedMousePos,
+                        CommandType = CommandType.Move
+                    };
+                }
             }
 
+            Debug.Log("here??");
+            CommandListener commandMetadata = commandGiven[0];
             CommandGiveJob commandGiveJob = new CommandGiveJob
             {
                 commandGiven = commandMetadata,
                 entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
-                hunterId = invaderLink.EntityId
+                hunterId = invaderLink.EntityId,
+                buildCommand = buildCommand
             };
-            JobHandle jobHandle = commandGiveJob.Schedule(commandListenerQuery);
-            freeWorkers.Clear();
-            busyWorkers.Clear();
+            JobHandle jobHandle = commandGiveJob.Schedule(this);
             commandGiven.Dispose();
             jobHandle.Complete();
+
         }
 
-        void ProcessBuildCommands()
+
+        // Old broadcast build command way, was stupid.
+
+        /*void ProcessBuildCommands()
         {
+
             GameObject hunter = GameObject.FindGameObjectWithTag("MainCamera");
-
-
             HunterController hunterController = hunter.GetComponent<HunterController>();
             if (hunterController.SelectedStructure != null)
             {
@@ -291,12 +314,10 @@ namespace MDG.Invader.Systems
                         toAssignTo = workersToAssign
                     };
                     JobHandle jobHandle = giveBuildCommand.Schedule(commandListenerQuery);
-                    freeWorkers.Clear();
-                    busyWorkers.Clear();
                     jobHandle.Complete();
                     workersToAssign.Dispose();
                 }
             }
-        }
+        }*/
     }
 }
