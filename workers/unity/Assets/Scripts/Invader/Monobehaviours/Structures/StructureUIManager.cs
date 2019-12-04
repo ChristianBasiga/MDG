@@ -58,6 +58,7 @@ namespace MDG.Invader.Monobehaviours.Structures
         private void OnJobStarted(int jobIndex, ShopItem jobInfo, LinkedEntityComponent arg2)
         {
             jobQueueUI[jobIndex].SetJob(jobInfo);
+            errorText.text = "";
         }
 
         private void OnJobRun(int jobIndex, StructureSchema.JobRunEventPayload jobRunPayload)
@@ -72,9 +73,29 @@ namespace MDG.Invader.Monobehaviours.Structures
         }
 
 
+        // Actually should just put this in a timer.
         private void DisplayErrorMessage(string errorMessage)
         {
             errorText.text = errorMessage;
+            StartCoroutine(FadeOutErrorMessage());
+        }
+
+        IEnumerator FadeOutErrorMessage()
+        {
+            string originalText = errorText.text;
+
+            float time = 0;
+            float duration = 2.0f;
+            while (time < duration)
+            {
+                if (errorText.text != originalText)
+                {
+                    yield break;
+                }
+                time += Time.deltaTime;
+                yield return null;
+            }
+            errorText.text = "";
         }
        
     }

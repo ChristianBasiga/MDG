@@ -138,7 +138,7 @@ namespace MDG.Invader.Monobehaviours.Structures
                 purchaserId = purchaser.EntityId.Id
             };
 
-            if (jobIndex == 0 && jobQueue[0] != null)
+            if (jobQueue[jobIndex] != null)
             {
                 OnError?.Invoke("Job Queue is Full");
             }
@@ -155,20 +155,21 @@ namespace MDG.Invader.Monobehaviours.Structures
                 }
                 else
                 {
-                    Debug.Log("Job is busy");
-                    StartCoroutine(QueueNextJob(purchasePayload, currentlyRunningJob));
-
+                    Debug.Log("Job is busy. Queuing this job up");
+                    StartCoroutine(QueueNextJob(shopItem, purchaser, purchasePayload, currentlyRunningJob));
                 }
                 OnJobStarted?.Invoke(jobIndex, shopItem, purchaser);
+                // Setting of image is  
                 jobQueue[jobIndex++] = shopItem;
                 jobIndex = jobIndex % jobQueue.Length;
             }
         }
 
-        IEnumerator QueueNextJob(PurchasePayload purchasePayload, int busyJobIndex)
+        IEnumerator QueueNextJob(ShopItem shopItem, LinkedEntityComponent purchaser, PurchasePayload purchasePayload, int busyJobIndex)
         {
             yield return new WaitWhile(() => jobQueue[busyJobIndex] != null);
             currentlyRunningJob = (busyJobIndex + 1) % jobQueue.Length;
+            OnJobStarted?.Invoke(currentlyRunningJob, shopItem, purchaser);
             ConcreteStructureBehaviour.StartJob(Converters.SerializeArguments(purchasePayload));
         }
     }

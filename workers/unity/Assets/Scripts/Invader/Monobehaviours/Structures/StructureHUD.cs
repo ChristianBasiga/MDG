@@ -23,8 +23,8 @@ namespace MDG.Invader.Monobehaviours.Structures {
         void Start()
         {
             Transform structureHud = transform.Find("StructureHUD");
-            constructionProgressUI = structureHud.Find("Healthbar").GetComponent<Image>();
-            healthUI = structureHud.Find("ConstructionProgress").GetComponent<Image>();
+            healthUI = structureHud.Find("Healthbar").GetComponent<Image>();
+            constructionProgressUI = structureHud.Find("ConstructionProgress").GetComponent<Image>();
 
             structureReader.OnBuildingEvent += UpdateConstructionProgress;
             statsReader.OnHealthUpdate += UpdateHealthBar;
@@ -38,6 +38,7 @@ namespace MDG.Invader.Monobehaviours.Structures {
 
         private void UpdateConstructionProgress(StructureSchema.BuildEventPayload  buildEventPayload)
         {
+
             // Idk how many times repeat this shit lol, but it's all temp, bar easiest way to show progress.
             float pct = buildEventPayload.BuildProgress / (float)buildEventPayload.EstimatedBuildCompletion;
             StartCoroutine(HelperFunctions.UpdateFill(constructionProgressUI, pct));
