@@ -144,7 +144,6 @@ namespace MDG.Common.Systems.Structure
                 else
                 {
                     float remainingTime = runningJobComponent.jobProgress + deltaTime;
-                    Debug.Log($"Ticking down time {remainingTime}");
                     // Bound it to estimated time incase a couple seconds off so that equality will go through properly.
                     remainingTime = Mathf.Min(remainingTime, runningJobComponent.estimatedJobCompletion);
                     runningJobComponent.jobProgress = remainingTime;

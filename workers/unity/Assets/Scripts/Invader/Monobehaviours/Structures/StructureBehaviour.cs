@@ -69,6 +69,7 @@ namespace MDG.Invader.Monobehaviours.Structures
         public virtual void Start()
         {
             jobIndex = 0;
+            currentlyRunningJob = 0;
             jobQueue = new ShopItem[JobCapacity];
             // This is crucial lol. How do I get ref to build menu of someting I don't haveeeee
             ShopBehaviour shopBehaviour = GetComponent<ShopBehaviour>();
@@ -95,8 +96,11 @@ namespace MDG.Invader.Monobehaviours.Structures
 
         private void OnJobComplete(StructureSchema.JobCompleteEventPayload jobCompleteEventPayload)
         {
+            Debug.Log("Do I sometimes not happen?");
             ConcreteStructureBehaviour.CompleteJob(jobCompleteEventPayload.JobData);
             OnJobCompleted?.Invoke(currentlyRunningJob, jobCompleteEventPayload.JobData);
+            jobQueue[currentlyRunningJob] = null;
+            currentlyRunningJob = jobIndex;
         }
 
         private void OnUpdateJob(StructureSchema.JobRunEventPayload jobRunEventPayload)
@@ -127,24 +131,45 @@ namespace MDG.Invader.Monobehaviours.Structures
         // Need to set up a core UI error handler.
         public virtual void StartJob(ShopItem shopItem, LinkedEntityComponent purchaser)
         {
+            ShopItemDto shopItemDto = Converters.ShopItemToDto(shopItem);
+            PurchasePayload purchasePayload = new PurchasePayload
+            {
+                shopItem = shopItemDto,
+                purchaserId = purchaser.EntityId.Id
+            };
+
             if (jobIndex == 0 && jobQueue[0] != null)
             {
-                OnError?.Invoke("Reached maximum job occupancy");
+                OnError?.Invoke("Job Queue is Full");
             }
             else
             {
-                ShopItemDto shopItemDto = Converters.ShopItemToDto(shopItem);
-                PurchasePayload purchasePayload = new PurchasePayload
+                if (jobQueue[0] == null)
                 {
-                    shopItem = shopItemDto,
-                    purchaserId = purchaser.EntityId.Id
-                };
-                ConcreteStructureBehaviour.StartJob(Converters.SerializeArguments(purchasePayload));
+                    jobIndex = 0;
+                }
+                if (jobQueue[currentlyRunningJob] == null)
+                {
+                    ConcreteStructureBehaviour.StartJob(Converters.SerializeArguments(purchasePayload));
+                    currentlyRunningJob = jobIndex;
+                }
+                else
+                {
+                    Debug.Log("Job is busy");
+                    StartCoroutine(QueueNextJob(purchasePayload, currentlyRunningJob));
+
+                }
                 OnJobStarted?.Invoke(jobIndex, shopItem, purchaser);
-                currentlyRunningJob = jobIndex;
                 jobQueue[jobIndex++] = shopItem;
                 jobIndex = jobIndex % jobQueue.Length;
             }
+        }
+
+        IEnumerator QueueNextJob(PurchasePayload purchasePayload, int busyJobIndex)
+        {
+            yield return new WaitWhile(() => jobQueue[busyJobIndex] != null);
+            currentlyRunningJob = (busyJobIndex + 1) % jobQueue.Length;
+            ConcreteStructureBehaviour.StartJob(Converters.SerializeArguments(purchasePayload));
         }
     }
 }

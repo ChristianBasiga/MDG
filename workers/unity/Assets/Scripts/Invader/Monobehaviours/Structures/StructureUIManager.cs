@@ -16,6 +16,8 @@ namespace MDG.Invader.Monobehaviours.Structures
         public JobSlot[] jobQueueUI;
         public StructureBehaviour structureBehaviour;
 
+        
+
         public void SetStructure(StructureBehaviour newStructureBehaviour)
         {
             if (structureBehaviour != null)
@@ -40,7 +42,18 @@ namespace MDG.Invader.Monobehaviours.Structures
         private void Start()
         {
             errorText.text = "";
+            int queueLength = jobQueueUI.Length;
+            for (int i = 0; i < queueLength; ++i)
+            {
+                // For closure
+                int jobIndex = i;
+                jobQueueUI[jobIndex].OnJobCompleted += (_) =>
+                {
+                    jobQueueUI[jobIndex].ClearJob();
+                };
+            }
         }
+
 
         private void OnJobStarted(int jobIndex, ShopItem jobInfo, LinkedEntityComponent arg2)
         {
@@ -55,9 +68,9 @@ namespace MDG.Invader.Monobehaviours.Structures
 
         void OnFinishJob(int jobIndex, byte[] jobData)
         {
-            // set image.
-            jobQueueUI[jobIndex].ClearJob();
+           // Not needed anymore since attached directly to oncoplete event of job slots.
         }
+
 
         private void DisplayErrorMessage(string errorMessage)
         {

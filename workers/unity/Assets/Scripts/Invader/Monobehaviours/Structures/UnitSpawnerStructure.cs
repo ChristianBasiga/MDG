@@ -122,6 +122,8 @@ namespace MDG.Invader.Monobehaviours.Structures
         {
             // Will be removed when I include spawnPos in the byte payload for spawnMetaData.
             UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(jobData);
+            //Todo: Debug how it got to 40, like it added y of structure pos.
+            unitConfig.position.Y = 20;
             spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
             {
                 TypeToSpawn = MdgSchema.Common.GameEntityTypes.Unit,
