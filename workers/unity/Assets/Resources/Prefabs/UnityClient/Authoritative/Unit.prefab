@@ -1090,7 +1090,6 @@ GameObject:
   - component: {fileID: 3814014676529068973}
   - component: {fileID: 2241359130974104472}
   - component: {fileID: 6571083358827388135}
-  - component: {fileID: 4103828514437578791}
   - component: {fileID: 2603996790471517455}
   - component: {fileID: 7623247431706732736}
   - component: {fileID: 9214022549309636057}
@@ -1162,28 +1161,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &4103828514437578791
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4478110480561422378}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8cbe2c3cc19aa14eb3627a7635b8671, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  selectionRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 0
-    height: 0
-  selectionSkin:
-    m_Text: 
-    m_Image: {fileID: 0}
-    m_Tooltip: 
 --- !u!114 &2603996790471517455
 MonoBehaviour:
   m_ObjectHideFlags: 0

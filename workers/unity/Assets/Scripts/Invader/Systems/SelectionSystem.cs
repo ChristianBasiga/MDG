@@ -3,6 +3,7 @@ using Improbable.Gdk.Core;
 using MDG.Common.Components;
 using MDG.Invader.Components;
 using MdgSchema.Common;
+using System;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
@@ -16,11 +17,16 @@ namespace MDG.Invader.Systems {
     [UpdateBefore(typeof(CommandGiveSystem))]
     public class SelectionSystem : ComponentSystem
     {
+
+        public event Action<bool> OnUnitSelectionUpdated;
+
+        public const float MinSelectionSize = 10;
+
+        NativeArray<bool> didSelectThisFrame;
         JobHandle selectedJobHandle;
         EntityQuery selectorGroup;
         NativeHashMap<EntityId, SelectionBounds> idToSelectionBounds;
-
-        public const float MinSelectionSize = 10;
+  
 
         public struct SelectionBounds
         {
@@ -30,12 +36,24 @@ namespace MDG.Invader.Systems {
             public bool onlySelectOne;
         }
 
+        // Shit, on Start running is not what I want. OnCreate Manager maybe?
+        // or make sure only happens once, that's pretty fucked and would slow shit down
         protected override void OnStartRunning()
         {
             base.OnStartRunning();
             selectorGroup = GetEntityQuery(typeof(Selection));
+            if (!didSelectThisFrame.IsCreated)
+            didSelectThisFrame = new NativeArray<bool>(1, Allocator.Persistent);
         }
 
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (didSelectThisFrame.IsCreated)
+            {
+                didSelectThisFrame.Dispose();
+            }
+        }
 
 
         public struct GetSelectedBounds : IJobForEach<SpatialEntityId, Selection>
@@ -99,6 +117,7 @@ namespace MDG.Invader.Systems {
             public NativeArray<EntityId> selected;
             public int index;
 
+            public NativeArray<bool> didSelect;
             // Instead of single, do double buffering, have a selected to read from, and one to writ eto?
             public void Execute([ReadOnly] ref SpatialEntityId id, [ReadOnly] ref EntityTransform.Component entityTransform, ref Clickable clickable)
             {
@@ -116,6 +135,7 @@ namespace MDG.Invader.Systems {
                         if (position.X > selectionBounds.botLeft.x && position.Z > selectionBounds.botLeft.y 
                             && position.X < selectionBounds.topRight.x && position.Z < selectionBounds.topRight.y)
                         {
+                            didSelect[0] = true;
                             clickable.Clicked = true;
                             clickable.ClickedEntityId = selectorIds[i];
                             if (selectionBounds.onlySelectOne)
@@ -137,6 +157,8 @@ namespace MDG.Invader.Systems {
             {
                 return;
             }
+
+            didSelectThisFrame[0] = false;
             // If selector count isn't 0, then new selection has been made this frame, reset Clickables.
             ResetSelectedEntities resetSelectedEntitiesJob = new ResetSelectedEntities();
             resetSelectedEntitiesJob.Schedule(this).Complete();
@@ -148,15 +170,22 @@ namespace MDG.Invader.Systems {
             JobHandle selectedBoundsJob = getSelectedBounds.Schedule(this);
             selectedBoundsJob.Complete();
 
+
+            // ECS way would be for me to query clickables and check if any are currently clicked.
+            // idk if faster to have event and the extra memory or nah.
             SetSelectedEntities setSelectedEntities = new SetSelectedEntities
             {
                 idToSelectionBounds = idToSelectionBounds,
                 selected = new NativeArray<EntityId>(selectorCount, Allocator.TempJob),
                 index = 0,
+                didSelect = didSelectThisFrame
             };
             selectedJobHandle = setSelectedEntities.Schedule(this, selectedBoundsJob);
             selectedJobHandle.Complete();
+            OnUnitSelectionUpdated?.Invoke(didSelectThisFrame[0]);
             idToSelectionBounds.Dispose();
+
+
             RemoveSelections removeSelections = new RemoveSelections
             {
                 commandBuffer = PostUpdateCommands.ToConcurrent()

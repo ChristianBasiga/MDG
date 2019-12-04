@@ -29,8 +29,8 @@ using MDG.Common;
 using MDG.Common.Systems.Spawn;
 using MDG.DTO;
 
-
 using MDG.ScriptableObjects.Weapons;
+using MDG.Common.Systems.Structure;
 
 // DEFINITELY CAN SEPERATE THIS INTO THREE DIFFERENT CLASSES.
 // OR AT THE VERY LEAST MOVE THE RESPECTIVE JOBS IN OWN CLASSES.
@@ -85,7 +85,9 @@ namespace MDG.Invader.Systems
         private NativeQueue<CollectPayload> pendingCollects;
         private NativeQueue<CollectPayload> pendingReleases;
 
+        Dictionary<long, BuildCommand> requestIdToBuildCommand;
 
+        private NativeHashMap<EntityId, BuildCommand> buildCommands;
         private NativeQueue<BuildPayload> buildRequestsToSend;
 
         private PositionSystem positionSystem;
@@ -94,7 +96,6 @@ namespace MDG.Invader.Systems
         private ResourceRequestSystem resourceRequestSystem;
         private ComponentUpdateSystem componentUpdateSystem;
         private WorkerSystem workerSystem;
-        private Dictionary<EntityId, List<EntityId>> unitCollisionMappings;
         private ComponentType[] authVelocityGroup;
 
         private EntityQuery combatStatsQuery;
@@ -108,6 +109,10 @@ namespace MDG.Invader.Systems
         // Change this to dictionary so that weapons of units more expandible.
         Weapon unitWeapon;
 
+        // Need to make the move jobs somehow generic.
+        // since all write into buffer, I can't run them in parralel anyway.
+        // actually I could if ahve them all write into extra buffer, that is then written into actual buffer.
+        // but that's stupid.
 
         struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityTransform.Component, PositionSchema.LinearVelocity.Component,
             CollisionSchema.BoxCollider.Component, CommandListener>
@@ -253,21 +258,49 @@ namespace MDG.Invader.Systems
         #endregion
 
         #region Build Command Jobs
-        struct MoveToBuildLocationJob: IJobForEach<SpatialEntityId, BuildCommand, PositionSchema.LinearVelocity.Component,
+        struct MoveToBuildLocationJob: IJobForEachWithEntity<SpatialEntityId, BuildCommand, PositionSchema.LinearVelocity.Component,
             EntityTransform.Component>
         {
             public NativeHashMap<EntityId, BuildCommand>.ParallelWriter entitiesBuilding;
-            public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, ref BuildCommand buildCommand, ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
+
+
+            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref SpatialEntityId spatialEntityId, ref BuildCommand buildCommand, ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
             [ReadOnly] ref EntityTransform.Component entityTransformComponent )
             {
                 float distance = HelperFunctions.Distance(buildCommand.buildLocation, entityTransformComponent.Position);
-                if (distance <= buildCommand.minDistanceToBuild && !buildCommand.isBuilding){
-                    buildCommand.isBuilding = true;
+
+                if (buildCommand.isBuilding && buildCommand.structureId.IsValid())
+                {
+                    // If building add to queue for sending requests.
                     entitiesBuilding.TryAdd(spatialEntityId.EntityId, buildCommand);
                 }
-                else{
+                else if (distance <= buildCommand.minDistanceToBuild)
+                {
+                    if (!buildCommand.isBuilding)
+                    {
+                        buildCommand.isBuilding = true;
+                        buildCommand.builderId = spatialEntityId.EntityId;
+                        entitiesBuilding.TryAdd(spatialEntityId.EntityId, buildCommand);
+                        linearVelocityComponent.Velocity = Vector3f.Zero;
+                    }
+                }
+                else
+                {
                     linearVelocityComponent.Velocity = buildCommand.buildLocation - entityTransformComponent.Position;
                     buildCommand.isBuilding = false;
+                }
+            }
+        }
+
+        struct UpdateBuildCommandJob : IJobForEach<SpatialEntityId, BuildCommand>
+        {
+            [ReadOnly]
+            public NativeHashMap<EntityId, BuildCommand> pendingUpdates;
+            public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, ref BuildCommand buildCommand)
+            {
+                if (pendingUpdates.TryGetValue(spatialEntityId.EntityId, out BuildCommand newBuildCommand))
+                {
+                    buildCommand.structureId = newBuildCommand.structureId; 
                 }
             }
         }
@@ -311,6 +344,10 @@ namespace MDG.Invader.Systems
             pendingCollects = new NativeQueue<CollectPayload>(Allocator.Persistent);
             pendingOccupy = new NativeQueue<CollectPayload>(Allocator.Persistent);
 
+            buildCommands = new NativeHashMap<EntityId, BuildCommand>(1000, Allocator.Persistent);
+            requestIdToBuildCommand = new Dictionary<long, BuildCommand>();
+
+
             spawnRequestSystem = World.GetExistingSystem<SpawnRequestSystem>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             positionSystem = World.GetExistingSystem<PositionSystem>();
@@ -318,7 +355,6 @@ namespace MDG.Invader.Systems
             resourceRequestSystem = World.GetExistingSystem<ResourceRequestSystem>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
 
-            unitCollisionMappings = new Dictionary<EntityId, List<EntityId>>();
             interruptedGroup = GetEntityQuery(ComponentType.ReadOnly<CommandInterrupt>(), ComponentType.ReadOnly<SpatialEntityId>());
            // enemyQuery = GetEntityQuery(ComponentType.ReadOnly<EnemyComponent>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
             friendlyQuery = GetEntityQuery(ComponentType.ReadOnly<CommandListener>(), ComponentType.ReadOnly<SpatialEntityId>(), ComponentType.ReadOnly<Position.Component>());
@@ -329,6 +365,7 @@ namespace MDG.Invader.Systems
             base.OnDestroy();
             pendingCollects.Dispose();
             pendingOccupy.Dispose();
+            buildCommands.Dispose();
         }
 
         protected override void OnUpdate()
@@ -377,7 +414,6 @@ namespace MDG.Invader.Systems
             authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<CollectCommand>();
             authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
 
-            // Might need to keep doing 
             entityQueryDesc = new EntityQueryDesc
             {
                 All = authVelocityGroup
@@ -400,7 +436,6 @@ namespace MDG.Invader.Systems
             NativeHashMap<EntityId, BuildCommand> buildingUnits = new NativeHashMap<EntityId, BuildCommand>(entityQuery.CalculateEntityCount(), Allocator.TempJob);
             MoveToBuildLocationJob moveToBuildLocation = new MoveToBuildLocationJob{
                 entitiesBuilding = buildingUnits.AsParallelWriter(),
-                
             };
 
             moveToCollectHandle.Complete();
@@ -414,10 +449,9 @@ namespace MDG.Invader.Systems
             {
                 workerSystem.TryGetEntity(potentialTargetId, out Entity targetEntity);
 
-                //CHeck if respawning
+                //Check if respawning
                 if (EntityManager.HasComponent<SpawnSchema.RespawnMetadata.Component>(targetEntity) && EntityManager.GetComponentData<SpawnSchema.PendingRespawn.Component>(targetEntity).RespawnActive)
                 {
-                    Debug.Log("here??");
                     attackeePositions.Remove(potentialTargetId);
                 }
             }
@@ -444,13 +478,33 @@ namespace MDG.Invader.Systems
 
             // maybe even do this run first as easily one of the biggest
             Queue<PendingAttack> pendingAttacks = ProcessAttackPayloads(attackPayloads);
-            SpawnBuildings(buildingUnits);
+            ProcessBuildCommand(buildingUnits);
+
+
+            JobHandle? updateBuildHandle = null;
+
+            if (buildCommands.Length > 0)
+            {
+                UpdateBuildCommandJob updateBuildCommandJob = new UpdateBuildCommandJob
+                {
+                    pendingUpdates = buildCommands
+                };
+
+                updateBuildHandle = updateBuildCommandJob.Schedule(this);
+            }
+
             buildingUnits.Dispose();
             // Spawn Buildings
             // Rename this to SpawnStructures.
             RunBuildCommandRequests();
 
             ProcessPendingAttacks(pendingAttacks);
+
+            if (updateBuildHandle.HasValue)
+            {
+                updateBuildHandle.Value.Complete();
+                buildCommands.Clear();
+            }
         }
 
         // To go even further beyond in parraelizing maybe seperate this to request for each command too.
@@ -792,14 +846,73 @@ namespace MDG.Invader.Systems
 
         #endregion
 
-        private void SpawnBuildings(NativeHashMap<EntityId, BuildCommand> buildingUnits)
+        // Realistically only first one sends request.
+        // but also multiple concurrent build commands could be happening as well, keep that in mind.
+        private void ProcessBuildCommand(NativeHashMap<EntityId, BuildCommand> buildingUnits)
         {
+            // So 2 phases, spawning the building itself initially, then continously sending build requests.
+            // Structure id is how I tell after the fact, but before that?
+            // Okay know what, fuck it, let's just do single assignment for demo sake for now.
+            // cmon bruh.
             var builderIds = buildingUnits.GetKeyArray(Allocator.TempJob);
+            // Since sending build request
+            for (int i = 0; i < builderIds.Length; ++i)
+            {
+                BuildCommand buildCommand = buildingUnits[builderIds[i]];
 
-            foreach(EntityId builderId in builderIds){
-                // I should puysh whats here and let autocompelte hep now.
+                if (!buildCommand.structureId.IsValid())
+                {
+                    // This system or other system should load in all stucture scriptable objects so can reference whichever to get and get health.
+                    // For now this is fine.
+                    SpawnStructureConfig structureConfig = new SpawnStructureConfig
+                    {
+                        structureType = buildCommand.structureType,
+                        constructionTime = buildCommand.constructionTime,
+                        constructing = true,
+                        health = 10
+                    };
+
+                    byte[] serialized = Converters.SerializeArguments(structureConfig);
+                    Debug.Log("BUild location " + buildCommand.buildLocation);
+                    spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
+                    {
+                        Position = buildCommand.buildLocation,
+                        TypeToSpawn = GameEntityTypes.Structure
+                    }, (EntityId structureId) =>
+                    {
+                        OnStructureBuilt(structureId, buildCommand);
+                    }, serialized);
+                }
+                else
+                {
+                    if (buildCommands.ContainsKey(buildCommand.builderId))
+                    {
+                        return;
+                    }
+                    // Otherwise send build requests.
+                    // Maybe map   builder id to request id and that is the request cooldown.
+                    // that way not sending every frame, but only after last build request processed.
+                    long requestId = commandSystem.SendCommand(new StructureSchema.Structure.Build.Request
+                    {
+                        TargetEntityId = buildCommand.structureId,
+                        Payload = new StructureSchema.BuildRequestPayload
+                        {
+                            BuilderId = buildCommand.builderId,
+                            BuildRate = 1
+                        }
+                    });
+                    requestIdToBuildCommand.Add(requestId,buildCommand);
+
+                }
             }
             builderIds.Dispose();
+        }
+
+        private void OnStructureBuilt(EntityId structureId, BuildCommand buildCommand)
+        {
+            buildCommand.structureId = structureId;
+            Debug.Log("Adding to build commands mapping");
+            Debug.Log("Added build command " + buildCommands.TryAdd(buildCommand.builderId, buildCommand));
         }
     }
 }

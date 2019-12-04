@@ -25,7 +25,6 @@ namespace MDG.Invader.Monobehaviours
         Vector3 GetSelectionScale()
         {
             Vector3 selectionSize = new Vector3(Input.mousePosition.x - startSelection.x, startSelection.y - Input.mousePosition.y);
-            Debug.Log("selection size " + selectionSize);
             return selectionSize;
         }
         void Update()

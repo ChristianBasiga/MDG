@@ -26,6 +26,8 @@ namespace MDG.Invader.Monobehaviours.UserInterface
         MenuSlot lastClicked;
         ResourceRequest menuSlotPrefabPromise;
 
+
+        public string MenuSlotPrefabPath;
         public string MenuContentsPath;
 
 
@@ -37,7 +39,7 @@ namespace MDG.Invader.Monobehaviours.UserInterface
         // Images set should be injected, but watcha gonna do.
         void Start()
         {
-            menuSlotPrefabPromise = Resources.LoadAsync("UserInterface/MenuSlot");
+            menuSlotPrefabPromise = Resources.LoadAsync(MenuSlotPrefabPath);
             menuSlotPrefabPromise.completed += MenuSlotPrefabPromise_completed;
         }
 
@@ -53,9 +55,12 @@ namespace MDG.Invader.Monobehaviours.UserInterface
             menuSlots = new MenuSlot[length];
             for (int i = 0; i < length; ++i)
             {
+                Debug.Log(resources[i]);
                 ShopItem shopItem = resources[i] as ShopItem;
                 GameObject gameObject = Instantiate(menuSlotPrefabPromise.asset, transform) as GameObject;
+                Debug.Log(gameObject.name);
                 menuSlots[i] = gameObject.GetComponent<MenuSlot>();
+                // This casting is not needed at this stage, just for confirmation, later on remove the swich and simply set the item.
                 switch (shopItem.shopItemType)
                 {
                     case ShopItemType.Buildable:
@@ -64,6 +69,8 @@ namespace MDG.Invader.Monobehaviours.UserInterface
                         break;
                     case ShopItemType.Unit:
                         // Do later.
+                        ShopUnit shopUnit = resources[i] as ShopUnit;
+                        menuSlots[i].SetItem(shopUnit);
                         break;
                 }
                 menuSlots[i].OnSlotClicked += OnSlotClicked ;
@@ -77,7 +84,6 @@ namespace MDG.Invader.Monobehaviours.UserInterface
             if (ConfirmCallback == null)
             {
                 StartCoroutine(ConfirmSelection());
-                OnOptionConfirmed?.Invoke(lastClicked.ShopItem);
             }
         }
 
@@ -85,7 +91,7 @@ namespace MDG.Invader.Monobehaviours.UserInterface
         {
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
-
+            OnOptionConfirmed?.Invoke(lastClicked.ShopItem);
         }
 
         private void Update()

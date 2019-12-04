@@ -38,11 +38,16 @@ namespace MDG.Invader.Components
         public bool GoingToResource;
     }
 
-    public struct BuildCommand : IComponentData{
+    public struct BuildCommand : IComponentData
+    {
         public StructureSchema.StructureType structureType;
         public Vector3f buildLocation;
         public float minDistanceToBuild;
         public bool isBuilding;
+        public int constructionTime;
+        public EntityId structureId;
+        public EntityId builderId;
+        public bool hasPendingBuildRequest;
     }
 
     [RemoveAtEndOfTick]

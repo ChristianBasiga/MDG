@@ -4,7 +4,6 @@ using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.Subscriptions;
 using MDG;
-using MDG.ClientSide.UserInterface;
 using MDG.Common.Components;
 using MDG.Invader.Components;
 using MdgSchema.Common;

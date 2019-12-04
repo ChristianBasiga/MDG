@@ -14,6 +14,8 @@ using MDG.Common.MonoBehaviours.Shopping;
 using MDG.Common;
 using MDG.ScriptableObjects.Items;
 using UnityEngine.EventSystems;
+using MdgSchema.Common.Structure;
+using MDG.Invader.Monobehaviours.Structures;
 
 namespace MDG.Invader.Monobehaviours {
 
@@ -22,19 +24,27 @@ namespace MDG.Invader.Monobehaviours {
         [Require] PointSchema.PointReader PointReader;
         LinkedEntityComponent linkedEntityComponent;
 
+        Dictionary<StructureType, StructureUIManager> TypeToOverlay;
 
         CommandGiveSystem commandGiveSystem;
         Camera inputCamera;
-        public InvaderStructureConfig SelectedStructure {private set; get;}
+        ScriptableObjects.Structures.Structure selectedStructure;
 
         ShopBehaviour shopBehaviour;
 
         [SerializeField]
         BuildMenu structureBuildMenu;
 
+
+        public StructureUIManager GetStructureOverlay(StructureType structureType)
+        {
+            return TypeToOverlay[structureType];
+        }
+
         // Start is called before the first frame update
         void Start()
         {
+
             inputCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             commandGiveSystem = linkedEntityComponent.World.GetExistingSystem<CommandGiveSystem>();
@@ -42,19 +52,48 @@ namespace MDG.Invader.Monobehaviours {
             SelectionController selectionController = GetComponent<SelectionController>();
             selectionController.OnSelectionEnd += UpdateSelectionComponent;
 
-          
+            SelectionSystem selectionSystem = linkedEntityComponent.World.GetExistingSystem<SelectionSystem>();
+            selectionSystem.OnUnitSelectionUpdated += OnSelectionUpdated;
             structureBuildMenu.OnOptionSelected += SetupBuildCommand;
             structureBuildMenu.SetConfirmation(ConfirmStructurePurchase);
             structureBuildMenu.OnOptionConfirmed += OnStructureBuildRequested;
+            structureBuildMenu.transform.parent.gameObject.SetActive(false);
+
+
 
             shopBehaviour = GetComponent<ShopBehaviour>();
             shopBehaviour.OnPurchaseItem += GiveBuildCommand;
+
+            LoadInStuctureOverlays();
         }
 
+        private void OnSelectionUpdated(bool selectionMade)
+        {
+            structureBuildMenu.transform.parent.gameObject.SetActive(selectionMade);
+        }
+
+        private void LoadInStuctureOverlays()
+        {
+            TypeToOverlay = new Dictionary<StructureType, StructureUIManager>();
+
+            // Really making load time long as fuck lol.
+            object[] overlays = Resources.LoadAll("UserInterface/StructureOverlays/");
+
+            int length = overlays.Length;
+            for (int i = 0; i < length; ++i)
+            {
+                GameObject gameObject = overlays[i] as GameObject;
+                GameObject cloned = Instantiate(gameObject);
+
+                StructureUIManager structureUIManager = cloned.GetComponent<StructureUIManager>();
+                TypeToOverlay.Add(structureUIManager.StructureType, structureUIManager);
+                cloned.SetActive(false);
+            }
+        }
 
         private bool ConfirmStructurePurchase()
         {
-            return SelectedStructure != null && Input.GetMouseButtonDown(0);
+            return selectedStructure != null && Input.GetMouseButtonDown(0);
         }
 
         private void OnStructureBuildRequested(ScriptableObjects.Items.ShopItem obj)
@@ -65,43 +104,27 @@ namespace MDG.Invader.Monobehaviours {
 
         private void SetupBuildCommand(ScriptableObjects.Items.ShopItem shopItem)
         {
-            ScriptableObjects.Structures.Structure scriptableStructure = shopItem as ScriptableObjects.Structures.Structure;
-            // After this I want to get all selected units.
-            InvaderStructureConfig structureConfig = new InvaderStructureConfig
-            {
-                constructionTime = scriptableStructure.ConstructionTime,
-                prefabName = scriptableStructure.PrefabPath,
-                structureType = scriptableStructure.StructureType,
-                WorkersRequired = scriptableStructure.WorkersRequired
-            };
-            // Well okay, so since build command is really just a broadcast now irrelvant to right click.
-            SelectedStructure = structureConfig;
-
-            Debug.Log("setting up build command");
+            selectedStructure = shopItem as ScriptableObjects.Structures.Structure;
         }
 
         private void GiveBuildCommand(ShopItem item, LinkedEntityComponent purchaser)
         {
-            // Send build request. Need to create end point for this first.
-            // Actually could just reference system since both on client.
-            Debug.Log("giving build command");
-
-            var selectedStructure = SelectedStructure;
-            Vector3 position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            ScriptableObjects.Structures.Structure scriptableStructure = item as ScriptableObjects.Structures.Structure;
+            Vector3 position = inputCamera.ScreenToWorldPoint(Input.mousePosition);
             commandGiveSystem.GiveBuildCommand(new BuildCommand
             {
-                buildLocation = new Improbable.Vector3f(position.x, 15, position.z),
-                structureType = selectedStructure.structureType,
+                buildLocation = new Improbable.Vector3f(position.x, 20, position.z),
+                structureType = scriptableStructure.StructureType,
+                minDistanceToBuild = scriptableStructure.MinDistanceToBuild,
+                structureId = new Improbable.Gdk.Core.EntityId(-1),
+                constructionTime = scriptableStructure.ConstructionTime 
             });
-            SelectedStructure = null;
-             
         }
 
         void UpdateSelectionComponent(SelectionController.SelectionPayload payload)
         {
             if (payload.scale.magnitude < SelectionSystem.MinSelectionSize  && EventSystem.current.IsPointerOverGameObject())
             {
-                Debug.Log("Don't send selecion");
                 return;
             }
 

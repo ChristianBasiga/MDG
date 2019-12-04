@@ -51,7 +51,6 @@ namespace MDG.Templates
            
             template.AddComponent(new Position.Snapshot(), clientAttribute);
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
-            // No need for player transform, enttiy transform, etc. is enough now.
            
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             TransformSynchronizationHelper.AddTransformSynchronizationComponents(template, clientAttribute);

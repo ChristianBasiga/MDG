@@ -16,6 +16,8 @@ namespace MDG.ScriptableObjects.Structures
         public int ConstructionTime;
         public int MaximumConcurrentJobs;
         public int MaxJobsQueued;
+        public float MinDistanceToBuild;
+        public int Health;
         // Monobehaviour should load these in and populate them.
         // For tempalte itself I only need the index and item info.
         public List<ShopItem> options;

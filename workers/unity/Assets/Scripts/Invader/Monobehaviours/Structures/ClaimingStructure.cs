@@ -12,7 +12,6 @@ using StructureSchema = MdgSchema.Common.Structure;
 using TerritorySchema = MdgSchema.Game.Territory;
 using MdgSchema.Units;
 using MDG.Common.Systems.Spawn;
-using MDG.Common.MonoBehaviours.Structures;
 using Unity.Entities;
 
 namespace MDG.Invader.Monobehaviours.Structures
@@ -24,6 +23,7 @@ namespace MDG.Invader.Monobehaviours.Structures
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
         Image claimProgressBar;
+
 
 
         private void Start()
@@ -42,7 +42,6 @@ namespace MDG.Invader.Monobehaviours.Structures
 
         private void OnBuildComplete()
         {
-            // This is fine.
             EntityManager entityManager = linkedStructure.World.EntityManager;
             WorkerSystem workerSystem = linkedStructure.World.GetExistingSystem<WorkerSystem>();
             workerSystem.TryGetEntity(linkedStructure.EntityId, out Entity entity);
@@ -75,7 +74,7 @@ namespace MDG.Invader.Monobehaviours.Structures
             });
         }
 
-        public void UpdateClaimProgress(StructureSchema.JobRunEventPayload jobRunEvent)
+        public void UpdateClaimProgress(int jobIndex, StructureSchema.JobRunEventPayload jobRunEvent)
         {
             // Do other things alongside the claim progress bar.
             linkedStructure.StartCoroutine(HelperFunctions.UpdateFill(claimProgressBar, jobRunEvent.JobProgress / jobRunEvent.EstimatedJobCompletion));
@@ -94,6 +93,11 @@ namespace MDG.Invader.Monobehaviours.Structures
              });
 
             claimProgressBar.gameObject.SetActive(false);
+        }
+
+        public StructureSchema.StructureType GetStructureType()
+        {
+            return StructureSchema.StructureType.Claiming;
         }
     }
 }

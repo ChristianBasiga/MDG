@@ -124,8 +124,6 @@ namespace MDG
 
                 if (hasAuthority)
                 {
-                 
-
                     pathToPlayer = $"{pathToPlayer}/Authoritative";
 
                     if (GameObject.FindGameObjectWithTag("MainCamera"))
@@ -142,7 +140,7 @@ namespace MDG
                             {
                                 ownerId = entity.SpatialOSEntityId.Id,
                                 position = initialInvaderUnitPositions[i],
-                                unitType = UnitTypes.WORKER
+                                unitType = UnitTypes.Worker
                             };
 
 
@@ -151,16 +149,10 @@ namespace MDG
                                 TypeToSpawn = GameEntityTypes.Unit,
                                 Position = initialInvaderUnitPositions[i],
                                 // Deperecate typeId, should all be serialized args for stuff like this.
-                                TypeId = (int)UnitTypes.WORKER,
+                                TypeId = (int)UnitTypes.Worker,
                                 
                             }, null, Converters.SerializeArguments<UnitConfig>(unitConfig));
                         }
-                        /* systems not being added during here. Hmm.
-                        // Add event to add systems to world accordingly
-                        spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.SelectionSystem>();
-                        spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.CommandGiveSystem>();
-                        spawnReqSystem.World.GetOrCreateSystem<InvaderSystems.CommandUpdateSystem>();
-                        */
                     }
                     else
                     {
@@ -180,8 +172,6 @@ namespace MDG
                 GameObject created = CreateEntityObject(entity, linker, pathToPlayer, null, null);
                 Vector3 startingPoint = defenderStartingPoints[defenderPointsUsed].ToUnityVector();
                 created.transform.position = startingPoint;
-                Object prefab = Resources.Load($"{pathToEntity}/FakeClientInput");
-                GameObject clientFaker = Object.Instantiate(prefab) as GameObject;
             }
             else if (metaData.EntityType.Equals("Unit"))
             {
@@ -235,16 +225,20 @@ namespace MDG
                 switch (structureMetaData.StructureType)
                 {
                     case StructureSchema.StructureType.Trap:
-                        structurePath = $"{structurePath}/Traps/{structureMetaData.PrefabName}";
+                        StructureSchema.Trap.Component trap = entity.GetComponent<StructureSchema.Trap.Component>();
+                        structurePath = $"{structurePath}/Traps/{trap.PrefabName}";
                         break;
                     case StructureSchema.StructureType.Spawning:
+                        structurePath = $"{structurePath}/InvaderStructures/UnitSpawnStructure";
+                        break;
                     case StructureSchema.StructureType.Claiming:
-                        structurePath = $"{structurePath}/InvaderStructures/{structureMetaData.PrefabName}";
+                        structurePath = $"{structurePath}/InvaderStructures/ClaimingStructure";
                         break;
                 }
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 worker.TryGetEntity(entity.SpatialOSEntityId, out Entity structureEntity);
                 Templates.StructureArchtypes.AddStructureArchtype(_world.EntityManager, structureEntity, hasAuthority);
+                Debug.Log("StructurePath " + structurePath);
                 CreateEntityObject(entity, linker, structurePath);
             }
             else
@@ -284,7 +278,6 @@ namespace MDG
                 gameObject.transform.parent = parent;
             }
             gameObject.name = $"{prefab.name}(SpatialOS: {entity.SpatialOSEntityId}, Worker: {_workerType})";
-            //Seems like can inject components is that better to just add or not add or to just have diff similiar prefabs?
             if (ecsComponents != null)
             {
                 linker.LinkGameObjectToSpatialOSEntity(entity.SpatialOSEntityId, gameObject, ecsComponents);

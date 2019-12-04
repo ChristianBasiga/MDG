@@ -12,6 +12,7 @@ namespace MDG.Common.Systems.Structure
 {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
+    [AlwaysUpdateSystem]
     public class StructureMonitorSystem : ComponentSystem
     {
         EntityQuery runningJobQuery;
@@ -66,21 +67,25 @@ namespace MDG.Common.Systems.Structure
             notConstructingQuery = GetEntityQuery(
                 ComponentType.ReadOnly<NewlyAddedSpatialOSEntity>(),
                 ComponentType.ReadOnly<StructureSchema.StructureMetadata.Component>(),
+                ComponentType.ReadOnly<StructureSchema.Structure.Component>(),
                 ComponentType.Exclude<StructureComponents.BuildingComponent>()
             );
         }
 
-
-        struct StartConstructingStructuresJob : IJobForEachWithEntity<NewlyAddedSpatialOSEntity, StructureSchema.StructureMetadata.Component>
+        struct StartConstructingStructuresJob : IJobForEachWithEntity<NewlyAddedSpatialOSEntity, StructureSchema.Structure.Component, StructureSchema.StructureMetadata.Component>
         {
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
-            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref NewlyAddedSpatialOSEntity newlyAddedSpatialOSEntity, [ReadOnly] ref StructureSchema.StructureMetadata.Component structureMetadata)
+            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref NewlyAddedSpatialOSEntity newlyAddedSpatialOSEntity, 
+                [ReadOnly] ref StructureSchema.Structure.Component structureComponent, [ReadOnly] ref StructureSchema.StructureMetadata.Component structureMetadata)
             {
-                entityCommandBuffer.AddComponent(jobIndex, entity, new StructureComponents.BuildingComponent
+                if (structureComponent.Constructing)
                 {
-                    estimatedBuildCompletion = structureMetadata.ConstructionTime,
-                    buildProgress = 0
-                });
+                    entityCommandBuffer.AddComponent(jobIndex, entity, new StructureComponents.BuildingComponent
+                    {
+                        estimatedBuildCompletion = structureMetadata.ConstructionTime,
+                        buildProgress = 0
+                    });
+                }
             }
         }
 
@@ -98,9 +103,10 @@ namespace MDG.Common.Systems.Structure
                 if (structureIdToSpeed.TryGetValue(c0.EntityId, out int constructionSpeed))
                 {
                     c3.buildProgress += constructionSpeed;
-
+                    Debug.Log($"Build progress {c3.buildProgress}");
                     if (c3.buildProgress >= c3.estimatedBuildCompletion)
                     {
+                        Debug.Log("BuildCompleted");
                         c2.Constructing = false;
                         entityCommandBuffer.RemoveComponent<StructureComponents.BuildingComponent>(index, entity);
                     }
@@ -126,6 +132,7 @@ namespace MDG.Common.Systems.Structure
             public NativeQueue<CompleteJobPayload>.ParallelWriter completedJobPayloads;
             public void Execute(Entity entity, int index, [ReadOnly] ref SpatialEntityId spatialEntityId, ref StructureComponents.RunningJobComponent runningJobComponent)
             {
+
                 if (runningJobComponent.jobProgress >= runningJobComponent.estimatedJobCompletion)
                 {
                     completedJobPayloads.Enqueue(new CompleteJobPayload
@@ -137,6 +144,7 @@ namespace MDG.Common.Systems.Structure
                 else
                 {
                     float remainingTime = runningJobComponent.jobProgress + deltaTime;
+                    Debug.Log($"Ticking down time {remainingTime}");
                     // Bound it to estimated time incase a couple seconds off so that equality will go through properly.
                     remainingTime = Mathf.Min(remainingTime, runningJobComponent.estimatedJobCompletion);
                     runningJobComponent.jobProgress = remainingTime;
@@ -155,6 +163,8 @@ namespace MDG.Common.Systems.Structure
         {
             float deltaTime = Time.deltaTime;
 
+
+
             NativeQueue<JobEventPayloadHeader> jobsToSendEventsFor = new NativeQueue<JobEventPayloadHeader>(Allocator.TempJob);
             NativeQueue<CompleteJobPayload> completedJobPayloads = new NativeQueue<CompleteJobPayload>(Allocator.TempJob);
 
@@ -168,6 +178,7 @@ namespace MDG.Common.Systems.Structure
                 completedJobPayloads = completedJobPayloads.AsParallelWriter()
             };
             JobHandle tickJobsHandle = tickActiveJobsJob.Schedule(runningJobQuery);
+            Debug.Log("Am I ticking");
             ProcessJobRequests();
 
             NativeQueue<ConstructionPayloadHeader> constructionsToSendEventsFor = new NativeQueue<ConstructionPayloadHeader>(Allocator.TempJob);
@@ -262,7 +273,8 @@ namespace MDG.Common.Systems.Structure
         }
 
         private void ProcessJobRequests()
-        {
+        { 
+            Debug.Log("here though right?");
             var jobRequests = commandSystem.GetRequests<StructureSchema.Structure.StartJob.ReceivedRequest>();
             for (int i = 0; i < jobRequests.Count; ++i)
             {
@@ -272,7 +284,7 @@ namespace MDG.Common.Systems.Structure
 
                 int jobId = randomNumberGenerator.Next();
                 jobIdToPayload[jobId] = jobRequest.Payload.JobData;
-
+                Debug.Log("Estimated job completion " + jobRequest.Payload.EstimatedJobCompletion);
                 PostUpdateCommands.AddComponent(structureEntity, new StructureComponents.RunningJobComponent
                 {
                     estimatedJobCompletion = jobRequest.Payload.EstimatedJobCompletion,

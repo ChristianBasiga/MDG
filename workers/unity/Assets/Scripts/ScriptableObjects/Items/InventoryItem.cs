@@ -9,11 +9,5 @@ namespace MDG.ScriptableObjects.Items
     public class InventoryItem : ScriptableObject
     {
         public Sprite Thumbnail;
-        public string PrefabPath;
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
     }
 }

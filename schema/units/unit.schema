@@ -1,9 +1,9 @@
 package mdg_schema.units;
 // Prob can reuse this for defender units.
 enum UnitTypes{
-    WORKER = 1;
-    TANK = 2;
-    DPS = 3;
+    Worker = 1;
+    Tank = 2;
+    Dps = 3;
 }
 
 

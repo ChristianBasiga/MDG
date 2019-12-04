@@ -68,10 +68,7 @@ namespace MDG_Testing
         {
             InventoryItemFactory inventoryItemFactory = new InventoryItemFactory();
             inventoryItemFactory.Initialize();
-            InventoryItem adding = new InventoryItem
-            {
-                PrefabPath = "Resource"
-            };
+          
            // InventoryItem added = inventoryItemFactory.GetInventoryItem(adding);
        //     Assert.AreEqual(adding, added);
         }

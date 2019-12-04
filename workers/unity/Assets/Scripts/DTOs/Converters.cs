@@ -8,6 +8,8 @@ using MDG.ScriptableObjects.Weapons;
 using MdgSchema.Common.Inventory;
 using StructureSchema = MdgSchema.Common.Structure;
 using ScriptableStructures = MDG.ScriptableObjects.Structures;
+using MDG.ScriptableObjects.Items;
+
 namespace MDG.DTO
 {
     public class Converters
@@ -105,6 +107,27 @@ namespace MDG.DTO
                 default:
                     throw new System.Exception();
             }
+        }
+
+        public static ShopItemDto ShopItemToDto(ShopItem shopItem)
+        {
+            ShopItemDto shopItemDto;
+
+            switch (shopItem.shopItemType)
+            {
+                case ScriptableObjects.Constants.ShopItemType.Unit:
+                    ShopUnit shopUnit = shopItem as ShopUnit;
+                    shopItemDto = new ShopUnitDto
+                    {
+                        unitType = shopUnit.UnitType,
+                        shopItemType = shopItem.shopItemType,
+                        constructionTime = shopUnit.ConstructTime
+                    };
+                    break;
+                default:
+                    throw new System.Exception();
+            }
+            return shopItemDto;
         }
     }
 }

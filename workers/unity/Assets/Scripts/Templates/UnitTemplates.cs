@@ -68,10 +68,10 @@ namespace MDG.Templates
 
             switch (unitType)
             {
-                case UnitsSchema.UnitTypes.WORKER:
+                case UnitsSchema.UnitTypes.Worker:
                     MakeWorkerUnit(template, clientAttribute);
                     break;
-                case UnitsSchema.UnitTypes.TANK:
+                case UnitsSchema.UnitTypes.Tank:
                     break;
             }
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
@@ -126,7 +126,7 @@ namespace MDG.Templates
 
             template.AddComponent(new UnitsSchema.Unit.Snapshot
             {
-                Type = UnitsSchema.UnitTypes.TANK
+                Type = UnitsSchema.UnitTypes.Tank
             }, serverAttribute);
         }
     }
@@ -152,7 +152,7 @@ namespace MDG.Templates
 
             switch (type)
             {
-                case UnitTypes.WORKER:
+                case UnitTypes.Worker:
                     AddWorkerUnitArchtype(entityManager, entity, authoritative);
                     break;
             }

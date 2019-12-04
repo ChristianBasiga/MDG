@@ -11,11 +11,5 @@ namespace MDG.ScriptableObjects.Items
     {
         public float ConstructTime;
         public UnitSchema.UnitTypes UnitType;
-      
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
     }
 }

@@ -28,7 +28,9 @@ namespace MDG.Invader.Systems
         EntityQuery commandListenerQuery;
         EntityQuery workerUnitQuery;
 
-        LinkedEntityComponent invaderLink;
+
+        
+        public LinkedEntityComponent InvaderLink { private set; get; }
 
         BuildCommand? queuedBuildCommand;
         // Checks what command the right click signified,
@@ -102,7 +104,6 @@ namespace MDG.Invader.Systems
 
             public void Execute(Entity entity, int index, [ReadOnly] ref Clickable clicked, [ReadOnly] ref MdgSchema.Units.Unit.Component c1, ref CommandListener commandListener)
             {
-                Debug.Log("I happen");
                 if (clicked.Clicked && clicked.ClickedEntityId.Equals(hunterId))
                 {
                     //Clean up and stop all command compnents on unit before adding a new one.
@@ -123,7 +124,6 @@ namespace MDG.Invader.Systems
                     commandListener.TargetPosition = commandGiven.TargetPosition;
                     commandListener.TargetId = commandGiven.TargetId;
 
-                    Debug.Log("I happen " + buildCommand);
                     switch (commandGiven.CommandType)
                     {
                         case CommandType.Move:
@@ -173,7 +173,7 @@ namespace MDG.Invader.Systems
         protected override void OnStartRunning()
         {
             base.OnStartRunning();
-            invaderLink = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<LinkedEntityComponent>();
+            InvaderLink = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<LinkedEntityComponent>();
             commandListenerQuery = GetEntityQuery(
               ComponentType.ReadWrite<CommandListener>(),
               ComponentType.ReadOnly<Clickable>(),
@@ -214,7 +214,6 @@ namespace MDG.Invader.Systems
 
             if (queuedBuildCommand.HasValue)
             {
-                Debug.Log("here?");
                 commandGiven[0] = new CommandListener
                 {
                     CommandType = CommandType.Build
@@ -260,13 +259,12 @@ namespace MDG.Invader.Systems
                 }
             }
 
-            Debug.Log("here??");
             CommandListener commandMetadata = commandGiven[0];
             CommandGiveJob commandGiveJob = new CommandGiveJob
             {
                 commandGiven = commandMetadata,
                 entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
-                hunterId = invaderLink.EntityId,
+                hunterId = InvaderLink.EntityId,
                 buildCommand = buildCommand
             };
             JobHandle jobHandle = commandGiveJob.Schedule(this);
@@ -274,50 +272,5 @@ namespace MDG.Invader.Systems
             jobHandle.Complete();
 
         }
-
-
-        // Old broadcast build command way, was stupid.
-
-        /*void ProcessBuildCommands()
-        {
-
-            GameObject hunter = GameObject.FindGameObjectWithTag("MainCamera");
-            HunterController hunterController = hunter.GetComponent<HunterController>();
-            if (hunterController.SelectedStructure != null)
-            {
-                var selectedStructure = hunterController.SelectedStructure;
-                if (freeWorkers.Count + busyWorkers.Count >= selectedStructure.WorkersRequired)
-                {
-                    BuildCommand buildCommand = new BuildCommand
-                    {
-                        structureType = selectedStructure.structureType,
-                    };
-
-                    NativeArray<EntityId> workersToAssign = new NativeArray<EntityId>(selectedStructure.WorkersRequired, Allocator.TempJob);
-
-                    int added = 0;
-
-                    while (added < selectedStructure.WorkersRequired && freeWorkers.Count > 0)
-                    {
-                        workersToAssign[added++] = freeWorkers.Dequeue();
-                    }
-
-                    while (added < selectedStructure.WorkersRequired && busyWorkers.Count > 0)
-                    {
-                        workersToAssign[added++] = busyWorkers.Dequeue();
-                    }
-
-                    GiveBuildCommandJob giveBuildCommand = new GiveBuildCommandJob
-                    {
-                        buildCommand = buildCommand,
-                        entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
-                        toAssignTo = workersToAssign
-                    };
-                    JobHandle jobHandle = giveBuildCommand.Schedule(commandListenerQuery);
-                    jobHandle.Complete();
-                    workersToAssign.Dispose();
-                }
-            }
-        }*/
     }
 }

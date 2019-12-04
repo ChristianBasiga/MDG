@@ -3,6 +3,7 @@ using Improbable.Gdk.Subscriptions;
 using MDG.Common.MonoBehaviours.Shopping;
 using MDG.DTO;
 using MDG.Invader.Monobehaviours.UserInterface;
+using MDG.Invader.Systems;
 using MDG.ScriptableObjects.Items;
 using System;
 using System.Collections;
@@ -11,7 +12,7 @@ using UnityEngine;
 using StructureSchema = MdgSchema.Common.Structure;
 
 
-namespace MDG.Common.MonoBehaviours.Structures
+namespace MDG.Invader.Monobehaviours.Structures
 {
     public interface IStructure
     {
@@ -19,13 +20,10 @@ namespace MDG.Common.MonoBehaviours.Structures
         void Link(StructureBehaviour structureBehaviour);
         void StartJob(byte[] jobContext);
         void CompleteJob(byte[] jobData);
+        StructureSchema.StructureType GetStructureType();
     }
 
 
-    // Not all structures have multipe jobs as shop items, need to update this.
-    [RequireComponent(typeof(ShopBehaviour))]
-    [RequireComponent(typeof(BuildMenu))]
-    // For invader specifically.. Too general and too grand.
     public class StructureBehaviour : MonoBehaviour
     {
         // All logic is simply fetching data, so it's not pure visual since doing I/O
@@ -33,48 +31,95 @@ namespace MDG.Common.MonoBehaviours.Structures
         public event Action<StructureSchema.BuildEventPayload> OnBuild;
         public event Action OnBuildComplete;
         public event Action<int, ShopItem, LinkedEntityComponent> OnJobStarted;
-        public event Action<StructureSchema.JobRunEventPayload> OnJobRun;
+        public event Action<int, StructureSchema.JobRunEventPayload> OnJobRun;
         public event Action<int, byte[]> OnJobCompleted;
         public event Action<string> OnError;
 
         public int JobCapacity;
         ComponentUpdateSystem componentUpdateSystem;
         LinkedEntityComponent linkedEntityComponent;
+        LinkedEntityComponent invaderLink;
+
         [Require] StructureSchema.StructureReader structureReader = null;
 
         int jobIndex;
+        int currentlyRunningJob;
+
         private ShopItem[] jobQueue;
+        StructureUIManager structureUIManager;
 
-
+        [SerializeField]
         BuildMenu buildMenu;
         public IStructure ConcreteStructureBehaviour { set; get; }
+
+
+
+        private void OnMouseDown()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                structureUIManager.SetStructure(this);
+                structureUIManager.SetJobs(jobQueue);
+                // Now what sets this back off??? Prob just an x button
+                structureUIManager.gameObject.SetActive(true);
+            }
+        }
 
         // Wierd dependancy if do inheritance, think structure
         public virtual void Start()
         {
             jobIndex = 0;
             jobQueue = new ShopItem[JobCapacity];
-            ConcreteStructureBehaviour.Link(this);
-            buildMenu = GetComponent<BuildMenu>();
-            buildMenu.OnOptionSelected += BuildMenu_OnOptionSelected;
-            // Oh now it's all fucked lmao. I created shop behaviour already.
+            // This is crucial lol. How do I get ref to build menu of someting I don't haveeeee
             ShopBehaviour shopBehaviour = GetComponent<ShopBehaviour>();
             shopBehaviour.OnPurchaseItem += StartJob;
+
+            structureReader.OnBuildingEvent += OnUpdateBuilding;
             structureReader.OnConstructingUpdate += OnConstructingUpdate;
+
+            structureReader.OnJobRunningEvent += OnUpdateJob;
+            structureReader.OnJobCompleteEvent += OnJobComplete;
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
+
+            ConcreteStructureBehaviour = GetComponent<IStructure>();
+            ConcreteStructureBehaviour.Link(this);
+
+            invaderLink = linkedEntityComponent.World.GetExistingSystem<CommandGiveSystem>().InvaderLink;
+            structureUIManager = invaderLink.GetComponent<HunterController>().GetStructureOverlay(ConcreteStructureBehaviour.GetStructureType());
+            
+            // This line right here is horrible
+            buildMenu = structureUIManager.transform.GetChild(0).Find("BuildMenu").GetComponent<BuildMenu>();
+            buildMenu.OnOptionConfirmed += BuildMenu_OnOptionSelected;
+        }
+
+        private void OnJobComplete(StructureSchema.JobCompleteEventPayload jobCompleteEventPayload)
+        {
+            ConcreteStructureBehaviour.CompleteJob(jobCompleteEventPayload.JobData);
+            OnJobCompleted?.Invoke(currentlyRunningJob, jobCompleteEventPayload.JobData);
+        }
+
+        private void OnUpdateJob(StructureSchema.JobRunEventPayload jobRunEventPayload)
+        {
+            OnJobRun?.Invoke(currentlyRunningJob, jobRunEventPayload);
+        }
+
+        private void OnUpdateBuilding(StructureSchema.BuildEventPayload buildEventPayload)
+        {
+            OnBuild?.Invoke(buildEventPayload);
         }
 
         private void BuildMenu_OnOptionSelected(ShopItem obj)
         {
             ShopBehaviour shopBehaviour = GetComponent<ShopBehaviour>();
-            shopBehaviour.TryPurchase(obj, linkedEntityComponent);
+            shopBehaviour.TryPurchase(obj, invaderLink);
         }
 
         // Layered events but it's fine.
         private void OnConstructingUpdate(bool constructing)
         {
             if (!constructing){
+                Debug.Log("No longer constructing");
                 OnBuildComplete?.Invoke();
             }
         }
@@ -82,58 +127,24 @@ namespace MDG.Common.MonoBehaviours.Structures
         // Need to set up a core UI error handler.
         public virtual void StartJob(ShopItem shopItem, LinkedEntityComponent purchaser)
         {
-            if (jobIndex == 0 && jobQueue[0] == null)
+            if (jobIndex == 0 && jobQueue[0] != null)
             {
                 OnError?.Invoke("Reached maximum job occupancy");
             }
             else
             {
+                ShopItemDto shopItemDto = Converters.ShopItemToDto(shopItem);
                 PurchasePayload purchasePayload = new PurchasePayload
                 {
-                    shopItem = shopItem,
+                    shopItem = shopItemDto,
                     purchaserId = purchaser.EntityId.Id
                 };
-                ConcreteStructureBehaviour.StartJob(Converters.SerializeArguments<PurchasePayload>(purchasePayload));
+                ConcreteStructureBehaviour.StartJob(Converters.SerializeArguments(purchasePayload));
                 OnJobStarted?.Invoke(jobIndex, shopItem, purchaser);
-                ++jobIndex;
+                currentlyRunningJob = jobIndex;
+                jobQueue[jobIndex++] = shopItem;
+                jobIndex = jobIndex % jobQueue.Length;
             }
-        }
-
-        private void Update()
-        {
-
-            #region Checking for Building and Job Events
-            if (structureReader.Data.Constructing)
-            {
-                var buildEvents = componentUpdateSystem.GetEventsReceived<StructureSchema.Structure.Building.Event>(linkedEntityComponent.EntityId);
-                for (int i = 0; i < buildEvents.Count; ++i)
-                {
-                    // I literally made both of them timers.
-                    ref readonly var buildEvent = ref buildEvents[i];
-                    float percentage = buildEvent.Event.Payload.BuildProgress / buildEvent.Event.Payload.EstimatedBuildCompletion;
-                    OnBuild?.Invoke(buildEvent.Event.Payload);
-                }
-            }
-            else
-            {
-                var jobProgressEvents = componentUpdateSystem.GetEventsReceived<StructureSchema.Structure.JobRunning.Event>(linkedEntityComponent.EntityId);
-                if (jobProgressEvents.Count > 0)
-                {
-                    ref readonly var jobProgressEvent = ref jobProgressEvents[0];
-                    float pct = jobProgressEvent.Event.Payload.JobProgress / jobProgressEvent.Event.Payload.EstimatedJobCompletion;
-                    OnJobRun?.Invoke(jobProgressEvent.Event.Payload);
-                }
-
-                var jobCompleteEvents = componentUpdateSystem.GetEventsReceived<StructureSchema.Structure.JobComplete.Event>(linkedEntityComponent.EntityId);
-                if (jobCompleteEvents.Count > 0)
-                {
-                    ref readonly var jobCompleteEvent = ref jobCompleteEvents[0];
-                    ConcreteStructureBehaviour.CompleteJob(jobCompleteEvent.Event.Payload.JobData);
-                    OnJobCompleted?.Invoke(jobIndex, jobCompleteEvent.Event.Payload.JobData);
-                    jobIndex = (jobIndex + 1) % JobCapacity;
-                }
-            }
-            #endregion
         }
     }
 }

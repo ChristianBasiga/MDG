@@ -7,6 +7,7 @@ using MDG.DTO;
 using Improbable.Gdk.PlayerLifecycle;
 using Unity.Entities;
 using MDG.Common;
+using MdgSchema.Common.Stats;
 
 namespace MDG.Templates
 {
@@ -32,6 +33,15 @@ namespace MDG.Templates
                     break;
             }
 
+            entityTemplate.AddComponent(new Stats.Snapshot
+            {
+                Health = structureConfig.health
+            }, serverAttribute);
+            entityTemplate.AddComponent(new StatsMetadata.Snapshot
+            {
+                Health = structureConfig.health
+            }, serverAttribute);
+
             CommonTemplates.AddRequiredSpatialComponents(entityTemplate, "Structure");
             CommonTemplates.AddRequiredGameEntityComponents(entityTemplate, position, MdgSchema.Common.GameEntityTypes.Structure);
 
@@ -41,15 +51,16 @@ namespace MDG.Templates
             });
             entityTemplate.AddComponent(new StructureSchema.StructureMetadata.Snapshot
             {
-                PrefabName = structureConfig.prefabName,
                 StructureType = structureConfig.structureType,
                 ConstructionTime = structureConfig.constructionTime
             }, serverAttribute);
 
             entityTemplate.AddComponent(new StructureSchema.Structure.Snapshot
             {
-                Constructing = false,
+                Constructing = structureConfig.constructing,
             }, serverAttribute);
+
+            PlayerLifecycleHelper.AddPlayerLifecycleComponents(entityTemplate, clientWorkerId, serverAttribute);
 
             return entityTemplate;
         }
@@ -58,8 +69,8 @@ namespace MDG.Templates
         {
             template.AddComponent(new InventorySchema.Inventory.Snapshot
             {
-                InventorySize = structureConfig.inventoryConfig.inventorySize,
-                Inventory = structureConfig.inventoryConfig.itemToCost
+                InventorySize = 10,
+                Inventory = new System.Collections.Generic.Dictionary<int, InventorySchema.Item>()
             }, serverAttribute);
         }
 

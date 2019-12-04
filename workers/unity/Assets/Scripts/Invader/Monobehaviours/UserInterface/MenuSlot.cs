@@ -8,6 +8,7 @@ using ScriptableObjectStructures = MDG.ScriptableObjects.Structures;
 
 namespace MDG.Invader.Monobehaviours.UserInterface
 {
+    // Shop behaviour, should I reuse build menu and menu slot??
     [RequireComponent(typeof(Button))]
     public class MenuSlot : MonoBehaviour
     {
@@ -22,9 +23,13 @@ namespace MDG.Invader.Monobehaviours.UserInterface
         [SerializeField]
         Image thumbnail;
 
+        [SerializeField]
+        Text costText;
+
         public void SetItem(ShopItem shopItem)
         {
             thumbnail.sprite = shopItem.Thumbnail;
+            costText.text = shopItem.Cost.ToString();
             ShopItem = shopItem;
         }
 
