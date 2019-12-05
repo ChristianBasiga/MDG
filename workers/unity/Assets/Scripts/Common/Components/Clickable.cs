@@ -10,10 +10,4 @@ namespace MDG.Common.Components
         // Todo: change this to be list of clicked.
         public EntityId ClickedEntityId;
     }
-
-    // For easy query.
-    public struct Clicked : IComponentData
-    {
-
-    }
 }

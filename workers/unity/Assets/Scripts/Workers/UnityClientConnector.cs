@@ -24,7 +24,7 @@ namespace MDG
     {
         public const string WorkerType = "UnityClient";
         public ClientGameObjectCreator clientGameObjectCreator { get; private set; }
-        GameConfig gameConfig;
+        public GameConfig gameConfig { private set; get; }
         private async void Start()
         {
             var connParams = CreateConnectionParameters(WorkerType);
@@ -92,6 +92,7 @@ namespace MDG
         public void AddInvaderSystems()
         {
             Worker.World.GetOrCreateSystem<SelectionSystem>().Enabled = true;
+            Worker.World.GetOrCreateSystem<SelectionSystem>().Init(clientGameObjectCreator);
             Worker.World.GetOrCreateSystem<CommandGiveSystem>().Enabled = true;
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = true;
             Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = true;

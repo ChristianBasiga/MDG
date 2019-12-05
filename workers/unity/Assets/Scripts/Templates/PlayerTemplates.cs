@@ -41,15 +41,19 @@ namespace MDG.Templates
                 }, serverAttribute);
                 template = creationArgs.playerType == GameEntityTypes.Hunter ? AddInvaderComponents(clientAttribute,template) 
                     : AddDefenderComponents(clientAttribute, template);
-
+                Debug.Log("Creation args position " + creationArgs.position);
                 template.AddComponent(new EntityTransform.Snapshot
                 {
                     Position = creationArgs.position
                 }, serverAttribute);
+
+                template.AddComponent(new Position.Snapshot
+                {
+                    Coords = new Coordinates(creationArgs.position.X, creationArgs.position.Y, creationArgs.position.Z)
+                }, serverAttribute);
             }
-           
-           
-            template.AddComponent(new Position.Snapshot(), clientAttribute);
+
+
             template.AddComponent(new Metadata.Snapshot("Player"), serverAttribute);
            
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);

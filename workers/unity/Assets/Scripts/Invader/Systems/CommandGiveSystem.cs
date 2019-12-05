@@ -15,6 +15,7 @@ using MdgSchema.Units;
 using Improbable.Gdk.Subscriptions;
 using Improbable;
 using MDG.Invader.Monobehaviours;
+using MDG.Common;
 
 namespace MDG.Invader.Systems
 {
@@ -230,11 +231,11 @@ namespace MDG.Invader.Systems
                     return;
                 }
 
-                float3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                float3 mousePos = HelperFunctions.GetMousePosition();
                 // Creates bounding box for right click big enough to sense the click.
                 // Maybe create alot of these / include botLeft and botRight in the NativeArray.
-                float3 botLeft = mousePos + new float3(-10, 0, -10);// * (10 - Input.mousePosition.magnitude) * .5f;
-                float3 topRight = mousePos + new float3(+10, 0, +10);// * (10 - Input.mousePosition.magnitude) * .5f;
+                float3 botLeft = mousePos + new float3(-20, 0, -20);// * (10 - Input.mousePosition.magnitude) * .5f;
+                float3 topRight = mousePos + new float3(+20, 0, +20);// * (10 - Input.mousePosition.magnitude) * .5f;
 
                 CommandProcessJob commandProcessJob = new CommandProcessJob
                 {

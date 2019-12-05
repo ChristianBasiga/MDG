@@ -93,6 +93,14 @@ namespace MDG.Common
                 );
         }
 
+        public static Vector3 GetMousePosition()
+        {
+            Vector3 screenPos = Input.mousePosition;
+            Camera camera = Camera.main;
+            screenPos.z = camera.farClipPlane;
+            return camera.ScreenToWorldPoint(screenPos);
+        }
+
         #endregion
        
         #region UI related helper functions.

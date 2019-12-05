@@ -170,8 +170,8 @@ namespace MDG
                 }
                 pathToPlayer = $"{pathToPlayer}/{type.ToString()}";
                 GameObject created = CreateEntityObject(entity, linker, pathToPlayer, null, null);
-                Vector3 startingPoint = defenderStartingPoints[defenderPointsUsed].ToUnityVector();
-                created.transform.position = startingPoint;
+            //    Vector3 startingPoint = defenderStartingPoints[defenderPointsUsed].ToUnityVector();
+            //    created.transform.position = startingPoint;
             }
             else if (metaData.EntityType.Equals("Unit"))
             {

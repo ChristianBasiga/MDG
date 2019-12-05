@@ -134,7 +134,6 @@ namespace MDG.Invader.Systems
                 }
                 else if (distance <= boxCollider.Dimensions.ToUnityVector().magnitude)
                 {
-                    Debug.Log("Finished moving");
                     linearVelocityComponent.Velocity = Vector3f.Zero;
                     commandListener.CommandType = CommandType.None;
                     entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(MoveCommand));

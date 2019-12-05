@@ -13,6 +13,7 @@ namespace MDG.ScriptableObjects.Game
         public Vector3[] SpawnStructureSpawnPoints;
         public Vector3[] DefenderSpawnPoints;
         public Vector3 WorldDimensions;
+        public Vector3 InvaderSpawnPoint;
         public int CapicityPerRegion;
     }
 }

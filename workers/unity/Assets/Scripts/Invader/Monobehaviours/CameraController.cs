@@ -72,6 +72,7 @@ namespace MDG.Invader.Monobehaviours
                 newCameraPosition.x += -cameraSettings.panningSpeed * Time.deltaTime;
             }
             float scroll = Input.GetAxis("Mouse ScrollWheel");
+           // transform.position.y -= scroll * cameraSettings.scrollSpeed * 100.0f * Time.deltaTime;
             viewCamera.orthographicSize -= scroll * cameraSettings.scrollSpeed * 100.0f * Time.deltaTime;
             viewCamera.orthographicSize = Mathf.Clamp(viewCamera.orthographicSize, minZoom, maxZoom);
             newCameraPosition.x = Mathf.Clamp(newCameraPosition.x, -cameraSettings.panningBounds.x, cameraSettings.panningBounds.x);

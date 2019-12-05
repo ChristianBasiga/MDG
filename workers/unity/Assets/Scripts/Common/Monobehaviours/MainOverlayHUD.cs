@@ -85,9 +85,17 @@ namespace MDG.Common.MonoBehaviours
             roleSelected = type;
 
             UnityClientConnector clientConnector = GetComponent<UnityClientConnector>();
+
+            Vector3 position = clientConnector.gameConfig.DefenderSpawnPoints[0];
+            if (type == GameEntityTypes.Hunter)
+            {
+                position = clientConnector.gameConfig.InvaderSpawnPoint;
+            }
+
             var playerCreationSystem = clientConnector.Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
             playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
             {
+                position = HelperFunctions.Vector3fFromUnityVector(position),
                 playerType = type,
             }), OnCreatePlayerResponse);
             roleSelectionUI.SetActive(false);

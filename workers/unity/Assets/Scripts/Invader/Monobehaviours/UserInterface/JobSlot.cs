@@ -41,7 +41,6 @@ namespace MDG.Invader.Monobehaviours.Structures
 
         public void UpdateProgress(float pct)
         {
-            Debug.Log("I ever happen?");
             StartCoroutine(HelperFunctions.UpdateFill(jobProgressBar, pct, OnProgressUpdated));
         }
 
