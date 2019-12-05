@@ -17,6 +17,8 @@ using MDG.Common.Systems.Point;
 using MDG.Common.Systems.Weapon;
 using MDG.Common.Systems.Structure;
 using MDG.ScriptableObjects.Game;
+using System.Collections;
+
 namespace MDG
 {
     //Need to figure out spawnign stuff on server side and not.
@@ -85,9 +87,21 @@ namespace MDG
             Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = false;
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
             clientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType, gameConfig);
+            clientGameObjectCreator.OnGameObjectSpawned += OnGameObjectSpawned;
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, clientGameObjectCreator);
         }
 
+        private void OnGameObjectSpawned(GameObject obj)
+        {
+            obj.SetActive(false);
+            StartCoroutine(SetActive(obj));
+        }
+
+        IEnumerator SetActive(GameObject obj)
+        {
+            yield return new WaitForEndOfFrame();
+            obj.SetActive(true);
+        }
 
         public void AddInvaderSystems()
         {

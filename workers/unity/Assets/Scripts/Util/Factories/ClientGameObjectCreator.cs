@@ -41,6 +41,7 @@ namespace MDG
         public delegate void EntityChangeEventHandler(EntityId entityId);
 
         // For others to know when thish happens.
+        public event System.Action<GameObject> OnGameObjectSpawned;
         public event EntityChangeEventHandler OnEntityAdded;
         public event EntityChangeEventHandler OnEntityDeleted;
         // Storing here prob fine actually.
@@ -194,7 +195,6 @@ namespace MDG
             {
                 pathToEntity = $"{pathToEntity}/Resource";
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
-                created.tag = "Resource";
             }
             else if (metaData.EntityType.Equals("GameManager"))
             {
@@ -210,7 +210,7 @@ namespace MDG
                 pathToEntity = $"{pathToEntity}/Weapons/{weaponComponent.WeaponId}";
 
                 GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
-                created.tag = weaponComponent.  WeaponType.ToString();
+                created.tag = weaponComponent.WeaponType.ToString();
             }
             else if (metaData.EntityType.Equals("Territory"))
             {
@@ -287,6 +287,7 @@ namespace MDG
                 linker.LinkGameObjectToSpatialOSEntity(entity.SpatialOSEntityId, gameObject);
             }
             EntityToGameObjects[entity.SpatialOSEntityId] = gameObject;
+            OnGameObjectSpawned?.Invoke(gameObject);
             return gameObject;
         }
 

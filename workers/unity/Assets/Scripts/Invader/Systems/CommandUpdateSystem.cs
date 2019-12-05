@@ -126,11 +126,9 @@ namespace MDG.Invader.Systems
                 Vector3f sameY = new Vector3f(moveCommand.destination.X, entityTransform.Position.Y, moveCommand.destination.Z);
                 Vector3f direction = sameY - entityTransform.Position;
                 float distance = HelperFunctions.Distance(sameY, entityTransform.Position);
-                Vector3f normalizedDirection = HelperFunctions.Normalize(direction);
-                //Debug.Log("distance " + distance);
                 if (!moveCommand.applied)
                 {
-                    linearVelocityComponent.Velocity = normalizedDirection * 50.0f;
+                    linearVelocityComponent.Velocity = direction;
                     moveCommand.applied = true;
                 }
                 else if (distance <= 5.0f)
@@ -156,7 +154,6 @@ namespace MDG.Invader.Systems
                 Vector3f sameY = new Vector3f(collectCommand.destination.X, entityTransform.Position.Y, collectCommand.destination.Z);
                 Vector3f direction = sameY - entityTransform.Position;
                 float distance = HelperFunctions.Distance(sameY, entityTransform.Position);
-
 
                 // Just magnitude prob fine, if all uniform, they won't be uniform though.
                 float minDistance = boxCollider.Dimensions.ToUnityVector().magnitude;
@@ -287,7 +284,9 @@ namespace MDG.Invader.Systems
                 }
                 else
                 {
-                    linearVelocityComponent.Velocity = buildCommand.buildLocation - entityTransformComponent.Position;
+                    Vector3f normalizedDirection = HelperFunctions.Normalize(buildCommand.buildLocation - entityTransformComponent.Position);
+
+                    linearVelocityComponent.Velocity = normalizedDirection;
                     buildCommand.isBuilding = false;
                 }
             }

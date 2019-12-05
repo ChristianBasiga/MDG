@@ -31,6 +31,17 @@ namespace MDG.Invader.Systems {
 
         ClientGameObjectCreator clientGameObjectCreator;
         LinkedEntityComponent invaderLink;
+        LinkedEntityComponent InvaderLink
+        {
+            get
+            {
+                if (invaderLink == null)
+                {
+                    invaderLink = UnityEngine.Camera.main.GetComponent<LinkedEntityComponent>();
+                }
+                return invaderLink;
+            }
+        }
 
         public struct SelectionBounds
         {
@@ -44,14 +55,13 @@ namespace MDG.Invader.Systems {
         {
             this.clientGameObjectCreator = clientGameObjectCreator;
             // Access from somewhere
-            invaderLink = UnityEngine.Camera.main.GetComponent<LinkedEntityComponent>();
+
         }
 
         protected override void OnStartRunning()
         {
             base.OnStartRunning();
             selectorGroup = GetEntityQuery(typeof(Selection));
-
             if (!selectedThisFrameFromJob.IsCreated)
             {
                 selectedThisFrameFromJob = new NativeQueue<EntityId>(Allocator.Persistent);
@@ -162,7 +172,7 @@ namespace MDG.Invader.Systems {
                 if (clickableMonobehaviour.SelectedThisFrame)
                 {
                     clickable.Clicked = true;
-                    clickable.ClickedEntityId = invaderLink.EntityId;
+                    clickable.ClickedEntityId = InvaderLink.EntityId;
                     selectedThisFrameFromJob.Enqueue(spatialEntityId.EntityId);
                 }
             });

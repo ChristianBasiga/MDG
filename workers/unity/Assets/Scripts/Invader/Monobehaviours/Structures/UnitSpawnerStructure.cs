@@ -124,6 +124,9 @@ namespace MDG.Invader.Monobehaviours.Structures
             UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(jobData);
             //Todo: Debug how it got to 40, like it added y of structure pos.
             unitConfig.position.Y = 20;
+
+            // Need to delay this to be synced up with bar, but it's fine.
+
             spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
             {
                 TypeToSpawn = MdgSchema.Common.GameEntityTypes.Unit,
@@ -131,6 +134,7 @@ namespace MDG.Invader.Monobehaviours.Structures
                 Position = unitConfig.position
             }, OnUnitSuccessfullySpawned, jobData);
         }
+
 
         private void OnUnitSuccessfullySpawned(EntityId entityId)
         {

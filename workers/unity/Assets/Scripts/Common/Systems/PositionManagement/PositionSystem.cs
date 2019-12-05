@@ -177,7 +177,7 @@ namespace MDG.Common.Systems.Position
                 ref EntityTransform.Component entityTransform)
             {
                 // Add extra speed to this.
-                entityTransform.Position += linearVelocityComponent.Velocity * deltaTime;
+                entityTransform.Position += HelperFunctions.Normalize(linearVelocityComponent.Velocity) * deltaTime * 100.0f;
                 // entityTransform.Position = new Vector3f(entityTransform.Position.X, 0, entityTransform.Position.Z);
                 entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;
                 if (!linearVelocityComponent.Velocity.Equals(Vector3f.Zero))

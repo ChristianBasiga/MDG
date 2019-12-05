@@ -32,8 +32,18 @@ namespace MDG.Invader.Systems
 
 
         private ClientGameObjectCreator clientGameObjectCreator;
-        public LinkedEntityComponent InvaderLink { private set; get; }
-
+        LinkedEntityComponent invaderLink;
+        public LinkedEntityComponent InvaderLink 
+         {
+            get
+            {
+                if (invaderLink == null)
+                {
+                    invaderLink = UnityEngine.Camera.main.GetComponent<LinkedEntityComponent>();
+                }
+                return invaderLink;
+            }
+        }
         BuildCommand? queuedBuildCommand;
 
         // Maybe should also add worker component.
@@ -101,7 +111,6 @@ namespace MDG.Invader.Systems
                             entityCommandBuffer.AddComponent(index, entity, new CollectCommand { destination = commandGiven.TargetPosition, resourceId = commandGiven.TargetId });
                             break;
                         case CommandType.Build:
-                            Debug.Log("building");
                             entityCommandBuffer.AddComponent(index, entity, buildCommand.Value);
                             break;
                     }
@@ -138,7 +147,6 @@ namespace MDG.Invader.Systems
         protected override void OnStartRunning()
         {
             base.OnStartRunning();
-            InvaderLink = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<LinkedEntityComponent>();
             clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().clientGameObjectCreator;
             commandListenerQuery = GetEntityQuery(
               ComponentType.ReadWrite<CommandListener>(),

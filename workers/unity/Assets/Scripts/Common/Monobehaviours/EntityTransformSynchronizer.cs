@@ -7,9 +7,10 @@ using UnityEngine;
 public class EntityTransformSynchronizer : MonoBehaviour
 {
     [Require] EntityTransformReader transformReader = null;
-    // Start is called before the first frame update
+
     void Start()
     {
+      
         transform.position = transformReader.Data.Position.ToUnityVector();
         transformReader.OnPositionUpdate += UpdatePosition;
         transformReader.OnRotationUpdate += UpdateRotation;

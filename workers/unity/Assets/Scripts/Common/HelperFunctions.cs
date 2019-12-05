@@ -75,6 +75,8 @@ namespace MDG.Common
         }
         public static Vector3f Normalize(Vector3f vector)
         {
+            if (vector == Vector3f.Zero)
+                return vector;
             return vector / Magnitude(vector);
         }
 
