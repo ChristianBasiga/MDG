@@ -25,18 +25,30 @@ namespace MDG.Defender.Monobehaviours
         public OnGameEndEventHandler OnEndGame;
         EntityId gameManagerEntityId;
 
+        // Should put this in client worker
+        EntityId GameManagerEntityId
+        {
+            get
+            {
+                if (gameManagerEntityId == null)
+                {
+                    gameManagerEntityId = GameObject.FindGameObjectWithTag("GameManager").GetComponent<LinkedEntityComponent>().EntityId;
+                }
+                return gameManagerEntityId;
+            }
+        }
+
         private void Start()
         {
             pendingRespawnReader.OnRespawnActiveUpdate += OnRespawnActiveChange;
             componentUpdateSystem = GetComponent<LinkedEntityComponent>().World.GetExistingSystem<ComponentUpdateSystem>();
             // Soo how should bullets be handled in ecs? I'm pretty sure they HAVE to be tempaltes.
-            gameManagerEntityId = GameObject.FindGameObjectWithTag("GameManager").GetComponent<LinkedEntityComponent>().EntityId;
         }
 
         private void Update()
         {
             // For now just repeat this, later today move this to a common component
-            var endGameEventMessages = componentUpdateSystem.GetEventsReceived<GameSchema.GameStatus.EndGame.Event>(gameManagerEntityId);
+            var endGameEventMessages = componentUpdateSystem.GetEventsReceived<GameSchema.GameStatus.EndGame.Event>(GameManagerEntityId);
             if (endGameEventMessages.Count > 0)
             {
                 ref readonly var endGameEvent = ref endGameEventMessages[0];

@@ -8,6 +8,7 @@ using MDG.DTO;
 using Unity.Entities;
 using MDG.Common;
 using Improbable.Gdk.PlayerLifecycle;
+using StatSchema = MdgSchema.Common.Stats;
 
 namespace MDG.Templates
 {
@@ -36,6 +37,13 @@ namespace MDG.Templates
                 DamageDealt = 0,
                 Hits = 0
             }, clientAttribute);
+
+
+            template.AddComponent(new StatSchema.MovementSpeed.Snapshot
+            {
+                LinearSpeed = 100.0f,
+                AngularSpeed = 10.0f
+            }, serverAttribute);
 
             PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
 

@@ -9,6 +9,7 @@ using Improbable;
 using Improbable.Gdk.Core;
 using MdgSchema.Common;
 using PositionSchema = MdgSchema.Common.Position;
+using StatSchema = MdgSchema.Common.Stats;
 using MDG.Common.Systems.Collision;
 using MDG.ScriptableObjects.Game;
 
@@ -116,7 +117,8 @@ namespace MDG.Common.Systems.Position
                 ComponentType.ReadOnly<PositionSchema.LinearVelocity.Component>(),
                 ComponentType.ReadOnly<PositionSchema.AngularVelocity.Component>(),
                 ComponentType.ReadWrite<EntityTransform.Component>(),
-                ComponentType.ReadOnly<EntityTransform.ComponentAuthority>()
+                ComponentType.ReadOnly<EntityTransform.ComponentAuthority>(),
+                ComponentType.ReadOnly<StatSchema.MovementSpeed.Component>()
                 );
             applyVelocityQuery.SetFilter(EntityTransform.ComponentAuthority.Authoritative);
         }
@@ -166,7 +168,7 @@ namespace MDG.Common.Systems.Position
 
 
         struct ApplyVelocityJob : IJobForEach<SpatialEntityId, PositionSchema.LinearVelocity.Component, PositionSchema.AngularVelocity.Component,
-            EntityTransform.Component> {
+            EntityTransform.Component, StatSchema.MovementSpeed.Component> {
 
             public float deltaTime;
             [WriteOnly]
@@ -174,10 +176,10 @@ namespace MDG.Common.Systems.Position
 
             public void Execute([ReadOnly] ref SpatialEntityId entityIdComponent, [ReadOnly] ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
                 [ReadOnly] ref PositionSchema.AngularVelocity.Component angularVelocityComponent,
-                ref EntityTransform.Component entityTransform)
+                ref EntityTransform.Component entityTransform, [ReadOnly] ref StatSchema.MovementSpeed.Component moveSpeed)
             {
                 // Add extra speed to this.
-                entityTransform.Position += HelperFunctions.Normalize(linearVelocityComponent.Velocity) * deltaTime * 100.0f;
+                entityTransform.Position += HelperFunctions.Normalize(linearVelocityComponent.Velocity) * deltaTime * moveSpeed.LinearSpeed;
                 // entityTransform.Position = new Vector3f(entityTransform.Position.X, 0, entityTransform.Position.Z);
                 entityTransform.Rotation += angularVelocityComponent.AngularVelocity * deltaTime;
                 if (!linearVelocityComponent.Velocity.Equals(Vector3f.Zero))

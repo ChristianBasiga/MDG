@@ -92,6 +92,12 @@ namespace MDG.Templates
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
 
+            template.AddComponent(new StatSchema.MovementSpeed.Snapshot
+            {
+                LinearSpeed = 100.0f,
+                AngularSpeed = 10.0f
+            }, serverAttribute);
+
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {
                 Position = new Vector3f(0, 0, 0),

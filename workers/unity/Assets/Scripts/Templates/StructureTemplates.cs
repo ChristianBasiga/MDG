@@ -33,15 +33,6 @@ namespace MDG.Templates
                     break;
             }
 
-            entityTemplate.AddComponent(new Stats.Snapshot
-            {
-                Health = structureConfig.health
-            }, serverAttribute);
-            entityTemplate.AddComponent(new StatsMetadata.Snapshot
-            {
-                Health = structureConfig.health
-            }, serverAttribute);
-
             CommonTemplates.AddRequiredSpatialComponents(entityTemplate, "Structure");
             CommonTemplates.AddRequiredGameEntityComponents(entityTemplate, position, MdgSchema.Common.GameEntityTypes.Structure);
 
@@ -67,6 +58,15 @@ namespace MDG.Templates
 
         private static void GetSpawnStructureTemplate(EntityTemplate template, SpawnStructureConfig structureConfig, string serverAttribute)
         {
+            template.AddComponent(new Stats.Snapshot
+            {
+                Health = structureConfig.health
+            }, serverAttribute);
+            template.AddComponent(new StatsMetadata.Snapshot
+            {
+                Health = structureConfig.health
+            }, serverAttribute);
+
             template.AddComponent(new InventorySchema.Inventory.Snapshot
             {
                 InventorySize = 10,
@@ -76,6 +76,15 @@ namespace MDG.Templates
 
         private static void GetClaimStructureTemplate(EntityTemplate template, ClaimConfig claimConfig, string serverAttribute)
         {
+            template.AddComponent(new Stats.Snapshot
+            {
+                Health = claimConfig.health
+            }, serverAttribute);
+            template.AddComponent(new StatsMetadata.Snapshot
+            {
+                Health = claimConfig.health
+            }, serverAttribute);
+
             template.AddComponent(new StructureSchema.ClaimStructure.Snapshot{
                 TerritoryClaiming = claimConfig.territoryId
             }, serverAttribute);
@@ -83,12 +92,11 @@ namespace MDG.Templates
 
         private static void GetTrapStructureTemplate(EntityTemplate template, TrapConfig trapConfig, string workerId, string serverAttribute)
         {
-            PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
-
             template.AddComponent(new StructureSchema.Trap.Snapshot
             {
                 Damage = trapConfig.Damage,
-                OneTimeUse = trapConfig.OneTimeUse
+                OneTimeUse = trapConfig.OneTimeUse,
+                PrefabName = trapConfig.prefabName
             }, serverAttribute);
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {

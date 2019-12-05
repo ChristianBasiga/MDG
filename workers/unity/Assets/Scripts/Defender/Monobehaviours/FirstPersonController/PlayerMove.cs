@@ -62,7 +62,7 @@ namespace MDG.Defender.Monobehaviours {
             // Need to figure out how apply this.
             linearVelocityWriter.SendUpdate(new PositionSchema.LinearVelocity.Update
             {
-                Velocity = HelperFunctions.Vector3fFromUnityVector(forwardMovement + rightMovement) * defenderConfig.MovementSpeed
+                Velocity = HelperFunctions.Vector3fFromUnityVector(forwardMovement + rightMovement)
             });
 
             if (horizInput != 0 || vertInput != 0)

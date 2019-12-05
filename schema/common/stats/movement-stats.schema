@@ -1,0 +1,15 @@
+package mdg_schema.common.stats;
+
+
+
+
+
+// Scriptable objects should maybe be loaded in the factory / tempaltes
+// so that directly accessible instead of turning into config etc.
+
+component MovementSpeed
+{
+    id = 811;
+    float linear_speed = 1;
+    float angular_speed = 2;
+}

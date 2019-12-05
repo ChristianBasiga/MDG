@@ -190,7 +190,7 @@ namespace MDG.Common.Systems.Stat
                 else
                 {
 
-                    Debug.Log("Sending Delete entity request");
+                    Debug.Log($"Sending Delete entity request for entity {killed_id}");
                     commandSystem.SendCommand(new WorldCommands.DeleteEntity.Request
                     {
                         EntityId = killed_id

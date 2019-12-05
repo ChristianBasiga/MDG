@@ -38,7 +38,6 @@ namespace MDG.Templates
             template.AddComponent(new EntityTransform.Snapshot { Position = spawnPositon }, serverAttribute);
             template.AddComponent(new LinearVelocity.Snapshot { Velocity = Vector3f.Zero }, clientAttribute);
             template.AddComponent(new AngularVelocity.Snapshot { AngularVelocity = Vector3f.Zero }, clientAttribute);
-
             template.AddComponent(new PointSchema.Point.Snapshot
             {
                 Value = 10000
@@ -65,6 +64,12 @@ namespace MDG.Templates
                 unitSnapshot.Type = unitConfig.unitType;
             }
             template.AddComponent(unitSnapshot, serverAttribute);
+
+            template.AddComponent(new StatSchema.MovementSpeed.Snapshot
+            {
+                LinearSpeed = 100.0f,
+                AngularSpeed = 10.0f
+            }, serverAttribute);
 
             switch (unitType)
             {
