@@ -163,6 +163,7 @@ namespace MDG.Invader.Systems {
                 {
                     clickable.Clicked = true;
                     clickable.ClickedEntityId = invaderLink.EntityId;
+                    selectedThisFrameFromJob.Enqueue(spatialEntityId.EntityId);
                 }
             });
             selectedBoundsJob.Complete();

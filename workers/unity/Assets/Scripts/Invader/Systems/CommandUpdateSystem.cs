@@ -126,14 +126,16 @@ namespace MDG.Invader.Systems
                 Vector3f sameY = new Vector3f(moveCommand.destination.X, entityTransform.Position.Y, moveCommand.destination.Z);
                 Vector3f direction = sameY - entityTransform.Position;
                 float distance = HelperFunctions.Distance(sameY, entityTransform.Position);
-
+                Vector3f normalizedDirection = HelperFunctions.Normalize(direction);
+                //Debug.Log("distance " + distance);
                 if (!moveCommand.applied)
                 {
-                    linearVelocityComponent.Velocity = direction;
+                    linearVelocityComponent.Velocity = normalizedDirection * 50.0f;
                     moveCommand.applied = true;
                 }
-                else if (distance <= boxCollider.Dimensions.ToUnityVector().magnitude)
+                else if (distance <= 5.0f)
                 {
+                    Debug.Log("ever here?");
                     linearVelocityComponent.Velocity = Vector3f.Zero;
                     commandListener.CommandType = CommandType.None;
                     entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(MoveCommand));

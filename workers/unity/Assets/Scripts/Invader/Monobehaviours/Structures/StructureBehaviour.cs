@@ -80,6 +80,7 @@ namespace MDG.Invader.Monobehaviours.Structures
 
             structureReader.OnJobRunningEvent += OnUpdateJob;
             structureReader.OnJobCompleteEvent += OnJobComplete;
+
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
 
@@ -92,6 +93,15 @@ namespace MDG.Invader.Monobehaviours.Structures
             // This line right here is horrible
             buildMenu = structureUIManager.transform.GetChild(0).Find("BuildMenu").GetComponent<BuildMenu>();
             buildMenu.OnOptionConfirmed += BuildMenu_OnOptionSelected;
+        }
+
+        private void Update()
+        {
+            // Need to create UI stack.
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                structureUIManager.gameObject.SetActive(false);
+            }
         }
 
         private void OnJobComplete(StructureSchema.JobCompleteEventPayload jobCompleteEventPayload)

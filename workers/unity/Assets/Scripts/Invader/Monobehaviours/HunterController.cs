@@ -67,6 +67,7 @@ namespace MDG.Invader.Monobehaviours {
             LoadInStuctureOverlays();
         }
 
+       
         private void OnSelectionUpdated(bool selectionMade)
         {
             structureBuildMenu.transform.parent.gameObject.SetActive(selectionMade);

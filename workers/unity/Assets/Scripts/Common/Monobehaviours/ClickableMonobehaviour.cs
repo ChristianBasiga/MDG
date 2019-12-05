@@ -9,9 +9,17 @@ namespace MDG.Common.MonoBehaviours
     // How I should I get all these? idk mannnn.
     public class ClickableMonobehaviour : MonoBehaviour
     {
+        public enum ClickEnum
+        {
+            LeftClick = 0,
+            RightClick = 1
+        }
+
+        [SerializeField]
+        ClickEnum clickEnum;
 
         public bool SelectedThisFrame { private set; get; }
-        bool mouseOver;
+        public bool MouseOver { private set; get; }
         // Start is called before the first frame update
         void Start()
         {
@@ -20,29 +28,22 @@ namespace MDG.Common.MonoBehaviours
         // Update is called once per frame
         void Update()
         {
-            Debug.Log("mouse over" + mouseOver);
             if (Input.GetMouseButtonDown(0))
             {
-                SelectedThisFrame = mouseOver;
+                SelectedThisFrame = MouseOver;
             }
-            Debug.Log("selected this frame " + SelectedThisFrame);
-        }
-
-        private void OnMouseDown()
-        {
-            Debug.Log("mouse down");
         }
 
         private void OnMouseOver()
         {
             Debug.Log("Mouse over");
-            mouseOver = true;
+            MouseOver = true;
         }
         
         private void OnMouseExit()
         {
             Debug.Log("Mouse exit");
-            mouseOver = false;
+            MouseOver = false;
         }
     }
 }

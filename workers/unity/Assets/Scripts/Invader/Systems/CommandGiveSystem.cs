@@ -28,51 +28,13 @@ namespace MDG.Invader.Systems
 
         EntityQuery commandListenerQuery;
         EntityQuery workerUnitQuery;
+        EntityQuery rightClickablesQuery;
 
 
-        
+        private ClientGameObjectCreator clientGameObjectCreator;
         public LinkedEntityComponent InvaderLink { private set; get; }
 
         BuildCommand? queuedBuildCommand;
-        // Checks what command the right click signified,
-        // This would be applying the command to each Unit.
-        // what I really need to do first is process it.
-        public struct CommandProcessJob : IJobForEach<SpatialEntityId, Clickable, GameMetadata.Component, EntityTransform.Component>
-        {
-            public float3 botLeft;
-            public float3 topRight;
-
-            public NativeArray<CommandListener> commandMetadata;
-
-            public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Clickable clickable, [ReadOnly] ref GameMetadata.Component gameMetadata, [ReadOnly] ref EntityTransform.Component entityTransform)
-            {
-                if (commandMetadata[0].CommandType != CommandType.None) return;
-
-                if (entityTransform.Position.X > botLeft.x && entityTransform.Position.Z > botLeft.z
-                    && entityTransform.Position.X < topRight.x && entityTransform.Position.Z < topRight.z)
-                {
-                    CommandListener command = new CommandListener {
-                        TargetId = spatialEntityId.EntityId,
-                        TargetPosition = entityTransform.Position
-                    };
-                    switch (gameMetadata.Type)
-                    {
-                        case GameEntityTypes.Resource:
-                            command.CommandType = CommandType.Collect;
-                            break;
-                        case GameEntityTypes.Unit:
-                            // Don't know if attack unless has enemy component.
-                            // but I cannot check that here, so has to be after this job.
-                            // actually in final version there are no enemy units, just enemy structures.
-                            break;
-                        case GameEntityTypes.Hunted:
-                            command.CommandType = CommandType.Attack;
-                            break;
-                    }
-                    commandMetadata[0] = command;
-                }
-            }
-        }
 
         // Maybe should also add worker component.
         public struct GetWorkersJob : IJobForEachWithEntity<CommandListener, MdgSchema.Units.Unit.Component, 
@@ -101,6 +63,8 @@ namespace MDG.Invader.Systems
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
             public CommandListener commandGiven;
 
+            public MoveCommand? moveCommand;
+            public CollectCommand? collectCommand;
             public BuildCommand? buildCommand;
 
             public void Execute(Entity entity, int index, [ReadOnly] ref Clickable clicked, [ReadOnly] ref MdgSchema.Units.Unit.Component c1, ref CommandListener commandListener)
@@ -175,17 +139,24 @@ namespace MDG.Invader.Systems
         {
             base.OnStartRunning();
             InvaderLink = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<LinkedEntityComponent>();
+            clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().clientGameObjectCreator;
             commandListenerQuery = GetEntityQuery(
               ComponentType.ReadWrite<CommandListener>(),
               ComponentType.ReadOnly<Clickable>(),
               ComponentType.ReadOnly<MdgSchema.Units.Unit.Component>()
               );
             workerUnitQuery = GetEntityQuery(
-                  ComponentType.ReadOnly<CommandListener>(),
+                ComponentType.ReadOnly<CommandListener>(),
                 ComponentType.ReadOnly<Clickable>(),
                 ComponentType.ReadOnly<MdgSchema.Units.Unit.Component>(),
                 ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<WorkerUnit>()
+                );
+
+            rightClickablesQuery = GetEntityQuery(
+                ComponentType.ReadOnly<Clickable>(),
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadOnly<GameMetadata.Component>()
                 );
 
         }
@@ -204,74 +175,72 @@ namespace MDG.Invader.Systems
         protected override void OnUpdate()
         {
 
-            // Handling queued commands.
-
-            NativeArray<CommandListener> commandGiven = new NativeArray<CommandListener>(1, Allocator.TempJob);
-            commandGiven[0] = new CommandListener
+            CommandListener command = new CommandListener
             {
                 CommandType = CommandType.None
             };
-            BuildCommand? buildCommand = queuedBuildCommand;
 
+            BuildCommand? buildCommand = queuedBuildCommand;
             if (queuedBuildCommand.HasValue)
             {
-                commandGiven[0] = new CommandListener
-                {
-                    CommandType = CommandType.Build
-                };
+                command.CommandType = CommandType.Build;
                 queuedBuildCommand = null;
             }
             else
             {
-
                 // For handling click context commands.
                 if (workerUnitQuery.CalculateEntityCount() == 0 || !Input.GetMouseButtonDown(1))
                 {
-                    commandGiven.Dispose();
                     return;
                 }
-
-                float3 mousePos = HelperFunctions.GetMousePosition();
-                // Creates bounding box for right click big enough to sense the click.
-                // Maybe create alot of these / include botLeft and botRight in the NativeArray.
-                float3 botLeft = mousePos + new float3(-20, 0, -20);// * (10 - Input.mousePosition.magnitude) * .5f;
-                float3 topRight = mousePos + new float3(+20, 0, +20);// * (10 - Input.mousePosition.magnitude) * .5f;
-
-                CommandProcessJob commandProcessJob = new CommandProcessJob
-                {
-                    commandMetadata = commandGiven,
-                    botLeft = botLeft,
-                    topRight = topRight
-                };
-                JobHandle commandProcessHandle = commandProcessJob.ScheduleSingle(this);
-                //getWorkersJobHandle.Complete();
-                commandProcessHandle.Complete();
-
-
-                // If right click did not overlap with any clickable and build command not queued, it is move command.
-                if (commandGiven[0].CommandType == CommandType.None)
-                {
-                    Vector3f convertedMousePos = new Vector3f(mousePos.x, 0, mousePos.z);
-                    commandGiven[0] = new CommandListener
-                    {
-                        TargetPosition = convertedMousePos,
-                        CommandType = CommandType.Move
-                    };
-                }
+                command = ProcessCommandGiven();
             }
 
-            CommandListener commandMetadata = commandGiven[0];
             CommandGiveJob commandGiveJob = new CommandGiveJob
             {
-                commandGiven = commandMetadata,
+                commandGiven = command,
                 entityCommandBuffer = PostUpdateCommands.ToConcurrent(),
                 hunterId = InvaderLink.EntityId,
                 buildCommand = buildCommand
             };
             JobHandle jobHandle = commandGiveJob.Schedule(this);
-            commandGiven.Dispose();
             jobHandle.Complete();
+        }
 
+        // There really are SO many clickables potentially though.
+        private CommandListener ProcessCommandGiven()
+        {
+            float3 mousePos = HelperFunctions.GetMousePosition();
+            CommandListener commandListener = new CommandListener
+            {
+                CommandType = CommandType.None,
+                TargetPosition = new Vector3f(mousePos.x, 20, mousePos.z)
+            };
+            Entities.With(rightClickablesQuery).ForEach((ref SpatialEntityId spatialEntityId, ref Clickable clickable, ref GameMetadata.Component gameMetadata) =>
+            {
+                if (clickable.Clicked && clickable.ClickedEntityId.Equals(InvaderLink.EntityId))
+                {
+                    commandListener.TargetId = spatialEntityId.EntityId;
+                    switch (gameMetadata.Type)
+                    {
+                        case GameEntityTypes.Resource:
+                            commandListener.CommandType = CommandType.Collect;
+                            break;
+                        case GameEntityTypes.Unit:
+                            break;
+                        case GameEntityTypes.Hunted:
+                            commandListener.CommandType = CommandType.Attack;
+                            break;
+                    }
+                }
+            });
+
+            if (commandListener.CommandType == CommandType.None)
+            {
+                commandListener.CommandType = CommandType.Move;
+
+            }
+            return commandListener;
         }
     }
 }
