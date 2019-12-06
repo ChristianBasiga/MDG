@@ -72,7 +72,8 @@ namespace MDG.Defender.Monobehaviours
                 structureType = MdgSchema.Common.Structure.StructureType.Trap,
                 ColliderDimensions = HelperFunctions.Vector3fFromUnityVector(trap.ColliderDimensions),
                 constructionTime = trap.SetupTime,
-                OneTimeUse = trap.OneTimeUse
+                OneTimeUse = trap.OneTimeUse,
+                ownerId = linkedEntityComponent.EntityId.Id
             };
             // How i get this position prod needs to change.
             Vector3 worldCoords = HelperFunctions.GetMousePosition(Camera.main);

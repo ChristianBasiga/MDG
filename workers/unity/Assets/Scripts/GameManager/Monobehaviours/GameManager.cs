@@ -13,7 +13,6 @@ using Improbable.Gdk.Core.Commands;
 using Unity.Collections;
 using Unity.Entities;
 using Improbable.Gdk.Subscriptions;
-using Zenject;
 using SpawnSchema = MdgSchema.Common.Spawn;
 using GameSchema = MdgSchema.Game;
 using MdgSchema.Common;

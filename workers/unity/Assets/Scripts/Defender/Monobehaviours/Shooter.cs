@@ -17,15 +17,20 @@ namespace MDG.Defender.Monobehaviours
         SpawnRequestSystem spawnRequestSystem;
 
         public Weapon Weapon { private set; get; }
-        Transform crossHairs;
+
+        [SerializeField]
+        Camera shootCamera;
+
+        [SerializeField]
         Transform shootOrigin;
+
+        [SerializeField]
+        Transform crosshairs;
 
         // Start is called before the first frame update
         void Start()
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
-            crossHairs = GameObject.Find("CrossHairs").transform;
-            shootOrigin = GameObject.Find("ShootOrigin").transform;
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
             GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
             Weapon = Resources.Load("ScriptableObjects/Weapons/DefenderProjectile") as Weapon;
@@ -34,13 +39,16 @@ namespace MDG.Defender.Monobehaviours
         public void Shoot()
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
-            // rest should be derived from scriptble object shooter has. For now setting here.
-            // Ideally, show projectile coming from weapon, then continuing on from crosshairs forward. That's polish end result is cross hair forward and that
-            // is enugh.
-            Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(crossHairs.position);
+            crosshairs.transform.position = Input.mousePosition;
+            Vector3 mousePos = HelperFunctions.GetMousePosition(shootCamera);
 
+            Vector3 direction = mousePos - shootOrigin.position;
+            Debug.DrawRay(shootOrigin.position, direction, Color.red);
+
+            shootOrigin.rotation = Quaternion.LookRotation(direction);
+            Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(shootOrigin.position);
             Projectile projectile = Weapon as Projectile;
-            Vector3f bulletLinearVelocity = HelperFunctions.Vector3fFromUnityVector(crossHairs.forward) * projectile.ProjectileSpeed;
+            Vector3f bulletLinearVelocity = HelperFunctions.Vector3fFromUnityVector(shootOrigin.forward) * projectile.ProjectileSpeed;
 
             ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(projectile);
             projectileConfig.startingPosition = bulletStartingPosition;

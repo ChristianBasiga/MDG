@@ -181,7 +181,6 @@ namespace MDG.Common.Systems.Spawn
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
                                 EntityTemplates.UnitTemplates.GetUnitEntityTemplate(workerSystem.WorkerId, 
-                                (UnitTypes)request.payload.TypeId, 
                                 request.payload.Position,
                                 request.spawnMetaData)
                               ));

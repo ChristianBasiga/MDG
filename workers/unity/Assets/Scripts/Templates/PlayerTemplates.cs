@@ -39,7 +39,8 @@ namespace MDG.Templates
                 {
                     Type = creationArgs.playerType
                 }, serverAttribute);
-                template = creationArgs.playerType == GameEntityTypes.Hunter ? AddInvaderComponents(clientAttribute,template) 
+                template = creationArgs.playerType == GameEntityTypes.Hunter ? 
+                        AddInvaderComponents(clientAttribute,template) 
                     : AddDefenderComponents(clientAttribute, template);
                 Debug.Log("Creation args position " + creationArgs.position);
                 template.AddComponent(new EntityTransform.Snapshot
@@ -91,7 +92,7 @@ namespace MDG.Templates
         {
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
-
+            Debug.LogError("Adding defender components");
             template.AddComponent(new StatSchema.MovementSpeed.Snapshot
             {
                 LinearSpeed = 100.0f,

@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Zenject;
 using Unity.Entities;
 using Improbable;
 using Unity.Rendering;

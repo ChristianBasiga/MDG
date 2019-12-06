@@ -23,7 +23,6 @@ namespace MDG.Defender.Monobehaviours
         LinkedEntityComponent linkedEntityComponent;
         InputConfig inputConfig;
 
-        [Require] PointReader pointReader = null;
 
         [SerializeField]
         LoadoutSlot[] loadoutSlots;

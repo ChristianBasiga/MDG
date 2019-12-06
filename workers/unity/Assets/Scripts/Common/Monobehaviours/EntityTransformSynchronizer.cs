@@ -20,7 +20,7 @@ namespace MDG.Common.MonoBehaviours
 
         private void UpdateRotation(Improbable.Vector3f obj)
         {
-            transform.eulerAngles = obj.ToUnityVector();
+           // transform.eulerAngles = obj.ToUnityVector();
         }
 
         private void UpdatePosition(Improbable.Vector3f obj)

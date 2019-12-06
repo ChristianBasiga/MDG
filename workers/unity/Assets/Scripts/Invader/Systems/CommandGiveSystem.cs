@@ -205,8 +205,10 @@ namespace MDG.Invader.Systems
             };
             Entities.With(rightClickablesQuery).ForEach((ref SpatialEntityId spatialEntityId, ref Clickable clickable, ref GameMetadata.Component gameMetadata) =>
             {
+                Debug.Log("checking clicked clickables");
                 if (clickable.Clicked && clickable.ClickedEntityId.Equals(InvaderLink.EntityId))
                 {
+                    Debug.Log($"Clicked entity is {spatialEntityId.EntityId}");
                     commandListener.TargetId = spatialEntityId.EntityId;
                     switch (gameMetadata.Type)
                     {

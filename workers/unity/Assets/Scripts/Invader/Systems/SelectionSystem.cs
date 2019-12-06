@@ -66,6 +66,7 @@ namespace MDG.Invader.Systems {
         }
 
 
+        // Hindsight, should've still did bounds stuff until tested this thoroughly.
         public struct GetSelectedBounds : IJobForEach<SpatialEntityId, Selection>
         {
             [WriteOnly]
@@ -157,8 +158,9 @@ namespace MDG.Invader.Systems {
             Entities.ForEach((ref SpatialEntityId spatialEntityId, ref Clickable clickable) =>
             {
                 ClickableMonobehaviour clickableMonobehaviour = clientGameObjectCreator.GetLinkedGameObjectById(spatialEntityId.EntityId).GetComponent<ClickableMonobehaviour>();
-                if (clickableMonobehaviour.SelectedThisFrame)
+                if (clickableMonobehaviour != null && clickableMonobehaviour.SelectedThisFrame)
                 {
+                    UnityEngine.Debug.LogError("clicked on entity " + spatialEntityId.EntityId);
                     clickable.Clicked = true;
                     clickable.ClickedEntityId = clientGameObjectCreator.PlayerLink.EntityId;
                     selectedThisFrameFromJob.Enqueue(spatialEntityId.EntityId);

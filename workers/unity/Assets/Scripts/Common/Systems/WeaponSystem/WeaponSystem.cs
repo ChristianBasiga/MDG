@@ -35,6 +35,7 @@ namespace MDG.Common.Systems.Weapon
         struct DamageRequestPayload
         {
             public EntityId weapon_id;
+            public PointSchema.Point.Component pointComponent;
             public StatSchema.Stats.DamageEntity.Request request;
             // Purely for not having to re get weapon entity, etc.
             public WeaponSchema.Weapon.Component weaponComponent;
@@ -159,6 +160,7 @@ namespace MDG.Common.Systems.Weapon
                         {
                             currentHits += 1;
                             // Send damage request to entity hit.
+
                             UnityEngine.Debug.Log($"Sending damage request to {entityIdToCollision.Value.CollidingWith}");
                             StatSchema.Stats.DamageEntity.Request request = new StatSchema.Stats.DamageEntity.Request
                             {
@@ -168,12 +170,14 @@ namespace MDG.Common.Systems.Weapon
                                 },
                                 TargetEntityId = entityIdToCollision.Key,
                             };
+                            PointSchema.Point.Component pointComponent = EntityManager.GetComponentData<PointSchema.Point.Component>(collidedEntity);
                             long requestId = commandSystem.SendCommand(request);
                             pendingDamageRequests.Add(requestId, new DamageRequestPayload
                             {
                                 weapon_id = spatialEntityId.EntityId,
                                 weaponComponent = weaponComponent,
-                                request = request
+                                request = request,
+                                pointComponent = pointComponent
                             });
                         }
                     }
@@ -208,10 +212,10 @@ namespace MDG.Common.Systems.Weapon
                             else if (responsePayload.Killed)
                             {
                                 WeaponSchema.Weapon.Component weaponComponent = requestSent.weaponComponent;
-                                workerSystem.TryGetEntity(requestSent.request.TargetEntityId, out Entity killedEntity);
-                                PointSchema.Point.Component pointComponent = EntityManager.GetComponentData<PointSchema.Point.Component>(killedEntity);
+                                // Should prob get point of target entity beforekill
+                                PointSchema.PointRequest pointRequestPayload = new PointSchema.PointRequest { PointUpdate = requestSent.pointComponent.Value };
+
                                 workerSystem.TryGetEntity(weaponComponent.WielderId, out Entity wielderEntity);
-                                PointSchema.PointRequest pointRequestPayload = new PointSchema.PointRequest { PointUpdate = pointComponent.Value };
                                 if (EntityManager.HasComponent<MdgSchema.Units.Unit.Component>(wielderEntity))
                                 {
                                     pointRequestPayload.EntityUpdating = EntityManager.GetComponentData<MdgSchema.Units.Unit.Component>(wielderEntity).OwnerId;

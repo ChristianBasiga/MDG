@@ -107,6 +107,7 @@ namespace MDG
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 worker.TryGetEntity(entity.SpatialOSEntityId, out Entity ecsEntity);
                 GameEntityTypes type = gameMetaData.Type;
+                Debug.LogError("type being made " + type);
 
                 if (type == GameEntityTypes.Hunter)
                 {
@@ -121,10 +122,11 @@ namespace MDG
 
                 if (!hasAuthority && gameMetaData.Type == GameEntityTypes.Hunter)
                 {
+                    Debug.LogError("I happen");
                     return;
                 }
                 pathToPlayer = $"{pathToPlayer}/{type.ToString()}";
-                CreateEntityObject(entity, linker, pathToPlayer, null, null);
+                CreateEntityObject(entity, linker, pathToPlayer);
             }
             else if (metaData.EntityType.Equals("Unit"))
             {
@@ -178,6 +180,8 @@ namespace MDG
                 StructureSchema.StructureMetadata.Component structureMetaData = entity.GetComponent<StructureSchema.StructureMetadata.Component>();
 
                 // Maybe should have an ownership component, reduce copy. That's clen up later tho.
+                Debug.Log("player id" + PlayerLink.EntityId);
+                Debug.Log("structure owner id " + structureMetaData.OwnerId);
                 bool hasAuthority = structureMetaData.OwnerId.Equals(PlayerLink.EntityId);
                 string structurePath = hasAuthority ? $"{pathToEntity}/Authoritative/Structures" : $"{pathToEntity}/Structures";
                 switch (structureMetaData.StructureType)
@@ -219,8 +223,8 @@ namespace MDG
                 // Or both. Regardless doesn't just make it dissapear.
                 if (linkedGameObject.GetComponent<HealthSynchronizer>() == null)
                 {
-                    linkedGameObject.SetActive(false);
                 }
+                linkedGameObject.SetActive(false);
             }
             EntityToGameObjects.Remove(entityId);
             OnEntityDeleted?.Invoke(entityId);

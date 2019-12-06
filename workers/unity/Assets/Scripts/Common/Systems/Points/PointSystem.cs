@@ -86,6 +86,7 @@ namespace MDG.Common.Systems.Point
                         totalGain += points;
                         idToPoints.Remove(spatialEntityId.EntityId);
                     }
+                    totalGain = math.max(totalGain, 0);
                     point.Value = totalGain;
                 });
                 timeSinceIdleGain = gainRateInterval;

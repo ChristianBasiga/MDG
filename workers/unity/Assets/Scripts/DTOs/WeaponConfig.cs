@@ -32,6 +32,7 @@ namespace MDG.DTO
         public Vector3f angularVelocity;
         public Vector3f startingPosition;
         public int projectileId;
+        public float projectileSpeed;
     }
 
     [Serializable]

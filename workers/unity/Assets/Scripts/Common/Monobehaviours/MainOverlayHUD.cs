@@ -21,9 +21,6 @@ namespace MDG.Common.MonoBehaviours
         public event RoleSelectedHandler OnRoleSelected;
         public GameEntityTypes RoleSelected { private set; get; }
 
-
-
-
         private void Start()
         {
             roleSelectionUI = GameObject.Find("RoleSelectionUI");

@@ -18,6 +18,7 @@ using MDG.Common.Systems.Position;
 using MDG.Common.Systems.Stat;
 using MDG.Common.Systems.Weapon;
 using MDG.Common.Systems.Structure;
+using MDG.Templates;
 
 namespace MDG
 {
@@ -49,6 +50,7 @@ namespace MDG
             var builder = new SpatialOSConnectionHandlerBuilder()
                 .SetConnectionFlow(flow)
                 .SetConnectionParameters(connectionParameters);
+            PlayerLifecycleConfig.CreatePlayerEntityTemplate = PlayerTemplates.CreatePlayerEntityTemplate;
 
             await Connect(builder, new ForwardingDispatcher()).ConfigureAwait(false);
         }

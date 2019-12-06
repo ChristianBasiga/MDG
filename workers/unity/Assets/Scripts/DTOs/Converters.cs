@@ -48,6 +48,7 @@ namespace MDG.DTO
                 lifeTime = projectile.LifeTime,
                 maximumHits = projectile.Durability,
                 damage = projectile.Damage,
+                projectileSpeed = projectile.ProjectileSpeed
             };
             return projectileConfig;
         }

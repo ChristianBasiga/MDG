@@ -28,11 +28,12 @@ namespace MDG.Templates
     {
         // Using serialized args, I COULD make an interface / base function they all call that then calls specific one
         // based on game type. That would be 100% better, but that's elegance.
-        public static EntityTemplate GetUnitEntityTemplate(string workerId, UnitTypes unitType, Vector3f spawnPositon, byte[] spawnArgs = null)
+        public static EntityTemplate GetUnitEntityTemplate(string workerId, Vector3f spawnPositon, byte[] spawnArgs = null)
         {
             var clientAttribute = EntityTemplate.GetWorkerAccessAttribute(workerId);
             var serverAttribute = UnityGameLogicConnector.WorkerType;
             EntityTemplate template = new EntityTemplate();
+
             template.AddComponent(new Metadata.Snapshot { EntityType = "Unit" }, serverAttribute);
             template.AddComponent(new GameMetadata.Snapshot { Type = GameEntityTypes.Unit }, serverAttribute);
             template.AddComponent(new EntityTransform.Snapshot { Position = spawnPositon }, serverAttribute);
@@ -55,15 +56,13 @@ namespace MDG.Templates
                 Dimensions = new Vector3f(15, 0, 15)
             }, serverAttribute);
 
-            UnitsSchema.Unit.Snapshot unitSnapshot = new Unit.Snapshot { Type = unitType };
-            if (spawnArgs != null)
+            UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(spawnArgs);
+            Debug.Log("Unit config has owner id " + unitConfig.ownerId);
+            template.AddComponent(new Unit.Snapshot
             {
-                UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(spawnArgs);
-                Debug.Log("Unit config has owner id " + unitConfig.ownerId);
-                unitSnapshot.OwnerId = new EntityId(unitConfig.ownerId);
-                unitSnapshot.Type = unitConfig.unitType;
-            }
-            template.AddComponent(unitSnapshot, serverAttribute);
+                OwnerId = new EntityId(unitConfig.ownerId),
+                Type = unitConfig.unitType
+            }, serverAttribute);
 
             template.AddComponent(new StatSchema.MovementSpeed.Snapshot
             {
@@ -71,13 +70,15 @@ namespace MDG.Templates
                 AngularSpeed = 10.0f
             }, serverAttribute);
 
-            switch (unitType)
+            switch (unitConfig.unitType)
             {
                 case UnitsSchema.UnitTypes.Worker:
                     MakeWorkerUnit(template, clientAttribute);
                     break;
                 case UnitsSchema.UnitTypes.Tank:
                     break;
+                default:
+                    throw new System.Exception("Not Suppored Unit Type");
             }
             template.AddComponent(new Position.Snapshot
             {
@@ -87,19 +88,12 @@ namespace MDG.Templates
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);
             return template;
         }
-        /*
-        public static EntityTemplate GetUnitEntityTemplate(string workerId, byte[] serializedArgs)
-        {
-
-            UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(serializedArgs);
-            return GetUnitEntityTemplate(workerId, unitConfig.unitType, unitConfig.spawnPosition);
-        }*/
-
 
         private static void MakeWorkerUnit(EntityTemplate template, string clientAttribute)
         {
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
+            Debug.Log("Get to here");
             template.AddComponent(new InventorySchema.Inventory.Snapshot
             {
                 Inventory = new Dictionary<int, InventorySchema.Item>(),
@@ -121,6 +115,10 @@ namespace MDG.Templates
         {
             var serverAttribute = UnityGameLogicConnector.WorkerType;
 
+            template.AddComponent(new StatSchema.StatsMetadata.Snapshot
+            {
+                Health = 5
+            }, serverAttribute);
 
             template.AddComponent(new StatSchema.Stats.Snapshot
             {

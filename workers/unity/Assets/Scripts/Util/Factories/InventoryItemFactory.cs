@@ -2,11 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Zenject;
 namespace MDG.Factories
 {
     // Monobehaviour just for tseting rn.
-    public class InventoryItemFactory : IInitializable
+    public class InventoryItemFactory
     {
         public readonly static int ResourceItemId = 1;
         private Dictionary<int, InventoryItem> itemsCanRender;

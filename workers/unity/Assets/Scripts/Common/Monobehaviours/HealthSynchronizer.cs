@@ -32,7 +32,9 @@ namespace MDG.Common.MonoBehaviours
             {
                 if (pct == 0)
                 {
+                    Debug.Log("Do I not happen??");
                     this.gameObject.SetActive(false);
+                    //this.statsReader.RemoveAllCallbacks();
                 }
             }));
         }

@@ -75,6 +75,7 @@ namespace MDG
 
         private void SpawnPlayer(MdgSchema.Common.GameEntityTypes type)
         {
+            Debug.LogError(type);
             Vector3 position = GameConfig.DefenderSpawnPoints[0];
             playerRole = type;
             if (type == GameEntityTypes.Hunter)
@@ -85,7 +86,7 @@ namespace MDG
             playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
             {
                 position = HelperFunctions.Vector3fFromUnityVector(position),
-                playerType = type,
+                playerType = type
             }), OnCreatePlayerResponse);
         }
 

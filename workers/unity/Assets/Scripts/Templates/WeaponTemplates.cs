@@ -36,14 +36,7 @@ namespace MDG.Templates
             {
                 DamageDealt = 0,
                 Hits = 0
-            }, clientAttribute);
-
-
-            template.AddComponent(new StatSchema.MovementSpeed.Snapshot
-            {
-                LinearSpeed = 100.0f,
-                AngularSpeed = 10.0f
-            }, serverAttribute);
+            }, clientAttribute);     
 
             return template;
         }
@@ -51,9 +44,9 @@ namespace MDG.Templates
         private static void AddProjectileComponents(string clientAttribute, EntityTemplate template,
             EntityId wielder, string prefabName, ProjectileConfig projectileConfig)
         {
+            string serverAttribute = UnityGameLogicConnector.WorkerType;
             CommonTemplates.AddRequiredGameEntityComponents(template, projectileConfig.startingPosition,
                 MdgSchema.Common.GameEntityTypes.Weapon, projectileConfig.projectileId);
-
             template.AddComponent(new WeaponSchema.Weapon.Snapshot
             {
                 BaseDamage = projectileConfig.damage,
@@ -61,12 +54,18 @@ namespace MDG.Templates
                 WielderId = wielder,
                 WeaponId = prefabName,
                 WeaponType = WeaponSchema.WeaponType.Projectile
-            }, UnityGameLogicConnector.WorkerType);
+            }, serverAttribute);
 
             template.AddComponent(new CommonSchema.TimeLimitation.Snapshot
             {
                 TimeLeft = projectileConfig.lifeTime
-            }, UnityGameLogicConnector.WorkerType);
+            }, serverAttribute);
+
+            template.AddComponent(new StatSchema.MovementSpeed.Snapshot
+            {
+                LinearSpeed = projectileConfig.projectileSpeed,
+                AngularSpeed = 0
+            }, serverAttribute);
 
             template.AddComponent(new PositionSchema.LinearVelocity.Snapshot
             {
@@ -83,13 +82,13 @@ namespace MDG.Templates
                 Dimensions = projectileConfig.dimensions,
                 IsTrigger = true,
                 Position = Vector3f.Zero
-            }, UnityGameLogicConnector.WorkerType);
+            }, serverAttribute);
 
             template.AddComponent(new CollisionSchema.Collision.Snapshot
             {
                 Collisions = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>(),
                 Triggers = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>()
-            }, UnityGameLogicConnector.WorkerType);
+            }, serverAttribute);
         }
     }
 
