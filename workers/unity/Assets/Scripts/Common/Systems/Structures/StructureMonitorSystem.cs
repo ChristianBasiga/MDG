@@ -177,7 +177,6 @@ namespace MDG.Common.Systems.Structure
                 completedJobPayloads = completedJobPayloads.AsParallelWriter()
             };
             JobHandle tickJobsHandle = tickActiveJobsJob.Schedule(runningJobQuery);
-            Debug.Log("Am I ticking");
             ProcessJobRequests();
 
             NativeQueue<ConstructionPayloadHeader> constructionsToSendEventsFor = new NativeQueue<ConstructionPayloadHeader>(Allocator.TempJob);
@@ -273,17 +272,14 @@ namespace MDG.Common.Systems.Structure
 
         private void ProcessJobRequests()
         { 
-            Debug.Log("here though right?");
             var jobRequests = commandSystem.GetRequests<StructureSchema.Structure.StartJob.ReceivedRequest>();
             for (int i = 0; i < jobRequests.Count; ++i)
             {
                 ref readonly var jobRequest = ref jobRequests[i];
-                Debug.Log("Recieved startJob request requests");
-                Debug.Log(workerSystem.TryGetEntity(jobRequest.EntityId, out Entity structureEntity));
+                workerSystem.TryGetEntity(jobRequest.EntityId, out Entity structureEntity);
 
                 int jobId = randomNumberGenerator.Next();
                 jobIdToPayload[jobId] = jobRequest.Payload.JobData;
-                Debug.Log("Estimated job completion " + jobRequest.Payload.EstimatedJobCompletion);
                 PostUpdateCommands.AddComponent(structureEntity, new StructureComponents.RunningJobComponent
                 {
                     estimatedJobCompletion = jobRequest.Payload.EstimatedJobCompletion,
@@ -298,7 +294,6 @@ namespace MDG.Common.Systems.Structure
                     },
                     RequestId = jobRequest.RequestId
                 });
-                Debug.Log("Get to here");
             }
         }
         #endregion

@@ -1,12 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MdgSchema.Player;
 using MdgSchema.Common;
-using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
 using UnityEngine.UI;
+
 namespace MDG.Common.MonoBehaviours
 {
 
@@ -21,8 +19,7 @@ namespace MDG.Common.MonoBehaviours
         Text timerText;
         public delegate void RoleSelectedHandler(GameEntityTypes type);
         public event RoleSelectedHandler OnRoleSelected;
-        GameEntityTypes roleSelected;
-        private EntityId gameManagerEntityId = new EntityId(3);
+        public GameEntityTypes RoleSelected { private set; get; }
 
 
 
@@ -82,42 +79,9 @@ namespace MDG.Common.MonoBehaviours
         {
             GameEntityTypes type = (GameEntityTypes) System.Enum.Parse(typeof(GameEntityTypes), role);
             OnRoleSelected?.Invoke(type);
-            roleSelected = type;
-
-            UnityClientConnector clientConnector = GetComponent<UnityClientConnector>();
-
-            Vector3 position = clientConnector.gameConfig.DefenderSpawnPoints[0];
-            if (type == GameEntityTypes.Hunter)
-            {
-                position = clientConnector.gameConfig.InvaderSpawnPoint;
-            }
-
-            var playerCreationSystem = clientConnector.Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
-            playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
-            {
-                position = HelperFunctions.Vector3fFromUnityVector(position),
-                playerType = type,
-            }), OnCreatePlayerResponse);
+            RoleSelected = type;
             roleSelectionUI.SetActive(false);
             gameStatusHUD.SetActive(true);
-        }
-
-        //Move this and the creation requests to manager and just have this call it from manager.
-        private void OnCreatePlayerResponse(PlayerCreator.CreatePlayer.ReceivedResponse response)
-        {
-            if (response.StatusCode != Improbable.Worker.CInterop.StatusCode.Success)
-            {
-                Debug.LogWarning($"Error: {response.Message}");
-            }
-            else
-            {
-                Debug.Log("Created player succssfully");
-                UnityClientConnector clientConnector = GetComponent<UnityClientConnector>();
-
-                if (roleSelected == GameEntityTypes.Hunter) {
-                    clientConnector.AddInvaderSystems();
-                }
-            }
         }
     }
 }

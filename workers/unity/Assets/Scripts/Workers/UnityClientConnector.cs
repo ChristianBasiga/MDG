@@ -18,6 +18,10 @@ using MDG.Common.Systems.Weapon;
 using MDG.Common.Systems.Structure;
 using MDG.ScriptableObjects.Game;
 using System.Collections;
+using MDG.Common.MonoBehaviours;
+using MdgSchema.Common;
+using MDG.Common;
+using MDG.DTO;
 
 namespace MDG
 {
@@ -25,8 +29,9 @@ namespace MDG
     public class UnityClientConnector : WorkerConnector
     {
         public const string WorkerType = "UnityClient";
-        public ClientGameObjectCreator clientGameObjectCreator { get; private set; }
-        public GameConfig gameConfig { private set; get; }
+        GameEntityTypes playerRole;
+        public ClientGameObjectCreator ClientGameObjectCreator { get; private set; }
+        public GameConfig GameConfig { private set; get; }
         private async void Start()
         {
             var connParams = CreateConnectionParameters(WorkerType);
@@ -61,8 +66,62 @@ namespace MDG
             PlayerLifecycleConfig.CreatePlayerEntityTemplate = PlayerTemplates.CreatePlayerEntityTemplate;
 
             // Replace with loading config from connection param
-            gameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
+            GameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
+            MainOverlayHUD mainOverlayHUD = GetComponent<MainOverlayHUD>();
+            mainOverlayHUD.OnRoleSelected += SpawnPlayer;
+
             await Connect(builder, new ForwardingDispatcher()).ConfigureAwait(false);
+        }
+
+        private void SpawnPlayer(MdgSchema.Common.GameEntityTypes type)
+        {
+            Vector3 position = GameConfig.DefenderSpawnPoints[0];
+            playerRole = type;
+            if (type == GameEntityTypes.Hunter)
+            {
+                position = GameConfig.InvaderSpawnPoint;
+            }
+            var playerCreationSystem = Worker.World.GetOrCreateSystem<SendCreatePlayerRequestSystem>();
+            playerCreationSystem.RequestPlayerCreation(serializedArguments: DTO.Converters.SerializeArguments(new DTO.PlayerConfig
+            {
+                position = HelperFunctions.Vector3fFromUnityVector(position),
+                playerType = type,
+            }), OnCreatePlayerResponse);
+        }
+
+        //Move this and the creation requests to manager and just have this call it from manager.
+        private void OnCreatePlayerResponse(PlayerCreator.CreatePlayer.ReceivedResponse response)
+        {
+            if (response.StatusCode != Improbable.Worker.CInterop.StatusCode.Success)
+            {
+                Debug.LogWarning($"Error: {response.Message}");
+            }
+            else
+            {
+                Debug.Log("Created player succssfully");
+                if (playerRole == GameEntityTypes.Hunter)
+                {
+                    AddInvaderSystems();
+                    SpawnRequestSystem spawnRequestSystem = Worker.World.GetExistingSystem<SpawnRequestSystem>();
+                    var invaderUnitSpawnPoints = GameConfig.InvaderUnitSpawnPoints;
+                    var amountOfPoints = invaderUnitSpawnPoints.Length;
+                    for (int i = 0; i < amountOfPoints; ++i)
+                    {
+                        UnitConfig unitConfig = new UnitConfig
+                        {
+                            ownerId = response.ResponsePayload.Value.CreatedEntityId.Id,
+                            position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
+                            unitType = MdgSchema.Units.UnitTypes.Worker
+                        };
+                        spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
+                        {
+                            Position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
+                            Count = 1,
+                            TypeToSpawn = GameEntityTypes.Unit
+                        }, null, Converters.SerializeArguments(unitConfig));
+                    }
+                }
+            }
         }
 
         protected override void HandleWorkerConnectionEstablished()
@@ -73,12 +132,6 @@ namespace MDG
             Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
             Worker.World.GetOrCreateSystem<PointRequestSystem>();
             Worker.World.GetOrCreateSystem<WeaponSystem>();
-            //Invader systems.
-
-            /*
-           
-
-            */
             Worker.World.GetOrCreateSystem<ResourceRequestSystem>();
             Worker.World.GetOrCreateSystem<ResourceMonitorSystem>();
             Worker.World.GetOrCreateSystem<SelectionSystem>().Enabled = false; 
@@ -86,9 +139,9 @@ namespace MDG
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = false;
             Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = false;
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-            clientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType, gameConfig);
-            clientGameObjectCreator.OnGameObjectSpawned += OnGameObjectSpawned;
-            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, clientGameObjectCreator);
+            ClientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
+            ClientGameObjectCreator.OnGameObjectSpawned += OnGameObjectSpawned;
+            GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, ClientGameObjectCreator);
         }
 
         private void OnGameObjectSpawned(GameObject obj)
@@ -100,13 +153,17 @@ namespace MDG
         IEnumerator SetActive(GameObject obj)
         {
             yield return new WaitForEndOfFrame();
+            if (obj.CompareTag("Player"))
+            {
+                GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
+            }
             obj.SetActive(true);
         }
 
         public void AddInvaderSystems()
         {
             Worker.World.GetOrCreateSystem<SelectionSystem>().Enabled = true;
-            Worker.World.GetOrCreateSystem<SelectionSystem>().Init(clientGameObjectCreator);
+            Worker.World.GetOrCreateSystem<SelectionSystem>().Init(ClientGameObjectCreator);
             Worker.World.GetOrCreateSystem<CommandGiveSystem>().Enabled = true;
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = true;
             Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = true;

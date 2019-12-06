@@ -31,7 +31,7 @@ namespace MDG.Invader.Monobehaviours
         // Start is called before the first frame update
         void Start()
         {
-            clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().clientGameObjectCreator;
+            clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().ClientGameObjectCreator;
             healthbar = GameObject.Find("StatPanelHealthBar").GetComponent<Image>();
         }
 

@@ -104,7 +104,9 @@ namespace MDG.Invader.Systems
         private EntityQuery enemyQuery;
         private EntityQuery friendlyQuery;
         private EntityQuery attackQuery;
-        public JobHandle CommandExecuteJobHandle { get; private set; }
+
+
+        ClientGameObjectCreator clientGameObjectCreator;
 
         // Change this to dictionary so that weapons of units more expandible.
         Weapon unitWeapon;
@@ -131,9 +133,8 @@ namespace MDG.Invader.Systems
                     linearVelocityComponent.Velocity = direction;
                     moveCommand.applied = true;
                 }
-                else if (distance <= 5.0f)
+                else if (distance <= boxCollider.Dimensions.ToUnityVector().magnitude)
                 {
-                    Debug.Log("ever here?");
                     linearVelocityComponent.Velocity = Vector3f.Zero;
                     commandListener.CommandType = CommandType.None;
                     entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(MoveCommand));
@@ -309,6 +310,7 @@ namespace MDG.Invader.Systems
         protected override void OnStartRunning()
         {
             base.OnStartRunning();
+            clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().ClientGameObjectCreator;
             unitWeapon = Resources.Load("ScriptableObjects/Weapons/UnitWorkerProjectile") as Weapon;
             combatStatsQuery = GetEntityQuery(
                ComponentType.ReadOnly<CombatMetadata>(),
@@ -363,9 +365,12 @@ namespace MDG.Invader.Systems
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            pendingCollects.Dispose();
-            pendingOccupy.Dispose();
-            buildCommands.Dispose();
+            if (pendingCollects.IsCreated)
+            {
+                pendingCollects.Dispose();
+                pendingOccupy.Dispose();
+                buildCommands.Dispose();
+            }
         }
 
         protected override void OnUpdate()
@@ -869,7 +874,8 @@ namespace MDG.Invader.Systems
                         structureType = buildCommand.structureType,
                         constructionTime = buildCommand.constructionTime,
                         constructing = true,
-                        health = 10
+                        health = 10,
+                        ownerId = clientGameObjectCreator.PlayerLink.EntityId.Id
                     };
 
                     byte[] serialized = Converters.SerializeArguments(structureConfig);

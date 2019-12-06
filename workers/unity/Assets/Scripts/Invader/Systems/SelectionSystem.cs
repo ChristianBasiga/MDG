@@ -30,18 +30,6 @@ namespace MDG.Invader.Systems {
 
 
         ClientGameObjectCreator clientGameObjectCreator;
-        LinkedEntityComponent invaderLink;
-        LinkedEntityComponent InvaderLink
-        {
-            get
-            {
-                if (invaderLink == null)
-                {
-                    invaderLink = UnityEngine.Camera.main.GetComponent<LinkedEntityComponent>();
-                }
-                return invaderLink;
-            }
-        }
 
         public struct SelectionBounds
         {
@@ -172,7 +160,7 @@ namespace MDG.Invader.Systems {
                 if (clickableMonobehaviour.SelectedThisFrame)
                 {
                     clickable.Clicked = true;
-                    clickable.ClickedEntityId = InvaderLink.EntityId;
+                    clickable.ClickedEntityId = clientGameObjectCreator.PlayerLink.EntityId;
                     selectedThisFrameFromJob.Enqueue(spatialEntityId.EntityId);
                 }
             });

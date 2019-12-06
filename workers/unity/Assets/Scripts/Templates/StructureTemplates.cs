@@ -43,15 +43,14 @@ namespace MDG.Templates
             entityTemplate.AddComponent(new StructureSchema.StructureMetadata.Snapshot
             {
                 StructureType = structureConfig.structureType,
-                ConstructionTime = structureConfig.constructionTime
+                ConstructionTime = structureConfig.constructionTime,
+                OwnerId = new EntityId(structureConfig.ownerId)
             }, serverAttribute);
 
             entityTemplate.AddComponent(new StructureSchema.Structure.Snapshot
             {
                 Constructing = structureConfig.constructing,
             }, serverAttribute);
-
-            PlayerLifecycleHelper.AddPlayerLifecycleComponents(entityTemplate, clientWorkerId, serverAttribute);
 
             return entityTemplate;
         }

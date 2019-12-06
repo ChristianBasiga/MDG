@@ -39,33 +39,12 @@ namespace MDG.Invader.Systems
             {
                 if (invaderLink == null)
                 {
-                    invaderLink = UnityEngine.Camera.main.GetComponent<LinkedEntityComponent>();
+                    invaderLink = GameObject.FindGameObjectWithTag("Player").GetComponent<LinkedEntityComponent>();
                 }
                 return invaderLink;
             }
         }
         BuildCommand? queuedBuildCommand;
-
-        // Maybe should also add worker component.
-        public struct GetWorkersJob : IJobForEachWithEntity<CommandListener, MdgSchema.Units.Unit.Component, 
-            SpatialEntityId, WorkerUnit>
-        {
-            public NativeQueue<EntityId>.ParallelWriter freeWorkers;
-            public NativeQueue<EntityId>.ParallelWriter busyWorkers;
-
-            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref CommandListener commandListener, [ReadOnly] ref Unit.Component unitComponent, 
-                [ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref WorkerUnit workerUnit)
-            {
-                if (commandListener.CommandType == CommandType.None)
-                {
-                    freeWorkers.Enqueue(spatialEntityId.EntityId);
-                }
-                else
-                {
-                    busyWorkers.Enqueue(spatialEntityId.EntityId);
-                }
-            }
-        }
 
         public struct CommandGiveJob : IJobForEachWithEntity<Clickable, MdgSchema.Units.Unit.Component, CommandListener>
         {
@@ -147,7 +126,7 @@ namespace MDG.Invader.Systems
         protected override void OnStartRunning()
         {
             base.OnStartRunning();
-            clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().clientGameObjectCreator;
+            clientGameObjectCreator = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>().ClientGameObjectCreator;
             commandListenerQuery = GetEntityQuery(
               ComponentType.ReadWrite<CommandListener>(),
               ComponentType.ReadOnly<Clickable>(),
@@ -218,7 +197,7 @@ namespace MDG.Invader.Systems
         // There really are SO many clickables potentially though.
         private CommandListener ProcessCommandGiven()
         {
-            float3 mousePos = HelperFunctions.GetMousePosition();
+            float3 mousePos = HelperFunctions.GetMousePosition(InvaderLink.GetComponent<Camera>());
             CommandListener commandListener = new CommandListener
             {
                 CommandType = CommandType.None,

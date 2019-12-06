@@ -45,7 +45,7 @@ namespace MDG.Invader.Monobehaviours {
         void Start()
         {
 
-            inputCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+            inputCamera = GetComponent<Camera>();
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             commandGiveSystem = linkedEntityComponent.World.GetExistingSystem<CommandGiveSystem>();
 
@@ -58,8 +58,6 @@ namespace MDG.Invader.Monobehaviours {
             structureBuildMenu.SetConfirmation(ConfirmStructurePurchase);
             structureBuildMenu.OnOptionConfirmed += OnStructureBuildRequested;
             structureBuildMenu.transform.parent.gameObject.SetActive(false);
-
-
 
             shopBehaviour = GetComponent<ShopBehaviour>();
             shopBehaviour.OnPurchaseItem += GiveBuildCommand;
@@ -110,7 +108,7 @@ namespace MDG.Invader.Monobehaviours {
         private void GiveBuildCommand(ShopItem item, LinkedEntityComponent purchaser)
         {
             ScriptableObjects.Structures.Structure scriptableStructure = item as ScriptableObjects.Structures.Structure;
-            Vector3 position = HelperFunctions.GetMousePosition();
+            Vector3 position = HelperFunctions.GetMousePosition(inputCamera);
             commandGiveSystem.GiveBuildCommand(new BuildCommand
             {
                 buildLocation = new Improbable.Vector3f(position.x, 20, position.z),
@@ -127,7 +125,6 @@ namespace MDG.Invader.Monobehaviours {
             {
                 return;
             }
-
             if (linkedEntityComponent.Worker.TryGetEntity(linkedEntityComponent.EntityId, out Entity entity)) {
                 float3 convertedStart = inputCamera.ScreenToWorldPoint(new Vector3(payload.startPosition.x, payload.startPosition.y, inputCamera.farClipPlane));
                 float3 convertedEnd = inputCamera.ScreenToWorldPoint(new Vector3(payload.endPosition.x, payload.endPosition.y, inputCamera.farClipPlane));

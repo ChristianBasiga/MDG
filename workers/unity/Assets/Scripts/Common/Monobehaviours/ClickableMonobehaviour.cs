@@ -9,14 +9,6 @@ namespace MDG.Common.MonoBehaviours
     // How I should I get all these? idk mannnn.
     public class ClickableMonobehaviour : MonoBehaviour
     {
-        public enum ClickEnum
-        {
-            LeftClick = 0,
-            RightClick = 1
-        }
-
-        [SerializeField]
-        ClickEnum clickEnum;
 
         public bool SelectedThisFrame { private set; get; }
         public bool MouseOver { private set; get; }
@@ -36,13 +28,11 @@ namespace MDG.Common.MonoBehaviours
 
         private void OnMouseOver()
         {
-            Debug.Log("Mouse over");
             MouseOver = true;
         }
         
         private void OnMouseExit()
         {
-            Debug.Log("Mouse exit");
             MouseOver = false;
         }
     }

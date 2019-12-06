@@ -1,6 +1,8 @@
 ﻿using Improbable;
 using Improbable.Gdk.Core;
+using Improbable.Gdk.Subscriptions;
 using MDG.Invader.Systems;
+using MdgSchema.Common;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,6 +18,16 @@ namespace MDG.Common
     public class HelperFunctions
     {
         #region ECS related operations
+
+
+        // First see who is playertag
+        public static GameEntityTypes PlayerType()
+        {
+            LinkedEntityComponent playerLink = GameObject.FindGameObjectWithTag("Player").GetComponent<LinkedEntityComponent>();
+            playerLink.Worker.TryGetEntity(playerLink.EntityId, out Entity entity);
+            GameMetadata.Component gameMetadata = playerLink.World.EntityManager.GetComponentData<GameMetadata.Component>(entity);
+            return gameMetadata.Type;
+        }
 
 
         #endregion
@@ -95,10 +107,10 @@ namespace MDG.Common
                 );
         }
 
-        public static Vector3 GetMousePosition()
+        public static Vector3 GetMousePosition(Camera camera)
         {
             Vector3 screenPos = Input.mousePosition;
-            Ray ray = Camera.main.ScreenPointToRay(screenPos);
+            Ray ray = camera.ScreenPointToRay(screenPos);
             Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity);
             return hit.point;
         }

@@ -19,6 +19,7 @@ namespace MDG.DTO
         public int constructionTime;
         public bool constructing;
         public int health;
+        public long ownerId;
     }
 
     [Serializable]

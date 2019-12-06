@@ -9,20 +9,14 @@ using UnityEngine.UI;
 using StatSchema = MdgSchema.Common.Stats;
 namespace MDG.Defender.Monobehaviours
 {
-    public class DefenderHUD : HealthSynchronizer
+    public class DefenderHUD : MonoBehaviour
     {
 
         // Component Readers
         [Require] PointReader pointReader = null;
 
-        [Require] StatSchema.StatsReader statsReader = null;
-
-        [Require] StatSchema.StatsMetadataReader statsMetaDataReader = null;
         MainOverlayHUD mainOverlayHUD;
 
-        // UI varaibles
-        [SerializeField]
-        Image healthBar;
 
         [SerializeField]
         Text errorText;
@@ -33,7 +27,7 @@ namespace MDG.Defender.Monobehaviours
 
 
         // Start is called before the first frame update
-        protected override void Start()
+        void Start()
         {
 
             mainOverlayHUD = GameObject.Find("ClientWorker").GetComponent<MainOverlayHUD>();
@@ -42,9 +36,7 @@ namespace MDG.Defender.Monobehaviours
             defenderSynchronizer.OnLoseGame += DisplayLoseGameUI;
             defenderSynchronizer.OnWinGame += DisplayWinGameUI;
             pointReader.OnValueUpdate += mainOverlayHUD.UpdatePoints;
-            statsReader.OnHealthUpdate += OnHealthUpdate;
             errorText.gameObject.SetActive(false);
-            base.Start();
         }
 
 
@@ -88,23 +80,5 @@ namespace MDG.Defender.Monobehaviours
             mainOverlayHUD.SetEndGameText("You have stopped the Invasion", true);
         }
 
-
-        private void OnHealthUpdate(int newHealth)
-        {
-            OnHealthUpdate(newHealth, statsMetaDataReader.Data.Health);
-        }
-
-        protected override void OnHealthUpdate(int health, int maxHealth)
-        {
-            // Since doing this, need to handle respawning differently as shouldn't start ticking until health went down fully.
-            float percentageHealth = health / (float)maxHealth;
-            StartCoroutine(HelperFunctions.UpdateFill(healthBar, percentageHealth, (float pct) =>
-            {
-                if (pct == 0)
-                {
-                    this.gameObject.SetActive(false);
-                }
-            }));
-        }
     }
 }

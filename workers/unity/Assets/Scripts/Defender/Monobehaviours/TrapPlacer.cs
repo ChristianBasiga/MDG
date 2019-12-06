@@ -75,7 +75,7 @@ namespace MDG.Defender.Monobehaviours
                 OneTimeUse = trap.OneTimeUse
             };
             // How i get this position prod needs to change.
-            Vector3 worldCoords = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 worldCoords = HelperFunctions.GetMousePosition(Camera.main);
             Vector3f trapPosition = new Vector3f(worldCoords.x, 10, worldCoords.z);
             spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
             {

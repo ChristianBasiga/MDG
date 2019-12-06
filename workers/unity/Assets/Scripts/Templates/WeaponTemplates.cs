@@ -45,9 +45,6 @@ namespace MDG.Templates
                 AngularSpeed = 10.0f
             }, serverAttribute);
 
-            PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
-
-
             return template;
         }
 

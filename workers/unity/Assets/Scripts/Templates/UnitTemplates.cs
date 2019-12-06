@@ -79,7 +79,6 @@ namespace MDG.Templates
                 case UnitsSchema.UnitTypes.Tank:
                     break;
             }
-            PlayerLifecycleHelper.AddPlayerLifecycleComponents(template, workerId, serverAttribute);
             template.AddComponent(new Position.Snapshot
             {
                 Coords = new Coordinates(spawnPositon.X, spawnPositon.Y, spawnPositon.Z)

@@ -91,6 +91,7 @@ GameObject:
   - component: {fileID: 6330627888228630112}
   - component: {fileID: 694569641703235744}
   - component: {fileID: -7312033348679348966}
+  - component: {fileID: 338875312028485050}
   m_Layer: 0
   m_Name: UnitSpawnStructure
   m_TagString: Untagged
@@ -234,6 +235,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c025beae939ba54a91a665f7c624431, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &338875312028485050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1872774323955901914}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 427398f184574dc4b89bc37d4696e592, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healthbar: {fileID: 7575278356681208737}
 --- !u!1 &2462483088731299393
 GameObject:
   m_ObjectHideFlags: 0

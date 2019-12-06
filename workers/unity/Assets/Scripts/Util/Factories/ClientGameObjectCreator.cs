@@ -55,36 +55,32 @@ namespace MDG
         SpawnSystems.SpawnRequestSystem spawnReqSystem;
 
         private int defenderPointsUsed = 0;
-        // This actually shouldn't be here for player stuff but prior in selecting role.
-        private List<Coordinates> defenderStartingPoints;
-        private List<Vector3f> initialInvaderUnitPositions;
+
+        LinkedEntityComponent playerLink;
+
+        public LinkedEntityComponent PlayerLink
+        {
+            get
+            {
+                if (playerLink == null)
+                {
+                    Debug.Log(GameObject.FindGameObjectWithTag("Player"));
+                    playerLink = GameObject.FindGameObjectWithTag("Player").GetComponent<LinkedEntityComponent>();
+                }
+                return playerLink;
+            }
+        }
+
 
         //Look into being able to add multiple custom creators and see if can do that instead.   
         //I can still do factory plan this way.
 
         //Make worker type an enum to parse.
-        public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType,
-            GameScriptableObjects.GameConfig gameConfig)
+        public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType)
         {
             this._default = _default;
             this._world = world;
             this._workerType = workerType;
-
-            if (gameConfig != null)
-            {
-                this.defenderStartingPoints = new List<Coordinates>();
-                this.initialInvaderUnitPositions = new List<Vector3f>();
-                foreach (Vector3 pos in gameConfig.DefenderSpawnPoints)
-                {
-                    this.defenderStartingPoints.Add(HelperFunctions.CoordinatesFromUnityVector(pos));
-                }
-
-                foreach (Vector3 pos in gameConfig.InvaderUnitSpawnPoints)
-                {
-                    this.initialInvaderUnitPositions.Add(HelperFunctions.Vector3fFromUnityVector(pos));
-                }
-            }
-    
             EntityToGameObjects = new Dictionary<EntityId, GameObject>();
             ComponentUpdateSystem = _world.GetExistingSystem<ComponentUpdateSystem>();
             spawnReqSystem = _world.GetExistingSystem<SpawnSystems.SpawnRequestSystem>();
@@ -96,13 +92,13 @@ namespace MDG
             Metadata.Component metaData = entity.GetComponent<Metadata.Component>();
 
             string pathToEntity = $"Prefabs/{_workerType}";
-            var hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
 
             Debug.Log($"creating {metaData.EntityType}");
             // Prob switch on game entity type.
             if (metaData.EntityType.Equals("Player"))
             {
-                string pathToPlayer = pathToEntity;
+                bool hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
+                string pathToPlayer = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
                 if (!entity.HasComponent<GameMetadata.Component>())
                 {
                     return;
@@ -119,98 +115,57 @@ namespace MDG
                 }
                 else
                 {
-                   
+
                     PlayerArchtypes.AddDefenderArchtype(worker.EntityManager, ecsEntity, hasAuthority);
                 }
 
-                if (hasAuthority)
-                {
-                    pathToPlayer = $"{pathToPlayer}/Authoritative";
-
-                    if (GameObject.FindGameObjectWithTag("MainCamera"))
-                    {
-                        GameObject.FindGameObjectWithTag("MainCamera").SetActive(false);
-                    }
-                    if (type == GameEntityTypes.Hunter)
-                    {
-                            for (int i = 0; i < initialInvaderUnitPositions.Count; ++i)
-                        {
-
-                            Debug.Log(initialInvaderUnitPositions[i]);
-                            UnitConfig unitConfig = new UnitConfig
-                            {
-                                ownerId = entity.SpatialOSEntityId.Id,
-                                position = initialInvaderUnitPositions[i],
-                                unitType = UnitTypes.Worker
-                            };
-
-
-                            spawnReqSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
-                            {
-                                TypeToSpawn = GameEntityTypes.Unit,
-                                Position = initialInvaderUnitPositions[i],
-                                // Deperecate typeId, should all be serialized args for stuff like this.
-                                TypeId = (int)UnitTypes.Worker,
-                                
-                            }, null, Converters.SerializeArguments<UnitConfig>(unitConfig));
-                        }
-                    }
-                    else
-                    {
-                        // Add Defender specific systems.
-                    }
-
-                }
-                else if (gameMetaData.Type == GameEntityTypes.Hunter)
+                if (!hasAuthority && gameMetaData.Type == GameEntityTypes.Hunter)
                 {
                     return;
                 }
-                else
-                {
-
-                }
                 pathToPlayer = $"{pathToPlayer}/{type.ToString()}";
-                GameObject created = CreateEntityObject(entity, linker, pathToPlayer, null, null);
-            //    Vector3 startingPoint = defenderStartingPoints[defenderPointsUsed].ToUnityVector();
-            //    created.transform.position = startingPoint;
+                CreateEntityObject(entity, linker, pathToPlayer, null, null);
             }
             else if (metaData.EntityType.Equals("Unit"))
             {
-                Entity unitEntity;
+                UnitSchema.Unit.Component unitComponent = entity.GetComponent<UnitSchema.Unit.Component>();
+
+                bool hasAuthority = unitComponent.OwnerId.Equals(PlayerLink.EntityId);
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
-                if (worker.TryGetEntity(entity.SpatialOSEntityId, out unitEntity))
+                if (worker.TryGetEntity(entity.SpatialOSEntityId, out Entity unitEntity))
                 {
-                    UnitSchema.Unit.Component unitComponent = entity.GetComponent<UnitSchema.Unit.Component>();
                     Templates.UnitArchtypes.AddUnitArchtype(worker.EntityManager, unitEntity, hasAuthority, unitComponent.Type);
                 }
                 pathToEntity = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
                 pathToEntity = $"{pathToEntity}/Unit";
 
-                GameObject gameObject = CreateEntityObject(entity, linker, pathToEntity, null, null);
-                gameObject.tag = "Unit";
-                gameObject.name = $"{gameObject.name} {(hasAuthority? "authoritative" : "")}";
+                CreateEntityObject(entity, linker, pathToEntity, null, null);
 
             }
             else if (metaData.EntityType.Equals("Resource"))
             {
                 pathToEntity = $"{pathToEntity}/Resource";
-                GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
+                CreateEntityObject(entity, linker, pathToEntity, null, null);
             }
             else if (metaData.EntityType.Equals("GameManager"))
             {
-                pathToEntity = $"{pathToEntity}/GameManager";
-                GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
+                if (GameObject.FindGameObjectWithTag("GameManager") == null)
+                {
+                    pathToEntity = $"{pathToEntity}/GameManager";
+                    CreateEntityObject(entity, linker, pathToEntity, null, null);
+                }
             }
             else if (metaData.EntityType.Equals("Weapon"))
             {
                 WeaponSchema.Weapon.Component weaponComponent = entity.GetComponent<WeaponSchema.Weapon.Component>();
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 worker.TryGetEntity(entity.SpatialOSEntityId, out Entity weaponEntity);
+                // Put in game manager.
+                bool hasAuthority = PlayerLink.EntityId.Equals(weaponComponent.WielderId);
                 WeaponArchtypes.AddWeaponArchtype(_world.EntityManager, weaponEntity, hasAuthority);
                 pathToEntity = $"{pathToEntity}/Weapons/{weaponComponent.WeaponId}";
 
-                GameObject created = CreateEntityObject(entity, linker, pathToEntity, null, null);
-                created.tag = weaponComponent.WeaponType.ToString();
+                CreateEntityObject(entity, linker, pathToEntity, null, null);
             }
             else if (metaData.EntityType.Equals("Territory"))
             {
@@ -219,9 +174,12 @@ namespace MDG
             }
             else if (metaData.EntityType.Equals("Structure"))
             {
-                string structurePath =  hasAuthority ? $"{pathToEntity}/Authoritative/Structures" : $"{pathToEntity}/Structures";
+                // add owner to structure id.
                 StructureSchema.StructureMetadata.Component structureMetaData = entity.GetComponent<StructureSchema.StructureMetadata.Component>();
 
+                // Maybe should have an ownership component, reduce copy. That's clen up later tho.
+                bool hasAuthority = structureMetaData.OwnerId.Equals(PlayerLink.EntityId);
+                string structurePath = hasAuthority ? $"{pathToEntity}/Authoritative/Structures" : $"{pathToEntity}/Structures";
                 switch (structureMetaData.StructureType)
                 {
                     case StructureSchema.StructureType.Trap:

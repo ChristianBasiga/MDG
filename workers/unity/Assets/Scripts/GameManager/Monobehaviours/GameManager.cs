@@ -43,7 +43,7 @@ namespace MDG.Game.Monobehaviours
 
         void Start()
         {
-            // UI manager should handle this.
+            // UI manager should handle this. wtf was i doing here
             gameStatusReader.OnTimeLeftUpdate += GameObject.Find("ClientWorker").GetComponent<MainOverlayHUD>().UpdateTime;
             gameStatusReader.OnEndGameEvent += OnEndGame;
         }

@@ -36,8 +36,8 @@ namespace MDG.Invader.Monobehaviours
             pointText = GameObject.Find("PointText").GetComponent<Text>();
 
             UnityClientConnector unityClientConnector = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>();
-            unityClientConnector.clientGameObjectCreator.OnEntityAdded += UpdateUnitCount;
-            unityClientConnector.clientGameObjectCreator.OnEntityDeleted += UpdateUnitCount;
+            unityClientConnector.ClientGameObjectCreator.OnEntityAdded += UpdateUnitCount;
+            unityClientConnector.ClientGameObjectCreator.OnEntityDeleted += UpdateUnitCount;
             numberOfUnitsText.text = unitQuery.CalculateEntityCount().ToString();
 
         }

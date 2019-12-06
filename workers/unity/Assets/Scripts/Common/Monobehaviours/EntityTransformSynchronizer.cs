@@ -4,25 +4,28 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EntityTransformSynchronizer : MonoBehaviour
+
+namespace MDG.Common.MonoBehaviours
 {
-    [Require] EntityTransformReader transformReader = null;
-
-    void Start()
+    public class EntityTransformSynchronizer : MonoBehaviour
     {
-      
-        transform.position = transformReader.Data.Position.ToUnityVector();
-        transformReader.OnPositionUpdate += UpdatePosition;
-        transformReader.OnRotationUpdate += UpdateRotation;
-    }
+        [Require] EntityTransformReader transformReader;
 
-    private void UpdateRotation(Improbable.Vector3f obj)
-    {
-        transform.eulerAngles = obj.ToUnityVector();
-    }
+        void Start()
+        {
+            transform.position = transformReader.Data.Position.ToUnityVector();
+            transformReader.OnPositionUpdate += UpdatePosition;
+            transformReader.OnRotationUpdate += UpdateRotation;
+        }
 
-    private void UpdatePosition(Improbable.Vector3f obj)
-    {
-        transform.position = obj.ToUnityVector();
+        private void UpdateRotation(Improbable.Vector3f obj)
+        {
+            transform.eulerAngles = obj.ToUnityVector();
+        }
+
+        private void UpdatePosition(Improbable.Vector3f obj)
+        {
+            transform.position = obj.ToUnityVector();
+        }
     }
 }

@@ -106,7 +106,6 @@ namespace MDG.Invader.Monobehaviours.Structures
 
         private void OnJobComplete(StructureSchema.JobCompleteEventPayload jobCompleteEventPayload)
         {
-            Debug.Log("Do I sometimes not happen?");
             ConcreteStructureBehaviour.CompleteJob(jobCompleteEventPayload.JobData);
             OnJobCompleted?.Invoke(currentlyRunningJob, jobCompleteEventPayload.JobData);
             jobQueue[currentlyRunningJob] = null;
