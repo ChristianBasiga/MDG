@@ -1,7 +1,6 @@
 package mdg_schema.common.collision;
 import "improbable/standard_library.schema";
-import "improbable/vector3.schema";
-
+import "common/util.schema";
 
 // Will make seperate component for each kind.
 
@@ -11,7 +10,7 @@ import "improbable/vector3.schema";
 
 component BoxCollider{
     id = 862;
-    improbable.Vector3f position = 1;
-    improbable.Vector3f dimensions = 2;
+    mdg_schema.common.util.Vector3f position = 1;
+    mdg_schema.common.util.Vector3f dimensions = 2;
     bool is_trigger = 3;
 }

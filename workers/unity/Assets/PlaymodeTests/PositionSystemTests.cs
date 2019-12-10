@@ -15,6 +15,9 @@ using Improbable;
 using Improbable.Gdk.Subscriptions;
 using MdgSchema.Common;
 using System.Linq;
+using MdgSchema.Common.Util;
+using MDG.Common;
+
 namespace PlaymodeTests
 {
     // These should be suites.
@@ -60,7 +63,7 @@ namespace PlaymodeTests
             SpawnSchema.SpawnRequest payload = new SpawnSchema.SpawnRequest
             {
                 TypeToSpawn = MdgSchema.Common.GameEntityTypes.Unit,
-                Position = new Improbable.Vector3f(1, 1, 1)
+                Position = new Vector3f(1, 1, 1)
             };
             EntityId unitEntityId = new EntityId(-1);
             spawnReqSystem.RequestSpawn(payload,
@@ -194,7 +197,7 @@ namespace PlaymodeTests
             SpawnSchema.SpawnRequest payload = new SpawnSchema.SpawnRequest
             {
                 TypeToSpawn = MdgSchema.Common.GameEntityTypes.Unit,
-                Position = new Improbable.Vector3f(1, 1, 1)
+                Position = new Vector3f(1, 1, 1)
             };
             EntityId unitEntityId = new EntityId(-1);
             spawnReqSystem.RequestSpawn(payload,
@@ -210,7 +213,7 @@ namespace PlaymodeTests
             Vector3f linearVelocityApplied = new Vector3f(10, 0, 5);
             if (workerSystem.TryGetEntity(linkedEntityComponent.EntityId, out Unity.Entities.Entity entity))
             {
-                Vector3f initialPos = workerSystem.World.EntityManager.GetComponentData<EntityTransform.Component>(entity).Position;
+                Vector3f initialPos = workerSystem.World.EntityManager.GetComponentData<EntityPosition.Component>(entity).Position;
                 clientWorkerInWorld.World.EntityManager.SetComponentData(entity, new PositionSchema.LinearVelocity.Component
                 {
                     Velocity = linearVelocityApplied
@@ -221,9 +224,10 @@ namespace PlaymodeTests
                 yield return new WaitForEndOfFrame();
                 float thisFrameDelaTime = Time.deltaTime;
                 yield return new WaitForEndOfFrame();
-                Vector3f updatedPosition = workerSystem.World.EntityManager.GetComponentData<EntityTransform.Component>(entity).Position;
+                
+                Vector3f updatedPosition = workerSystem.World.EntityManager.GetComponentData<EntityPosition.Component>(entity).Position;
                 Assert.AreNotEqual(initialPos, updatedPosition, "Linear Velocity not applied to position");
-                Assert.AreEqual(initialPos + (linearVelocityApplied * thisFrameDelaTime), updatedPosition, "Linear Velocity not applied correctly");
+                Assert.AreEqual(HelperFunctions.Add(initialPos,HelperFunctions.Scale(linearVelocityApplied, thisFrameDelaTime)), updatedPosition, "Linear Velocity not applied correctly");
             }
         }
     }

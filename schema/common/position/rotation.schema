@@ -1,0 +1,9 @@
+package mdg_schema.common;
+import "common/util.schema";
+
+
+component EntityRotation
+{
+    id = 827;
+    mdg_schema.common.util.Vector3f rotation = 1;
+}

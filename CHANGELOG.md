@@ -2,6 +2,80 @@
 
 ## Unreleased
 
+## `0.3.1` - 2019-11-25
+
+### Changed
+
+- Upgraded to GDK for Unity version `0.3.1`
+## `0.3.0` - 2019-11-11
+
+### Changed
+
+- Upgraded to GDK for Unity version `0.3.0`
+- Changed the default client network connection type from KCP to Modular UDP with compression enabled. [#77](https://github.com/spatialos/gdk-for-unity-blank-project/pull/77)
+
+## `0.2.10` - 2019-10-15
+
+### Changed
+
+- Upgraded to GDK for Unity version `0.2.10`
+
+## `0.2.9` - 2019-09-16
+
+### Changed
+
+- Upgraded to GDK for Unity version `0.2.9`
+
+## `0.2.8` - 2019-09-03
+
+### Changed
+
+- Upgraded to GDK for Unity version `0.2.8`
+- Upgraded the project to be compatible with `2019.2.0f1`.
+
+## `0.2.7` - 2019-08-19
+
+### Breaking changes
+
+- Tidied up the project structure. [#68](https://github.com/spatialos/gdk-for-unity-blank-project/pull/68)
+    - Moved `CreatePlayerEntityTemplate` to the new `EntityTemplates` static class.
+    - Removed `Improbable.Gdk.TransformSynchronization` from the assembly definition.
+
+### Added
+
+- Created prefabs for `UnityClient`, `UnityGameLogic` and `MobileClient` workers under `Resources/Prefabs/Worker`. [#68](https://github.com/spatialos/gdk-for-unity-blank-project/pull/68)
+- Created a new `EntityTemplates` static class. [#68](https://github.com/spatialos/gdk-for-unity-blank-project/pull/68)
+
+### Changed
+
+- Upgraded to GDK for Unity version `0.2.7`
+- The **SpatialOS** > **Generate snapshot** button now generates a snapshot directly without displaying a pop-up window. [#68](https://github.com/spatialos/gdk-for-unity-blank-project/pull/68)
+
+### Internal
+
+- Removed old arguments from the worker JSON files. [#69](https://github.com/spatialos/gdk-for-unity-blank-project/pull/69)
+
+## `0.2.6` - 2019-08-05
+
+### Changed
+
+- Upgraded to GDK for Unity version `0.2.6`.
+
+### Added
+
+- Added the `io.improbable.gdk.debug` package as a dependency. [#66](https://github.com/spatialos/gdk-for-unity-blank-project/pull/66)
+
+## `0.2.5` - 2019-07-18
+
+### Changed
+
+- Changed manifest to use GDK Packages with NPM instead of sideloading.
+- Upgraded to GDK for Unity version `0.2.5`
+
+### Internal
+
+- Split the `MobileClient` build into separate `iOS` and `Android` buildkite steps.
+
 ## `0.2.4` - 2019-06-28
 
 ### Changed

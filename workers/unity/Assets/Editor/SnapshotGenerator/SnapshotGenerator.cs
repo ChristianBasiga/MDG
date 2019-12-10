@@ -1,6 +1,7 @@
 using Improbable;
 using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
+using MdgSchema.Common.Util;
 using UnityEngine;
 using Snapshot = Improbable.Gdk.Core.Snapshot;
 
@@ -27,7 +28,7 @@ namespace MDG.Editor
             var snapshot = new Snapshot();
 
             AddPlayerSpawner(snapshot);
-            AddSpawnManager(snapshot);
+           // AddSpawnManager(snapshot);
             AddGameManager(snapshot);
             AddTerritories(snapshot);   
             // If not do game launcher here, ma need to store lobby as scene in game.
