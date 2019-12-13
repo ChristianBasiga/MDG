@@ -46,7 +46,6 @@ namespace MDG.Templates
             template = creationArgs.playerType == GameEntityTypes.Hunter ?
                     AddInvaderComponents(clientAttribute, template)
                 : AddDefenderComponents(clientAttribute, template);
-            Debug.Log("Creation args position " + creationArgs.position);
             template.AddComponent(new EntityPosition.Snapshot
             {
                 Position = creationArgs.position

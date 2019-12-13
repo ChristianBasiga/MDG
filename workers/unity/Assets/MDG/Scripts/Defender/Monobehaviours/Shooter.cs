@@ -30,14 +30,17 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         Transform crosshairs;
 
+
 #pragma warning restore 649
 
-
+        Vector3 crosshairOffset = new Vector3(Screen.width * 0.8f, 0, 0);
         // Start is called before the first frame update
         void Start()
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
+            RectTransform rectTransform = GameObject.Find("DefenderHud").GetComponent<RectTransform>();
+            crosshairOffset = new Vector3(rectTransform.rect.width * 0.3f, rectTransform.rect.height * 0.6f, 0);
             //GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
             Weapon = Resources.Load("ScriptableObjects/Weapons/DefenderProjectile") as Weapon;
         }
@@ -46,9 +49,12 @@ namespace MDG.Defender.Monobehaviours
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             crosshairs.transform.position = Input.mousePosition;
-            Vector3 mousePos = HelperFunctions.GetMousePosition(shootCamera);
-
-            Vector3 direction = mousePos - shootOrigin.position;
+            Vector2 pos = crosshairs.GetChild(0).transform.position;
+            Ray ray = shootCamera.ScreenPointToRay(pos);
+            Physics.Raycast(ray , out RaycastHit raycastHit, Mathf.Infinity);
+            Vector3 direction = raycastHit.point - shootOrigin.position;
+            Debug.Log("raycast point" + raycastHit.point);
+            Debug.Log("direction of shot " + direction);
             shootOrigin.rotation = Quaternion.LookRotation(direction);
             Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(shootOrigin.position);
             Projectile projectile = Weapon as Projectile;
@@ -61,8 +67,8 @@ namespace MDG.Defender.Monobehaviours
             WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(Weapon);
             weaponMetadata.wielderId = linkedEntityComponent.EntityId.Id;
 
-            byte[] serializedWeapondata = Converters.SerializeArguments<ProjectileConfig>(projectileConfig);
-            byte[] serializedWeaponMetadata = Converters.SerializeArguments<WeaponMetadata>(weaponMetadata);
+            byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
+            byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
 
             spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
             {

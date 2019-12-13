@@ -58,7 +58,6 @@ namespace MDG
             {
                 if (playerLink == null)
                 {
-                    Debug.Log(GameObject.FindGameObjectWithTag("Player"));
                     GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
                     if (playerObject != null){
                         playerLink = playerObject.GetComponent<LinkedEntityComponent>();

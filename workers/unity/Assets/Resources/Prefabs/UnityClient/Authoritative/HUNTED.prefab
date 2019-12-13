@@ -1033,7 +1033,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2431640234666028470}
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0.8, y: 0, z: -0.5}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4056199062830517255}
@@ -2169,7 +2169,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shootCamera: {fileID: 6527348592995715617}
   shootOrigin: {fileID: 2878968916533318157}
-  crosshairs: {fileID: 504710915367022728}
+  crosshairs: {fileID: 4808924778412579527}
 --- !u!114 &4766110679049099297
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2243,7 +2243,7 @@ CapsuleCollider:
   m_Radius: 0.6654318
   m_Height: 2.07884
   m_Direction: 1
-  m_Center: {x: -0.8, y: 1, z: -0.5}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!54 &7222466849829637935
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4841,11 +4841,32 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2591082569920537925, guid: 58243a3e2c978134c9d08b4e4598db37,
+        type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2591082569920537925, guid: 58243a3e2c978134c9d08b4e4598db37,
+        type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2591082569920537925, guid: 58243a3e2c978134c9d08b4e4598db37,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -250
+      objectReference: {fileID: 0}
+    - target: {fileID: 2591082569920537925, guid: 58243a3e2c978134c9d08b4e4598db37,
+        type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 7616770794674844301, guid: 58243a3e2c978134c9d08b4e4598db37, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 58243a3e2c978134c9d08b4e4598db37, type: 3}
---- !u!224 &504710915367022728 stripped
+--- !u!224 &4808924778412579527 stripped
 RectTransform:
-  m_CorrespondingSourceObject: {fileID: 2591082569920537925, guid: 58243a3e2c978134c9d08b4e4598db37,
+  m_CorrespondingSourceObject: {fileID: 7370408670451748618, guid: 58243a3e2c978134c9d08b4e4598db37,
     type: 3}
   m_PrefabInstance: {fileID: 2662832692745688525}
   m_PrefabAsset: {fileID: 0}

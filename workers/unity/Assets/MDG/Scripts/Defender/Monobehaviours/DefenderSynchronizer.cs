@@ -40,11 +40,11 @@ namespace MDG.Defender.Monobehaviours
         }
 
 
-        private void OnHealthUpdate(int currentHealth)
+        private void OnHealthUpdate(int percentageHealth)
         {
-            if (currentHealth == 0)
+            if (percentageHealth == 1)
             {
-                this.gameObject.SetActive(false);
+                gameObject.SetActive(false);
             }
         }
 

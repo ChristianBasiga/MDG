@@ -113,11 +113,8 @@ namespace MDG.Invader.Systems
         // Change this to dictionary so that weapons of units more expandible.
         Weapon unitWeapon;
 
-        // Need to make the move jobs somehow generic.
-        // since all write into buffer, I can't run them in parralel anyway.
-        // actually I could if ahve them all write into extra buffer, that is then written into actual buffer.
-        // but that's stupid.
 
+        // Refactor this to write to split buffers with velocity and apply at once. but that's polish.
         struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityPosition.Component, PositionSchema.LinearVelocity.Component,
             CollisionSchema.BoxCollider.Component, CommandListener>
         {
@@ -488,21 +485,21 @@ namespace MDG.Invader.Systems
             };
             entityQuery = GetEntityQuery(entityQueryDesc);
 
-            Queue<PendingAttack> pendingAttacks = ProcessAttackPayloads(attackPayloads);
-
             moveToDestHandle.Complete();
             JobHandle moveToCollectHandle = moveToResourceJob.Schedule(entityQuery, moveToDestHandle);
+            moveToCollectHandle.Complete();
 
             authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<BuildCommand>();
             authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
             entityQuery = GetEntityQuery(entityQueryDesc);
+
+            Queue<PendingAttack> pendingAttacks = ProcessAttackPayloads(attackPayloads);
 
             NativeHashMap<EntityId, BuildCommand> buildingUnits = new NativeHashMap<EntityId, BuildCommand>(entityQuery.CalculateEntityCount(), Allocator.TempJob);
             MoveToBuildLocationJob moveToBuildLocation = new MoveToBuildLocationJob{
                 entitiesBuilding = buildingUnits.AsParallelWriter(),
             };
 
-            moveToCollectHandle.Complete();
             JobHandle moveToBuildHandle = moveToBuildLocation.Schedule(entityQuery, moveToCollectHandle);
 
             ProcessPendingAttacks(pendingAttacks);
@@ -519,7 +516,6 @@ namespace MDG.Invader.Systems
                 updateBuildHandle = updateBuildCommandJob.Schedule(this, moveToBuildHandle);
             }
             RunCollectCommandRequests();
-
             moveToBuildHandle.Complete();
             ProcessBuildCommand(buildingUnits);
             buildingUnits.Dispose();
