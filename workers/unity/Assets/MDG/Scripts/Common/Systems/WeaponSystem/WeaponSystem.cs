@@ -155,8 +155,6 @@ namespace MDG.Common.Systems.Weapon
                 {
                     if (workerSystem.TryGetEntity(entityIdToCollision.Value.CollidingWith, out Entity collidedEntity))
                     {
-                        UnityEngine.Debug.Log("Looking at weapon " + spatialEntityId.EntityId);
-                        
                         // If collidee not enemy, and what collision hit is enemy on respective client. This makes it so enemies not hitting each other 
                         // on other clients.
                         if (!EntityManager.HasComponent<Enemy>(entity) && EntityManager.HasComponent<Enemy>(collidedEntity))

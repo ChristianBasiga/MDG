@@ -53,9 +53,7 @@ namespace MDG.Defender.Monobehaviours
             Ray ray = shootCamera.ScreenPointToRay(pos);
             Physics.Raycast(ray , out RaycastHit raycastHit, Mathf.Infinity);
             Vector3 direction = raycastHit.point - shootOrigin.position;
-            Debug.Log("raycast point" + raycastHit.point);
-            Debug.Log("direction of shot " + direction);
-            shootOrigin.rotation = Quaternion.LookRotation(direction);
+            shootOrigin.rotation = Quaternion.LookRotation(ray.direction);
             Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(shootOrigin.position);
             Projectile projectile = Weapon as Projectile;
             Vector3f bulletLinearVelocity = HelperFunctions.Scale(HelperFunctions.Vector3fFromUnityVector(shootOrigin.forward), projectile.ProjectileSpeed);
