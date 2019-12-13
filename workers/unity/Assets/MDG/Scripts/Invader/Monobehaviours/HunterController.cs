@@ -58,6 +58,7 @@ namespace MDG.Invader.Monobehaviours {
 
             SelectionSystem selectionSystem = linkedEntityComponent.World.GetExistingSystem<SelectionSystem>();
             selectionSystem.OnUnitSelectionUpdated += OnSelectionUpdated;
+
             structureBuildMenu.OnOptionSelected += SetupBuildCommand;
             structureBuildMenu.SetConfirmation(ConfirmStructurePurchase);
             structureBuildMenu.OnOptionConfirmed += OnStructureBuildRequested;
@@ -75,6 +76,7 @@ namespace MDG.Invader.Monobehaviours {
             structureBuildMenu.transform.parent.gameObject.SetActive(selectionMade);
         }
 
+
         private void LoadInStuctureOverlays()
         {
             TypeToOverlay = new Dictionary<StructureType, StructureUIManager>();
@@ -87,7 +89,6 @@ namespace MDG.Invader.Monobehaviours {
             {
                 GameObject gameObject = overlays[i] as GameObject;
                 GameObject cloned = Instantiate(gameObject);
-
                 StructureUIManager structureUIManager = cloned.GetComponent<StructureUIManager>();
                 TypeToOverlay.Add(structureUIManager.StructureType, structureUIManager);
                 cloned.SetActive(false);

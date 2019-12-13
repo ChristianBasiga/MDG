@@ -22,13 +22,10 @@ namespace MDG.Invader.Monobehaviours.Structures
         LinkedEntityComponent linkedStructure;
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
-        Image claimProgressBar;
-
-
+        EntityId territoryClaiming;
 
         private void Start()
         {
-            claimProgressBar = transform.Find("ClaimProgress").GetComponent<Image>();
         }
         public void Link(StructureBehaviour structureBehaviour)
         {
@@ -36,7 +33,6 @@ namespace MDG.Invader.Monobehaviours.Structures
             linkedStructure = linkedEntityComponent;
             componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
             commandSystem = linkedEntityComponent.World.GetExistingSystem<CommandSystem>();
-            structureBehaviour.OnJobRun += UpdateClaimProgress;
             structureBehaviour.OnBuildComplete += OnBuildComplete;
         }
 
@@ -47,21 +43,42 @@ namespace MDG.Invader.Monobehaviours.Structures
             workerSystem.TryGetEntity(linkedStructure.EntityId, out Entity entity);
             
             StructureSchema.ClaimStructure.Component claimStructureComponent = entityManager.GetComponentData<StructureSchema.ClaimStructure.Component>(entity);
+            territoryClaiming = claimStructureComponent.TerritoryClaiming;
             StructureSchema.StructureMetadata.Component structureMetadata = entityManager.GetComponentData<StructureSchema.StructureMetadata.Component>(entity);
 
             Debug.Log($"Beginning claim on {claimStructureComponent.TerritoryClaiming}");
 
             ClaimConfig claimConfig = new ClaimConfig
             {
-                territoryId = claimStructureComponent.TerritoryClaiming,
+                territoryId = claimStructureComponent.TerritoryClaiming.Id,
                 constructionTime = structureMetadata.ConstructionTime
             };
-            StartJob(Converters.SerializeArguments<ClaimConfig>(claimConfig));
+            commandSystem.SendCommand(new TerritorySchema.TerritoryStatus.UpdateClaim.Request
+            {
+                TargetEntityId = territoryClaiming,
+                Payload = new TerritorySchema.UpdateTerritoryStatusRequest
+                {
+                    Status = TerritorySchema.TerritoryStatusTypes.Claiming
+                }
+            }, entity);
         }
-       
+
+
+        private void OnDestroy()
+        {
+            commandSystem.SendCommand(new TerritorySchema.TerritoryStatus.UpdateClaim.Request
+            {
+                TargetEntityId = territoryClaiming,
+                Payload = new TerritorySchema.UpdateTerritoryStatusRequest
+                {
+                    Status = TerritorySchema.TerritoryStatusTypes.Released
+                }
+            });
+        }
         // I've tested none of this and don't even remember at what point I'm at.
         public void StartJob(byte[] jobContext)
         {
+            /*
             ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobContext);
             commandSystem.SendCommand(new StructureSchema.Structure.StartJob.Request
             {
@@ -71,33 +88,17 @@ namespace MDG.Invader.Monobehaviours.Structures
                     EstimatedJobCompletion = claimConfig.constructionTime
                 },
                 TargetEntityId = linkedStructure.EntityId
-            });
-        }
-
-        public void UpdateClaimProgress(int jobIndex, StructureSchema.JobRunEventPayload jobRunEvent)
-        {
-            // Do other things alongside the claim progress bar.
-            linkedStructure.StartCoroutine(HelperFunctions.UpdateFill(claimProgressBar, jobRunEvent.JobProgress / jobRunEvent.EstimatedJobCompletion));
-        }
-
-        public void CompleteJob(byte[] jobData)
-        {
-            ClaimConfig claimConfig = Converters.DeserializeArguments<ClaimConfig>(jobData);
-             commandSystem.SendCommand(new TerritorySchema.TerritoryStatus.UpdateClaim.Request{
-
-                Payload = new TerritorySchema.UpdateTerritoryStatusRequest
-                {
-                    Status = TerritorySchema.TerritoryStatusTypes.Claimed
-                },
-                TargetEntityId = claimConfig.territoryId
-             });
-
-            claimProgressBar.gameObject.SetActive(false);
+            });*/
         }
 
         public StructureSchema.StructureType GetStructureType()
         {
             return StructureSchema.StructureType.Claiming;
+        }
+
+        public void CompleteJob(byte[] jobData)
+        {
+            // Jobs for claim will be repairs and upgrades, do later.
         }
     }
 }

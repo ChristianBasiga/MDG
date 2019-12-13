@@ -64,11 +64,6 @@ namespace MDG.Defender.Monobehaviours
             byte[] serializedWeapondata = Converters.SerializeArguments<ProjectileConfig>(projectileConfig);
             byte[] serializedWeaponMetadata = Converters.SerializeArguments<WeaponMetadata>(weaponMetadata);
 
-
-            // What If i don't make spawn request?
-            // Will it still cause things to show up?
-            // So only me requesting new spawn does it.
-            // yet when I request spawn for trap, it doesn't.. An anomly.
             spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
             {
                 Position = bulletStartingPosition,

@@ -23,7 +23,6 @@ using MDG.Templates;
 namespace MDG
 {
 
-    // These are just examples.
     public class UnityGameLogicConnector : WorkerConnector
     {
         public const string WorkerType = "UnityGameLogic";
@@ -67,13 +66,14 @@ namespace MDG
             Worker.World.GetOrCreateSystem<StructureMonitorSystem>();
             Worker.World.GetOrCreateSystem<WeaponSystem>();
 
-            Worker.World.GetOrCreateSystem<Game.GameStatusSystem>();
+            Worker.World.GetOrCreateSystem<Game.Systems.GameStatusSystem>();
+            Worker.World.GetOrCreateSystem<Game.Systems.TerritoryMonitorSystem>();
             Worker.World.GetOrCreateSystem<RespawnMonitorSystem>();
             Worker.World.GetOrCreateSystem<PointSystem>();
             Worker.World.GetOrCreateSystem<TimeManagementSystem>();
-           // Worker.World.GetOrCreateSystem<MDG.Common.Systems.Collision.CollisionDetectionSystem>();
             Worker.World.GetOrCreateSystem<MDG.Common.Systems.Collision.CollisionHandlerSystem>();
             PlayerLifecycleHelper.AddServerSystems(Worker.World);
         }
+
     }
 }

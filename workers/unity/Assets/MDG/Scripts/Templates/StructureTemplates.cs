@@ -103,7 +103,7 @@ namespace MDG.Templates
             }, serverAttribute);
 
             template.AddComponent(new StructureSchema.ClaimStructure.Snapshot{
-                TerritoryClaiming = claimConfig.territoryId
+                TerritoryClaiming = new EntityId(claimConfig.territoryId)
             }, serverAttribute);
         }
 

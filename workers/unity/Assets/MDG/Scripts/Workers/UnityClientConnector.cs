@@ -64,7 +64,6 @@ namespace MDG
             }
             else
             {
-
                 builder.SetConnectionFlow(new ReceptionistFlow(CreateNewWorkerId(WorkerType)));
             }
 
@@ -160,7 +159,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<SelectionSystem>().Enabled = false; 
             Worker.World.GetOrCreateSystem<CommandGiveSystem>().Enabled = false;
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = false;
-      //      Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = false;
+            Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = false;
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
             ClientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType, GameConfig);
            // ClientGameObjectCreator.OnGameObjectSpawned += OnLinkedGameObjectSpawned;
@@ -185,7 +184,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<SelectionSystem>().Init(ClientGameObjectCreator);
             Worker.World.GetOrCreateSystem<CommandGiveSystem>().Enabled = true;
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = true;
-        //    Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = true;
+            Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = true;
         }
 
         public void CloseConnection()

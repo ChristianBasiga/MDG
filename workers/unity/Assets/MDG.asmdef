@@ -15,7 +15,8 @@
         "UnityEngine.XR.LegacyInputHelpers",
         "Improbable.Gdk.Generated.BuildSystem",
         "Unity.Postprocessing.Editor",
-        "Unity.Postprocessing.Runtime"
+        "Unity.Postprocessing.Runtime",
+        "Improbable.Gdk.QueryBasedInterestHelper"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

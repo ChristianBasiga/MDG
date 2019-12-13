@@ -6,6 +6,7 @@ using UnityEngine;
 using SpawnSchema = MdgSchema.Common.Spawn;
 using GameSchema = MdgSchema.Game;
 using MDG.ScriptableObjects.Game;
+using MDG.Common.MonoBehaviours;
 
 namespace MDG.Defender.Monobehaviours
 {
@@ -35,6 +36,16 @@ namespace MDG.Defender.Monobehaviours
             clientConnector = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>();
             pendingRespawnReader.OnRespawnActiveUpdate += OnRespawnActiveChange;
             componentUpdateSystem = GetComponent<LinkedEntityComponent>().World.GetExistingSystem<ComponentUpdateSystem>();
+            GetComponent<HealthSynchronizer>().OnHealthBarUpdated += OnHealthUpdate;
+        }
+
+
+        private void OnHealthUpdate(int currentHealth)
+        {
+            if (currentHealth == 0)
+            {
+                this.gameObject.SetActive(false);
+            }
         }
 
         private void Update()
@@ -60,8 +71,10 @@ namespace MDG.Defender.Monobehaviours
 
         private void OnRespawnActiveChange(bool respawning)
         {
-            // Trigger other things.
-            gameObject.SetActive(!respawning);
+            if (!respawning)
+            {
+                gameObject.SetActive(true);
+            }
         }
     }
 }

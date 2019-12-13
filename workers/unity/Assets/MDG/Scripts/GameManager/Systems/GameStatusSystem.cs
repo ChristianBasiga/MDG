@@ -10,42 +10,23 @@ using Unity.Transforms;
 using static Unity.Mathematics.math;
 using GameSchema = MdgSchema.Game;
 using TerritorySchema = MdgSchema.Game.Territory;
-namespace MDG.Game
+namespace MDG.Game.Systems
 {
     [DisableAutoCreation]
     [AlwaysUpdateSystem]
     public class GameStatusSystem : ComponentSystem
     {
 
-        readonly int minPlayers = 1;
+        const int MinPlayers = 4;
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
         WorkerSystem workerSystem;
         EntityQuery gameStatusQuery;
         EntityQuery playerQuery;
         EntityQuery territoryQuery;
-        readonly int minPlayersToStart;
-        readonly int territoriesCount;
+        EntityId gameManagerEntityId = new EntityId(-1);
         bool startedGame = false;
 
-
-        struct CheckEnoughPlayersJob : IJobForEach<PlayerMetaData.Component, GameMetadata.Component>
-        {
-            public NativeArray<bool> invaderSpawned;
-            public NativeArray<int> defendersSpawnedCount;
-            public void Execute([ReadOnly] ref PlayerMetaData.Component c0, [ReadOnly] ref GameMetadata.Component c1)
-            {
-                switch (c1.Type)
-                {
-                    case GameEntityTypes.Hunted:
-                        defendersSpawnedCount[0] += 1;
-                        break;
-                    case GameEntityTypes.Hunter:
-                        invaderSpawned[0] = true;
-                        break;
-                }
-            }
-        }
 
         protected override void OnCreate()
         {
@@ -66,34 +47,67 @@ namespace MDG.Game
             workerSystem = World.GetExistingSystem<WorkerSystem>();
         }
 
+
+        protected override void OnStartRunning()
+        {
+            base.OnStartRunning();
+            NativeArray<SpatialEntityId> spatialEntityIds = gameStatusQuery.ToComponentDataArray<SpatialEntityId>(Allocator.TempJob);
+            gameManagerEntityId = spatialEntityIds[0].EntityId;
+            spatialEntityIds.Dispose();
+        }
+
+        struct CheckEnoughPlayersJob : IJobForEach<PlayerMetaData.Component, GameMetadata.Component>
+        {
+            public NativeArray<bool> invaderSpawned;
+            public NativeArray<int> defendersSpawnedCount;
+            public void Execute([ReadOnly] ref PlayerMetaData.Component c0, [ReadOnly] ref GameMetadata.Component c1)
+            {
+                switch (c1.Type)
+                {
+                    case GameEntityTypes.Hunted:
+                        defendersSpawnedCount[0] += 1;
+                        break;
+                    case GameEntityTypes.Hunter:
+                        invaderSpawned[0] = true;
+                        break;
+                }
+            }
+        }
+
+
+
+
         protected override void OnUpdate()
         {
             // Will validate and limit player choice prior, so simply getting the count is enough.
             // Four clients for 3 defenders and 1 invader.
-            bool startGame = playerQuery.CalculateEntityCount() == minPlayers;
-           // startedGame = playersSpawned == minPlayersToStart;
-           // Store entityId of core entities.
-            // Should only be started once both invader and defender are in the world.
-            if (!startedGame && startGame)
-            {
-                startedGame = true;     
-
-                // replace this literal.
-                workerSystem.TryGetEntity(new EntityId(2), out Unity.Entities.Entity gameManagerEntity);
-                // Strangely enough, snapshot setting this alo to 900 not working. Hmm
-
-                // Short to test this.
-                EntityManager.SetComponentData(gameManagerEntity, new GameSchema.GameStatus.Component
-                {
-                    TimeLeft = 100.0f
-                });
-                return;
-            }
-
-
+            bool startGame = playerQuery.CalculateEntityCount() == MinPlayers;
+          
             if (startedGame)
             {
                 bool timedOut = false;
+
+                // May want to keep this if decide to host multiple games in one go.
+
+
+                int claimed = 0;
+
+                Entities.With(territoryQuery).ForEach((ref TerritorySchema.TerritoryStatus.Component territoryStatus) =>
+                {
+                    if (territoryStatus.Status == TerritorySchema.TerritoryStatusTypes.Claimed)
+                    {
+                        claimed += 1;
+                    }
+                });
+                // If all territories are claimed.
+                if (claimed == territoryQuery.CalculateEntityCount())
+                {
+                    componentUpdateSystem.SendEvent(new GameSchema.GameStatus.EndGame.Event(new GameSchema.GameEndEventPayload
+                    {
+                        WinConditionMet = GameSchema.WinConditions.TerritoriesClaimed
+                    }), gameManagerEntityId);
+                }
+
                 Entities.With(gameStatusQuery).ForEach((ref SpatialEntityId spatialEntityId, ref GameSchema.GameStatus.Component gameStatus) =>
                 {
                     if (gameStatus.TimeLeft > 0)
@@ -111,24 +125,6 @@ namespace MDG.Game
                     }
                 });
 
-                int claimed = 0;
-                Entities.With(territoryQuery).ForEach((ref TerritorySchema.TerritoryStatus.Component territoryStatus) =>
-                {
-                    if (territoryStatus.Status == TerritorySchema.TerritoryStatusTypes.Claimed)
-                    {
-                        claimed += 1;
-                    }
-                });
-                // If all territories are claimed.
-                if (claimed == territoryQuery.CalculateEntityCount())
-                {
-                    componentUpdateSystem.SendEvent(new GameSchema.GameStatus.EndGame.Event(new GameSchema.GameEndEventPayload
-                    {
-                        WinConditionMet = GameSchema.WinConditions.TerritoriesClaimed
-                    }), new EntityId(3));
-                }
-
-                // Then also need to check invader win condition. All three territories are claimed.
             }
         }
     }

@@ -42,7 +42,7 @@ namespace MDG.Invader.Monobehaviours.Structures
 
         [Require] StructureSchema.StructureReader structureReader = null;
 
-        int jobIndex;
+        int nextJobIndex;
         int currentlyRunningJob;
 
         private ShopItem[] jobQueue;
@@ -60,7 +60,6 @@ namespace MDG.Invader.Monobehaviours.Structures
             {
                 structureUIManager.SetStructure(this);
                 structureUIManager.SetJobs(jobQueue);
-                // Now what sets this back off??? Prob just an x button
                 structureUIManager.gameObject.SetActive(true);
             }
         }
@@ -68,7 +67,7 @@ namespace MDG.Invader.Monobehaviours.Structures
         // Wierd dependancy if do inheritance, think structure
         public virtual void Start()
         {
-            jobIndex = 0;
+            nextJobIndex = 0;
             currentlyRunningJob = 0;
             jobQueue = new ShopItem[JobCapacity];
             // This is crucial lol. How do I get ref to build menu of someting I don't haveeeee
@@ -109,7 +108,7 @@ namespace MDG.Invader.Monobehaviours.Structures
             ConcreteStructureBehaviour.CompleteJob(jobCompleteEventPayload.JobData);
             OnJobCompleted?.Invoke(currentlyRunningJob, jobCompleteEventPayload.JobData);
             jobQueue[currentlyRunningJob] = null;
-            currentlyRunningJob = jobIndex;
+            currentlyRunningJob = nextJobIndex;
         }
 
         private void OnUpdateJob(StructureSchema.JobRunEventPayload jobRunEventPayload)
@@ -147,7 +146,7 @@ namespace MDG.Invader.Monobehaviours.Structures
                 purchaserId = purchaser.EntityId.Id
             };
 
-            if (jobQueue[jobIndex] != null)
+            if (jobQueue[nextJobIndex] != null)
             {
                 OnError?.Invoke("Job Queue is Full");
             }
@@ -155,22 +154,22 @@ namespace MDG.Invader.Monobehaviours.Structures
             {
                 if (jobQueue[0] == null)
                 {
-                    jobIndex = 0;
+                    nextJobIndex = 0;
                 }
                 if (jobQueue[currentlyRunningJob] == null)
                 {
                     ConcreteStructureBehaviour.StartJob(Converters.SerializeArguments(purchasePayload));
-                    currentlyRunningJob = jobIndex;
+                    currentlyRunningJob = nextJobIndex;
                 }
                 else
                 {
                     Debug.Log("Job is busy. Queuing this job up");
                     StartCoroutine(QueueNextJob(shopItem, purchaser, purchasePayload, currentlyRunningJob));
                 }
-                OnJobStarted?.Invoke(jobIndex, shopItem, purchaser);
+                OnJobStarted?.Invoke(nextJobIndex, shopItem, purchaser);
                 // Setting of image is  
-                jobQueue[jobIndex++] = shopItem;
-                jobIndex = jobIndex % jobQueue.Length;
+                jobQueue[nextJobIndex++] = shopItem;
+                nextJobIndex = nextJobIndex % jobQueue.Length;
             }
         }
 

@@ -23,14 +23,7 @@ namespace MDG.Defender.Monobehaviours
 #pragma warning restore 649
 
         MainOverlayHUD mainOverlayHUD;
-
-
-
-      
         int teammatesLoaded = 0;
-
-      
-
         bool newErrorPassed = false;
         string text;
         IEnumerator errorClearRoutine;
@@ -46,7 +39,11 @@ namespace MDG.Defender.Monobehaviours
             UnityClientConnector unityClientConnector = clientWorker.GetComponent<UnityClientConnector>();
             clientGameObjectCreator = unityClientConnector.ClientGameObjectCreator;
 
-            var defenderLinks = clientGameObjectCreator.otherPlayerLinks.FindAll((link) =>link.TryGetComponent(typeof(DefenderSynchronizer), out _));
+            // So defender synhronizre could instantiate defender hud, pass itself in to subcribe to events accordingly.
+            // makes it so hud doesn't have to be a child, stupid optimization. Call it.
+
+
+            var defenderLinks = clientGameObjectCreator.otherPlayerLinks.FindAll((link) => link.TryGetComponent(typeof(DefenderSynchronizer), out _));
             for (int i = 0; i < defenderLinks.Count; ++i)
             {
                 teammatePanels[teammatesLoaded++].SetPlayer(defenderLinks[i]);
@@ -56,16 +53,13 @@ namespace MDG.Defender.Monobehaviours
             {
                 clientGameObjectCreator.OnEntityAdded += OnEntityAdded;
             }
+
             // Subsribe to main overlay hud.
             DefenderSynchronizer defenderSynchronizer = GetComponent<DefenderSynchronizer>();
             defenderSynchronizer.OnLoseGame += DisplayLoseGameUI;
             defenderSynchronizer.OnWinGame += DisplayWinGameUI;
             pointReader.OnValueUpdate += mainOverlayHUD.UpdatePoints;
             errorText.gameObject.SetActive(false);
-
-
-
-
         }
 
         private void OnEntityAdded(Improbable.Gdk.GameObjectCreation.SpatialOSEntity obj)

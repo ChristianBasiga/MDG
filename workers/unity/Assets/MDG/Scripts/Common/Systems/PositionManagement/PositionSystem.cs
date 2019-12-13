@@ -178,20 +178,20 @@ namespace MDG.Common.Systems.Position
 
             public void Execute([ReadOnly] ref SpatialEntityId entityIdComponent, [ReadOnly] ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
                 [ReadOnly] ref PositionSchema.AngularVelocity.Component angularVelocityComponent,
-                ref EntityPosition.Component EntityPosition, [ReadOnly] ref StatSchema.MovementSpeed.Component moveSpeed)
+                ref EntityPosition.Component entityPosition, [ReadOnly] ref StatSchema.MovementSpeed.Component moveSpeed)
             {
                
                 if (!HelperFunctions.IsEqual(linearVelocityComponent.Velocity,(new Vector3f(0,0,0))))
                 {
 
                     Vector3f scaleVelocity = HelperFunctions.Scale(HelperFunctions.Normalize(linearVelocityComponent.Velocity), deltaTime * moveSpeed.LinearSpeed);
-                    Vector3f updatedPos = HelperFunctions.Add(EntityPosition.Position, scaleVelocity);
-
-                    EntityPosition.Position = updatedPos;
+                    Vector3f updatedPos = HelperFunctions.Add(entityPosition.Position, scaleVelocity);
+                  //  updatedPos.X += entityPosition.Offset.X;
+                    entityPosition.Position = updatedPos;
                     updateQueue.Enqueue(new UpdatePayload
                     {
                         EntityUpdating = entityIdComponent.EntityId,
-                        NewPosition = EntityPosition.Position
+                        NewPosition = entityPosition.Position
                     });
                 }
             }

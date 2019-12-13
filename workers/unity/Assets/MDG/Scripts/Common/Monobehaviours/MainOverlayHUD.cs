@@ -11,7 +11,18 @@ namespace MDG.Common.MonoBehaviours
     // Instead of UI Manager this is really MainOverlayUI.
     public class MainOverlayHUD : MonoBehaviour
     {
+
+
 #pragma warning disable 649
+
+        // Player HUDS
+
+        [SerializeField]
+        Canvas defenderHUD;
+
+        [SerializeField]
+        Canvas invaderHUD;
+
         [SerializeField]
         Camera uiCamera;
 
@@ -44,6 +55,9 @@ namespace MDG.Common.MonoBehaviours
             exitGameButton.gameObject.SetActive(false);
             endGameText.gameObject.SetActive(false);    
             gameStatusHUD.SetActive(false);
+            // It's not great that gameobject unused exists, especially if fairly large.
+     //       defenderHUD.gameObject.SetActive(false);
+     //       invaderHUD.gameObject.SetActive(false);
         }
 
         private void Update()

@@ -1,4 +1,5 @@
-﻿using Improbable.Gdk.Subscriptions;
+﻿using Improbable.Gdk.Core;
+using Improbable.Gdk.Subscriptions;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -30,14 +31,13 @@ namespace MDG.Common.MonoBehaviours
         void OnHealthUpdate(int health, int maxHealth)
         {
             float percentageHealth = health / (float)maxHealth;
-            StartCoroutine(HelperFunctions.UpdateFill(healthbar, percentageHealth, (float pct) =>
+            if (gameObject.activeInHierarchy)
             {
-                OnHealthBarUpdated?.Invoke((int)pct);
-                if (pct == 0)
+                StartCoroutine(HelperFunctions.UpdateFill(healthbar, percentageHealth, (float pct) =>
                 {
-                    gameObject.SetActive(false);
-                }
-            }));
+                    OnHealthBarUpdated?.Invoke((int)pct);
+                }));
+            }
         }
     }
 

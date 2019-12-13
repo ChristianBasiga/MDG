@@ -13,6 +13,9 @@ namespace MDG.Common.MonoBehaviours
 #pragma warning disable 649
         [Require] EntityPositionReader positionReader;
         [Require] EntityRotationReader rotationReader;
+
+        [SerializeField]
+        Vector3 offset;
 #pragma warning restore 649
 
         void Start()
@@ -29,7 +32,7 @@ namespace MDG.Common.MonoBehaviours
 
         private void UpdatePosition(Vector3f obj)
         {
-            transform.position = HelperFunctions.Vector3fToVector3(obj);
+            transform.position = offset + HelperFunctions.Vector3fToVector3(obj);
         }
     }
 }

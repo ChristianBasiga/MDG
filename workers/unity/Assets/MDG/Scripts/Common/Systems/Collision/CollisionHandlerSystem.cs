@@ -60,14 +60,11 @@ namespace MDG.Common.Systems.Collision {
                 // This only stops moving triggers from position being undone
                 // Not moving non triggers into triggers.
                 Vector3 linearVelocity = HelperFunctions.Vector3fToVector3(linearVelocityComponent.Velocity).normalized;
-                Debug.Log($"Checking collisions of entity {c0.EntityId} has collision count {c1.Collisions.Count} and collision count variable {c1.CollisionCount}");
-                // This is like working on old data yo.
                 if (!boxCollider.IsTrigger && c1.CollisionCount > 0 && !HelperFunctions.Equals(linearVelocityComponent.Velocity, new Vector3f(0,0,0)))
                 {
                     bool add = false;
                     foreach (var key in c1.Collisions.Keys)
                     {
-                        Debug.Log("looking at collision " + key);
                         // Check if velocity is tending same direction as distance to collision.
                         // Replace all normalized with unitisdes
                         // If it it's not, then don't undo the position update. Otherwise if does tend in same direction, then will contine collision.

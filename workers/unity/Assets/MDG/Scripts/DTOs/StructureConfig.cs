@@ -38,7 +38,7 @@ namespace MDG.DTO
     [Serializable]
     public class ClaimConfig : StructureConfig
     {
-        public EntityId territoryId;
+        public long territoryId;
     }
 
     [Serializable]

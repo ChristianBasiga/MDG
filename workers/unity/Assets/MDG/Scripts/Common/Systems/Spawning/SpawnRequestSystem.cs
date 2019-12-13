@@ -183,7 +183,10 @@ namespace MDG.Common.Systems.Spawn
                         sendCreatePlayerRequestSystem.RequestPlayerCreation(request.spawnMetaData,
                             (PlayerCreator.CreatePlayer.ReceivedResponse response) =>
                             {
-                                request.callback.Invoke(response.ResponsePayload.Value.CreatedEntityId);
+                                if (response.ResponsePayload.HasValue)
+                                {
+                                    request.callback?.Invoke(response.ResponsePayload.Value.CreatedEntityId);
+                                }
                             });
                         break;
                     case CommonSchema.GameEntityTypes.Resource:

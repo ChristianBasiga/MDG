@@ -5,4 +5,5 @@ component EntityPosition
 {
     id = 803;
     mdg_schema.common.util.Vector3f position = 1;
+    mdg_schema.common.util.Vector3f offset = 2;
 }

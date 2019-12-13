@@ -14,16 +14,16 @@ using MdgSchema.Common.Spawn;
 using CollisionSchema = MdgSchema.Common.Collision;
 using TerritorySchema = MdgSchema.Game.Territory;
 using MdgSchema.Common.Util;
+using WorldObjects = MDG.ScriptableObjects.World;
+using MDG.Common;
+using Improbable.Gdk.QueryBasedInterest;
+using StructureSchema = MdgSchema.Common.Structure;
 
 namespace MDG.Templates
 {
     public class WorldTemplates
     {
-        // For now basic functionality it what I want. Worry about granular scheme of how I'll handle resources.
-        // This first sprint is the true POC I should have had. Then build it greater.
-        // Since I'm going with route tht EVERYTHING is a resource, need to update template for getting resource.
-        // for now will keep as this for testing collect.
-        // Collect could also essentially be disarm
+
         public static EntityTemplate GetResourceTemplate()
         {
             // Replace this later with server worker that manges resource management.
@@ -73,19 +73,24 @@ namespace MDG.Templates
                 Triggers = new Dictionary<EntityId, CollisionSchema.CollisionPoint>()
             }, serverAttribute);
 
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                IsTrigger = true
+            }, serverAttribute);
+
             template.SetReadAccess(UnityClientConnector.WorkerType, MobileClientWorkerConnector.WorkerType, serverAttribute);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
 
             return template;
         }
 
-        public static EntityTemplate GetTerritoryTemplate(int territoryId, Vector3f position, Vector3f colliderDimensions)
+        public static EntityTemplate GetTerritoryTemplate(WorldObjects.Territory territory)
         {
             EntityTemplate template = new EntityTemplate();
             string serverAttribute = UnityGameLogicConnector.WorkerType;
 
             CommonTemplates.AddRequiredSpatialComponents(template, "Territory");
-            CommonTemplates.AddRequiredGameEntityComponents(template, position, GameEntityTypes.Territory);
+            CommonTemplates.AddRequiredGameEntityComponents(template, HelperFunctions.Vector3fFromUnityVector(territory.Position), GameEntityTypes.Territory);
 
             template.AddComponent(new EntityRotation.Snapshot
             {
@@ -94,26 +99,20 @@ namespace MDG.Templates
 
             template.SetComponent(new Position.Snapshot
             {
-                Coords = new Coordinates(position.X, position.Y, position.Z)
+                Coords = HelperFunctions.CoordinatesFromUnityVector(territory.Position)
             });
             template.AddComponent(new TerritorySchema.Territory.Snapshot
             {
-                PointGain = 1000,
-                TerritoryId = territoryId
+                PointGain = territory.PointGain,
+                TerritoryId = territory.Name,
+                ParticipationRadius = territory.ParticipationRadius,
+                TimeToClaim = territory.ClaimTime
             }, serverAttribute);
 
             template.AddComponent(new TerritorySchema.TerritoryStatus.Snapshot
             {
                 Status = TerritorySchema.TerritoryStatusTypes.Released
             }, serverAttribute);
-
-            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
-            {
-                Dimensions = colliderDimensions,
-                IsTrigger = true,
-                Position = position
-            }, serverAttribute);
-
             template.AddComponent(new Persistence.Snapshot(), serverAttribute);
             return template;
         }

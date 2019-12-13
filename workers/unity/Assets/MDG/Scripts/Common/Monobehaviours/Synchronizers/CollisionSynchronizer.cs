@@ -36,11 +36,7 @@ namespace MDG.Common.MonoBehaviours
         }
 
         private void Update()
-        {
-            Debug.Log("collision buffer count " + collisionBuffer.Count);
-            Debug.Log($"{GetComponent<LinkedEntityComponent>().EntityId} collisions data count" + collisionWriter.Data.Collisions.Count);
-
-            // So increasing amount works, decreasing amount works, but DOES NOT EVER EQUAL 0.
+        {   
             collisionWriter.SendUpdate(new CollisionSchema.Collision.Update
             {
                 Collisions = collisionBuffer,
@@ -80,23 +76,6 @@ namespace MDG.Common.MonoBehaviours
             if (other.gameObject.TryGetComponent(out LinkedEntityComponent linkedEntityComponent))
             {
                 collisionBuffer.Remove(linkedEntityComponent.EntityId);
-            }
-        }
-
-
-        // Maybe should do every frame lol. just for consistancy.
-        IEnumerator SyncCollisions()
-        {
-            while (this.gameObject.activeInHierarchy && collisionWriter.IsValid)
-            {
-                for (int i = 0; i < collisionBufferSize; ++i)
-                {
-                    yield return new WaitForEndOfFrame();
-                }
-                collisionWriter.SendUpdate(new CollisionSchema.Collision.Update
-                {
-                    Collisions = collisionBuffer
-                });
             }
         }
     }

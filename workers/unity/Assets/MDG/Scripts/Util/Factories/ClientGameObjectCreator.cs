@@ -96,6 +96,9 @@ namespace MDG
                 LinkedEntityComponent playerLink = PlayerLink;
                 if (playerLink != null)
                 {
+                    Debug.Log("Player link not null " + playerLink.name);
+                    // Needs to be based on connection params incase object not spawned yet upon 
+                    // connection unless I can yield selecting role untill all spawned. Has to be connection param based to do it right.
                     playerLink.Worker.TryGetEntity(playerLink.EntityId, out Entity playerEntity);
                     GameMetadata.Component gameMetadata = playerLink.World.EntityManager.GetComponentData<GameMetadata.Component>(playerEntity);
                     if (gameMetadata.Type == GameEntityTypes.Hunted)
@@ -107,6 +110,8 @@ namespace MDG
                         pathToEntity = $"{pathToEntity}/Invader";
                     }
                 }
+
+
                 GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 worker.TryGetEntity(entity.SpatialOSEntityId, out Entity ecsEntity);
@@ -122,6 +127,7 @@ namespace MDG
                 }
 
                 pathToPlayer = $"{pathToPlayer}/{type.ToString()}";
+                Debug.Log("Path to Player " + pathToPlayer);
                 GameObject g = CreateEntityObject(entity, linker, pathToPlayer);
                 if (!hasAuthority)
                 {
@@ -131,7 +137,6 @@ namespace MDG
             else if (metaData.EntityType.Equals("Unit"))
             {
                 UnitSchema.Unit.Component unitComponent = entity.GetComponent<UnitSchema.Unit.Component>();
-                Debug.Log("unit component type " + unitComponent.Type);
                 bool hasAuthority = PlayerLink != null && unitComponent.OwnerId.Equals(PlayerLink.EntityId);
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 if (worker.TryGetEntity(entity.SpatialOSEntityId, out Entity unitEntity))
@@ -153,17 +158,18 @@ namespace MDG
                 WeaponSchema.Weapon.Component weaponComponent = entity.GetComponent<WeaponSchema.Weapon.Component>();
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
                 worker.TryGetEntity(entity.SpatialOSEntityId, out Entity weaponEntity);
-                // Put in game manager.
                 bool hasAuthority = PlayerLink != null && PlayerLink.EntityId.Equals(weaponComponent.WielderId);
                 WeaponArchtypes.AddWeaponArchtype(_world.EntityManager, weaponEntity, hasAuthority);
+                if (hasAuthority)
+                {
+                    pathToEntity = $"{pathToEntity}/Authoritative";
+                }
                 pathToEntity = $"{pathToEntity}/Weapons/{weaponComponent.WeaponId}";
 
                 CreateEntityObject(entity, linker, pathToEntity, null, null);
             }
             else if (metaData.EntityType.Equals("Territory"))
             {
-                // Don't neccessarily need to create prefabfor this, maybe down line, but just being within area is fine for testing.
-                //pathToEntity = $"{pathToEntity}/Territories/${}"
             }
             else if (metaData.EntityType.Equals("Structure"))
             {

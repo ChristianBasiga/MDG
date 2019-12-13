@@ -1,6 +1,7 @@
 using Improbable;
 using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
+using WorldObjects = MDG.ScriptableObjects.World;
 using MdgSchema.Common.Util;
 using UnityEngine;
 using Snapshot = Improbable.Gdk.Core.Snapshot;
@@ -28,12 +29,8 @@ namespace MDG.Editor
             var snapshot = new Snapshot();
 
             AddPlayerSpawner(snapshot);
-           // AddSpawnManager(snapshot);
             AddGameManager(snapshot);
             AddTerritories(snapshot);   
-            // If not do game launcher here, ma need to store lobby as scene in game.
-            //down the line.
-            // AddLobby(snapshot);
             return snapshot;
         }
 
@@ -45,10 +42,14 @@ namespace MDG.Editor
 
         private static void AddTerritories(Snapshot snapshot)
         {
-            // Load from stored scriptable objects later.
-            snapshot.AddEntity(Templates.WorldTemplates.GetTerritoryTemplate(1, new Vector3f(17, 0, -60.6f) ,new Vector3f(25,0,25)));
-            snapshot.AddEntity(Templates.WorldTemplates.GetTerritoryTemplate(1, new Vector3f(451, 0, -606.6f), new Vector3f(25, 0, 25)));
 
+            object[] loadedTerritoryObjects = Resources.LoadAll("ScriptableObjects/World/Territories/");
+
+            for (int i = 0; i < loadedTerritoryObjects.Length; ++i)
+            {
+                WorldObjects.Territory territory = loadedTerritoryObjects[i] as WorldObjects.Territory;
+                snapshot.AddEntity(Templates.WorldTemplates.GetTerritoryTemplate(territory));
+            }
         }
 
         private static void AddSpawnManager(Snapshot snapshot)
