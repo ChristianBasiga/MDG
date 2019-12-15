@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
 using GameSchema = MdgSchema.Game;
-
+using System.Linq;
 // This has to be on client and server. And systems to remove is from external source depending on that upon connecting.
 // So probably OnConnectionEstablished.
 namespace MDG.Common.Systems
@@ -16,11 +16,15 @@ namespace MDG.Common.Systems
     public class SystemCleanupSystem : ComponentSystem
     {
         ComponentUpdateSystem componentUpdateSystem;
+        EntitySystem entitySystem;
         List<ComponentSystemBase> systemsToRemove;
         protected override void OnCreate()
         {
             base.OnCreate();
-          
+            entitySystem = World.GetExistingSystem<EntitySystem>();
+            
+            // Need to set all the player entity ids here.
+            // have client and server references file
         }
 
         protected override void OnUpdate()

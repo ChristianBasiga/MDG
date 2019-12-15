@@ -50,21 +50,27 @@ namespace MDG.Common.Systems.Collision {
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
         }
 
-        struct GetCollisionsJob : IJobForEach<SpatialEntityId, CollisionSchema.Collision.Component, CollisionSchema.BoxCollider.Component, PositionSchema.LinearVelocity.Component>
+
+        // Unjobifying this for interest of cross referencing
+        struct GetCollisionsJob : IJobForEachWithEntity<SpatialEntityId, CollisionSchema.Collision.Component, CollisionSchema.BoxCollider.Component, PositionSchema.LinearVelocity.Component>
         {
             [WriteOnly]
             public NativeHashMap<EntityId, bool>.ParallelWriter toReverse;
-            public void Execute([ReadOnly] ref SpatialEntityId c0, [ReadOnly] ref CollisionSchema.Collision.Component c1, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider,
+
+            public void Execute( Entity entity, int jobIndex, [ReadOnly] ref SpatialEntityId c0, [ReadOnly] ref CollisionSchema.Collision.Component c1, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider,
                 [ReadOnly] ref PositionSchema.LinearVelocity.Component linearVelocityComponent)
             {
-                // This only stops moving triggers from position being undone
-                // Not moving non triggers into triggers.
                 Vector3 linearVelocity = HelperFunctions.Vector3fToVector3(linearVelocityComponent.Velocity).normalized;
+
                 if (!boxCollider.IsTrigger && c1.CollisionCount > 0 && !HelperFunctions.Equals(linearVelocityComponent.Velocity, new Vector3f(0,0,0)))
                 {
                     bool add = false;
                     foreach (var key in c1.Collisions.Keys)
                     {
+                        if (c1.Collisions[key].IsTrigger)
+                        {
+                            continue;
+                        }
                         // Check if velocity is tending same direction as distance to collision.
                         // Replace all normalized with unitisdes
                         // If it it's not, then don't undo the position update. Otherwise if does tend in same direction, then will contine collision.
@@ -95,7 +101,6 @@ namespace MDG.Common.Systems.Collision {
             {
                 if (toReverse.TryGetValue(spatialEntityId.EntityId, out bool _))
                 {
-                    Debug.Log("Undoing change in position");
                     EntityPositionComponent.Position =  HelperFunctions.Subtract(EntityPositionComponent.Position, 
                         HelperFunctions.Scale(HelperFunctions.Normalize(velocityComponent.Velocity), deltaTime * movementSpeed.LinearSpeed));
                 }
@@ -106,6 +111,8 @@ namespace MDG.Common.Systems.Collision {
         {
             float deltaTime = Time.deltaTime;
             toReverse = new NativeHashMap<EntityId, bool>(authPosGroup.CalculateEntityCount(), Allocator.TempJob);
+
+            // Ohhh even handler is bad, cause need to cross reference the to reverse
             GetCollisionsJob getCollisionsJob = new GetCollisionsJob
             {
                 toReverse = toReverse.AsParallelWriter()
@@ -118,6 +125,7 @@ namespace MDG.Common.Systems.Collision {
                 deltaTime = deltaTime,
                 toReverse = toReverse
             };
+
             undoPositionJobHandle = undoPositionChangeJob.Schedule(authPosGroup, jobHandle);
             undoPositionJobHandle.Complete();
             toReverse.Dispose();

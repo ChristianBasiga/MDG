@@ -37,16 +37,9 @@ namespace MDG.Common.Systems.Spawn
             public Action<EntityId> callback;
         }
 
-        public class SpawnRequestWithDelay
-        {
-            public SpawnRequestPayload requestPayload;
-            public float delay;
-        }
-
         Queue<SpawnRequestPayload> spawnRequests;
         // So flow is, add to here. Create native array each frame having delays in here.
         // tick down in job, then update by index each one, checking which one to enqueue.
-        List<SpawnRequestWithDelay> tickingRequests;
         public delegate void SpawnFulfilledCallback(EntityId spawned);
 
         public class SpawnRequestHeader
@@ -58,7 +51,6 @@ namespace MDG.Common.Systems.Spawn
         protected override void OnCreate()
         {
             base.OnCreate();
-            tickingRequests = new List<SpawnRequestWithDelay>();
             spawnRequests = new Queue<SpawnRequestPayload>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
@@ -68,8 +60,9 @@ namespace MDG.Common.Systems.Spawn
         }
 
 
-        public void RequestSpawn(SpawnSchema.SpawnRequest spawnRequest, Action<EntityId> spawnFulfilledCallback = null, 
-            byte[] spawnMetadata = null, byte[] extraSpawnArgs = null, float delay = 0)
+
+        public void RequestSpawn(SpawnSchema.SpawnRequest spawnRequest, Action<EntityId> spawnFulfilledCallback = null,
+            byte[] spawnMetadata = null, byte[] extraSpawnArgs = null)
         {
             var payload = new SpawnRequestPayload
             {
@@ -78,77 +71,15 @@ namespace MDG.Common.Systems.Spawn
                 spawnData = extraSpawnArgs,
                 callback = spawnFulfilledCallback,
             };
-            if (delay == 0)
-            {
-                spawnRequests.Enqueue(payload);
-            }
-            else
-            {
-                tickingRequests.Add(new SpawnRequestWithDelay {
-
-                    delay = delay,
-                    requestPayload = payload
-                });
-            }
-        }
-
-
-        struct TickSpawnDelayJob : IJobParallelFor
-        {
-            public NativeArray<float> times;
-            public NativeQueue<int>.ParallelWriter finishedTimes;
-            public float deltaTime;
-            public void Execute(int index)
-            {
-                times[index] -= deltaTime;
-                if (times[index] <= 0)
-                {
-                    finishedTimes.Enqueue(index);
-                }
-            }
+            spawnRequests.Enqueue(payload);
         }
 
         protected override void OnUpdate()
         {
             try
             {
-                // Start tick job.
-                NativeArray<float> timesToTick = new NativeArray<float>(tickingRequests.Count, Allocator.TempJob);
-
-                for (int i = 0; i < tickingRequests.Count; ++i)
-                {
-                    timesToTick[i] = tickingRequests[i].delay;
-                }
-
-                NativeQueue<int> finishedTicks = new NativeQueue<int>(Allocator.TempJob);
-                float deltaTime = UnityEngine.Time.deltaTime;
-
-                TickSpawnDelayJob tickSpawnDelayJob = new TickSpawnDelayJob
-                {
-                    times = timesToTick,
-                    deltaTime = deltaTime,
-                    finishedTimes = finishedTicks.AsParallelWriter()
-                };
-                JobHandle scheduledTick = tickSpawnDelayJob.Schedule(tickingRequests.Count, 64);
-                
-                // Process requets and responses while let tick run in parralel.
-
                 ProcessRequests();
                 ProcessResponses();
-
-
-                // Complete tick job if still running.
-                scheduledTick.Complete();
-                timesToTick.Dispose();
-
-                // Queue for spawning the finished ticking requests
-                while (finishedTicks.Count > 0)
-                {
-                    int finishedIndex = finishedTicks.Dequeue();
-                    spawnRequests.Enqueue(tickingRequests[finishedIndex].requestPayload);
-                    tickingRequests.RemoveAt(finishedIndex);
-                }
-                finishedTicks.Dispose();
             }
             catch (System.Exception exception)
             {
@@ -229,9 +160,6 @@ namespace MDG.Common.Systems.Spawn
                 return;
             }
 
-            // So at this point is when for sure position is set. So it is here I want to send event.
-            // spawn request is client side, but collision detection is server side.
-            // so i need i to be spatial event.
             var creationResponses = commandSystem.GetResponses<WorldCommands.CreateEntity.ReceivedResponse>();
             for (int i = 0; i < creationResponses.Count; ++i)
             {
@@ -242,7 +170,6 @@ namespace MDG.Common.Systems.Spawn
                     {
                         // Remove from request mappings and send response back.
                         case StatusCode.Success:
-                            UnityEngine.Debug.Log("Successfully spawned entity");
                             spawnRequestHeader.requestInfo.callback?.Invoke(response.EntityId.Value);
                             requestIdToPayload.Remove(response.RequestId);
                             break;

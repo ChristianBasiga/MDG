@@ -22,18 +22,21 @@ using MDG.Common.MonoBehaviours;
 using MdgSchema.Common;
 using MDG.Common;
 using MDG.DTO;
+using Improbable.Gdk.Subscriptions;
+using System.Collections.Generic;
 
 namespace MDG
 {
-    //Need to figure out spawnign stuff on server side and not.
     public class UnityClientConnector : WorkerConnector
     {
         public const string WorkerType = "UnityClient";
-        GameEntityTypes playerRole;
+        public GameEntityTypes PlayerRole { private set; get; }
         public ClientGameObjectCreator ClientGameObjectCreator { get; private set; }
         public GameConfig GameConfig { private set; get; }
 
         public SpatialOSEntity GameManagerEntity { private set; get; }
+
+        public List<SpatialOSEntity> TerritoryEntities { private set; get; }
 
         public bool PlayerFinishedLoading { private set; get; }
 
@@ -73,25 +76,32 @@ namespace MDG
             GameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
             mainOverlayHUD = GetComponent<MainOverlayHUD>();
             mainOverlayHUD.OnRoleSelected += SpawnPlayer;
-
+            TerritoryEntities = new List<SpatialOSEntity>();
             await Connect(builder, new ForwardingDispatcher()).ConfigureAwait(false);
         }
 
 
         private void OnNewEntityAdded(SpatialOSEntity spatialOSEntity)
         {
+            spatialOSEntity.TryGetComponent(out Metadata.Component metadata);
 
-            if (spatialOSEntity.HasComponent<GameSchema.GameStatus.Component>())
+            switch (metadata.EntityType)
             {
-                Debug.Log("Game Manager Spawned");
-                GameManagerEntity = spatialOSEntity;
+                case "GameManager":
+                    GameManagerEntity = spatialOSEntity;
+                    break;
+                case "Territory":
+                    TerritoryEntities.Add(spatialOSEntity);
+                    break;
             }
         }
+
+        
 
         private void SpawnPlayer(MdgSchema.Common.GameEntityTypes type)
         {
             Vector3 position = GameConfig.DefenderSpawnPoints[0];
-            playerRole = type;
+            PlayerRole = type;
             if (type == GameEntityTypes.Hunter)
             {
                 position = GameConfig.InvaderSpawnPoint;
@@ -112,7 +122,7 @@ namespace MDG
         //Move this and the creation requests to manager and just have this call it from manager.
         private void OnCreatePlayerResponse(EntityId createdEntityId)
         {            
-                if (playerRole == GameEntityTypes.Hunter)
+                if (PlayerRole == GameEntityTypes.Hunter)
                 {
                     AddInvaderSystems();
                     SpawnRequestSystem spawnRequestSystem = Worker.World.GetExistingSystem<SpawnRequestSystem>();
@@ -134,7 +144,7 @@ namespace MDG
                         }, null, Converters.SerializeArguments(unitConfig));
                     }
                 }
-                else if (playerRole == GameEntityTypes.Hunted)
+                else if (PlayerRole == GameEntityTypes.Hunted)
                 {
                     // AddDefenderSystems (if any), maybe do do it on server side.
                 }
@@ -150,59 +160,59 @@ namespace MDG
             // if still no go, then look at monobehaviours and see what's up there. 
 
             Worker.World.GetOrCreateSystem<SpawnRequestSystem>();
-           // Worker.World.GetOrCreateSystem<InventoryRequestSystem>();
-           
             Worker.World.GetOrCreateSystem<PointRequestSystem>();
             Worker.World.GetOrCreateSystem<WeaponSystem>();
-            // Worker.World.GetOrCreateSystem<ResourceRequestSystem>();
-            // Worker.World.GetOrCreateSystem<ResourceMonitorSystem>();
+
+            // Invader systems.
             Worker.World.GetOrCreateSystem<SelectionSystem>().Enabled = false; 
             Worker.World.GetOrCreateSystem<CommandGiveSystem>().Enabled = false;
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = false;
-            Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = false;
+
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
             ClientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType, GameConfig);
-           // ClientGameObjectCreator.OnGameObjectSpawned += OnLinkedGameObjectSpawned;
+            ClientGameObjectCreator.OnEntityAdded += OnNewEntityAdded;
+            ClientGameObjectCreator.OnGameObjectSpawned += OnLinkedGameObjectSpawned;
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, ClientGameObjectCreator);
         }
 
         private void OnLinkedGameObjectSpawned(GameObject obj)
         {
-            gameObject.SetActive(false);
-            StartCoroutine(ActivateAfterSync(obj));
+            if (obj.GetComponent<LinkedEntityComponent>() != null)
+            {
+                obj.SetActive(false);
+                StartCoroutine(ActivateAfterSync(obj));
+            }
         }
 
-        IEnumerator ActivateAfterSync(GameObject gameObject)
+        IEnumerator ActivateAfterSync(GameObject spawned)
         {
             yield return new WaitForEndOfFrame();
-            gameObject.SetActive(true);
+            spawned.SetActive(true);
         }
 
-        public void AddInvaderSystems()
+        private void AddInvaderSystems()
         {
             Worker.World.GetOrCreateSystem<SelectionSystem>().Enabled = true;
-            Worker.World.GetOrCreateSystem<SelectionSystem>().Init(ClientGameObjectCreator);
+            Worker.World.GetOrCreateSystem<SelectionSystem>().Init(ClientGameObjectCreator, ClientGameObjectCreator.PlayerLink.EntityId);
             Worker.World.GetOrCreateSystem<CommandGiveSystem>().Enabled = true;
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = true;
-            Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = true;
+        //    Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = true;
+        }
+
+
+
+        private void AddDefenderSystems()
+        {
+            // Remove invader systems.
+            Worker.World.DestroySystem(Worker.World.GetExistingSystem<SelectionSystem>());
+            Worker.World.DestroySystem(Worker.World.GetExistingSystem<CommandGiveSystem>());
+            Worker.World.DestroySystem(Worker.World.GetExistingSystem<CommandUpdateSystem>());
+            Worker.World.DestroySystem(Worker.World.GetExistingSystem<UnitRerouteSystem>());
         }
 
         public void CloseConnection()
         {
             Application.Quit();
-        }
-
-
-        private void Update()
-        {
-            if (GameManagerEntity.SpatialOSEntityId.IsValid())
-            {
-                GameSchema.GameStatus.Component component = GameManagerEntity.GetComponent<GameSchema.GameStatus.Component>();
-                if (component.Started)
-                {
-                    mainOverlayHUD.UpdateTime(component.TimeLeft);
-                }
-            }
         }
     }
 }

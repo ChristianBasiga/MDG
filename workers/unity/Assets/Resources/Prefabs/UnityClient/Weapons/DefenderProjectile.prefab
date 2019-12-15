@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 1323510670743008201}
   - component: {fileID: 958801056979250001}
   - component: {fileID: 8194634259485528219}
-  - component: {fileID: 1996132014791935399}
   m_Layer: 0
   m_Name: DefenderProjectile
   m_TagString: Untagged
@@ -92,18 +91,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c025beae939ba54a91a665f7c624431, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  offset: {x: 0, y: 0, z: 0}
---- !u!136 &1996132014791935399
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8292352487760668938}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.5000001
-  m_Height: 2.0000005
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}

@@ -183,7 +183,6 @@ namespace MDG.Common.Systems.Position
                
                 if (!HelperFunctions.IsEqual(linearVelocityComponent.Velocity,(new Vector3f(0,0,0))))
                 {
-
                     Vector3f scaleVelocity = HelperFunctions.Scale(HelperFunctions.Normalize(linearVelocityComponent.Velocity), deltaTime * moveSpeed.LinearSpeed);
                     Vector3f updatedPos = HelperFunctions.Add(entityPosition.Position, scaleVelocity);
                   //  updatedPos.X += entityPosition.Offset.X;

@@ -21,19 +21,32 @@ namespace MDG.Common.MonoBehaviours
         private void Awake()
         {
             collisionBuffer = new Dictionary<EntityId, CollisionSchema.CollisionPoint>();
-            if (!GetComponent<Collider>().isTrigger)
-            {
-                throw new System.Exception("Trigger Synchronizer must be on a gameobject with a trigger collision");
-            }
         }
         private void Start()
         {
             StartCoroutine(SyncTriggers());
         }
 
+
+        private void Update()
+        {
+            collisionWriter.SendUpdate(new CollisionSchema.Collision.Update
+            {
+                Triggers = collisionBuffer,
+                TriggerCount = collisionBuffer.Count
+            });
+
+            if (collisionBuffer.Count > 0)
+            {
+                collisionWriter.SendTriggerHappenEvent(new CollisionSchema.CollisionEventPayload
+                {
+                    CollidedWith = collisionBuffer
+                });
+            }
+        }
+
         private void OnTriggerEnter(Collider other)
         {
-            Debug.Log("on trigger enter");
             if (other.gameObject.TryGetComponent(out LinkedEntityComponent linkedEntityComponent))
             {
                 if (collisionBuffer.Count >= collisionBufferSize)

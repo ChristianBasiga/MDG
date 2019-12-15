@@ -6,11 +6,13 @@ using Improbable.Gdk.Core;
 using Improbable;
 using ResourceSchema = MdgSchema.Game.Resource;
 using GameSchema = MdgSchema.Game;
+using MDG.ScriptableObjects.Game;
+
 namespace MDG.Templates
 {
     public class GameTemplates
     {
-        public static EntityTemplate CreateGameManagerTemplate()
+        public static EntityTemplate CreateGameManagerTemplate(GameConfig gameConfig)
         {
             var template = new EntityTemplate();
             template.AddComponent(new Metadata.Snapshot("GameManager"), UnityGameLogicConnector.WorkerType);
@@ -18,7 +20,7 @@ namespace MDG.Templates
             template.AddComponent(new Persistence.Snapshot(), UnityGameLogicConnector.WorkerType);
             template.AddComponent(new GameSchema.GameStatus.Snapshot
             {
-                TimeLeft = 900.0f
+                TimeLeft = gameConfig.GameTime
             }, UnityGameLogicConnector.WorkerType);
             template.SetReadAccess(UnityClientConnector.WorkerType, UnityGameLogicConnector.WorkerType, MobileClientWorkerConnector.WorkerType);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, UnityGameLogicConnector.WorkerType);

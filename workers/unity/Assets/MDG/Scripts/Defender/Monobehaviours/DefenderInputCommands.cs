@@ -91,7 +91,6 @@ namespace MDG.Defender.Monobehaviours
         void ProcessSelection()
         {
             LoadoutSlot selectedLoadoutSlot = loadoutSlots[selectedSlot];
-            Debug.Log(selectedLoadoutSlot.SlotType);
             switch (selectedLoadoutSlot.SlotType)
             {
                 case LoadoutSlot.SlotOptions.Weapon:

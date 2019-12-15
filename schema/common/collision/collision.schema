@@ -7,6 +7,8 @@ type CollisionPoint{
     EntityId colliding_with = 1;
     // Storing angle and magnitude from center of entity collided with.
     mdg_schema.common.util.Vector3f distance = 2;
+
+    bool is_trigger = 3;
 }
 
 // Will add vision too later.
@@ -24,6 +26,7 @@ component Collision{
     // but if assigning clear map to dictionary it don't register pdate. 
     // so this is literally a dirty flag essentially.
     int32 collision_count = 3;
+    int32 trigger_count = 4;
     event CollisionEventPayload trigger_happen;
     event CollisionEventPayload collision_happen;
 }

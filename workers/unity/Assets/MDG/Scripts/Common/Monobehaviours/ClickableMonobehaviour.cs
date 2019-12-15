@@ -14,24 +14,17 @@ namespace MDG.Common.MonoBehaviours
         public bool SelectedThisFrame { private set; get; }
         public bool MouseOver { private set; get; }
 
-        void Start()
+        private void Update()
         {
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-            if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)  )
+            if (Input.GetMouseButtonDown(0))
             {
                 SelectedThisFrame = MouseOver;
-            }
+            } 
         }
-
         private void OnMouseOver()
         {
             MouseOver = true;
         }
-        
         private void OnMouseExit()
         {
             MouseOver = false;

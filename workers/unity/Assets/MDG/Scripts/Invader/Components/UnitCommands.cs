@@ -49,6 +49,9 @@ namespace MDG.Invader.Components
         public EntityId structureId;
         public EntityId builderId;
         public bool hasPendingBuildRequest;
+
+        // For claims
+        public EntityId? territoryId;
     }
 
     [RemoveAtEndOfTick]

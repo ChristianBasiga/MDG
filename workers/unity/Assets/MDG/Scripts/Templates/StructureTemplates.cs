@@ -40,6 +40,10 @@ namespace MDG.Templates
             CommonTemplates.AddRequiredSpatialComponents(entityTemplate, "Structure");
             CommonTemplates.AddRequiredGameEntityComponents(entityTemplate, position, MdgSchema.Common.GameEntityTypes.Structure);
 
+            entityTemplate.AddComponent(new Owner.Snapshot
+            {
+                OwnerId = new EntityId(structureConfig.ownerId)
+            }, serverAttribute);
 
             entityTemplate.AddComponent(new EntityRotation.Snapshot
             {

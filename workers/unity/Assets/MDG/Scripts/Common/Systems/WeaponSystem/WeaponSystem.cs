@@ -11,12 +11,12 @@ using MDG.Common.Components.Weapon;
 using MdgSchema.Common.Collision;
 using Improbable.Gdk.Core.Commands;
 using Unity.Jobs;
+using MdgSchema.Common;
 
 namespace MDG.Common.Systems.Weapon
 {
-    // Should separate files into clientside adn server side to make that clear.
-    // Cause that's essentially ALL in my head and in diagrams right now lmao.
-    // This sits on client side btw. COULD sit on server side
+
+    // Jobify this system later.
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     [AlwaysUpdateSystem]
@@ -215,9 +215,9 @@ namespace MDG.Common.Systems.Weapon
                                 PointSchema.PointRequest pointRequestPayload = new PointSchema.PointRequest { PointUpdate = requestSent.pointComponent.Value };
 
                                 workerSystem.TryGetEntity(weaponComponent.WielderId, out Entity wielderEntity);
-                                if (EntityManager.HasComponent<MdgSchema.Units.Unit.Component>(wielderEntity))
+                                if (EntityManager.HasComponent<Owner.Component>(wielderEntity))
                                 {
-                                    pointRequestPayload.EntityUpdating = EntityManager.GetComponentData<MdgSchema.Units.Unit.Component>(wielderEntity).OwnerId;
+                                    pointRequestPayload.EntityUpdating = EntityManager.GetComponentData<Owner.Component>(wielderEntity).OwnerId;
                                 }
                                 else
                                 {

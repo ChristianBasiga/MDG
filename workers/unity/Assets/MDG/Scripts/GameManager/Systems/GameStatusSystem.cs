@@ -1,4 +1,5 @@
 ﻿using Improbable.Gdk.Core;
+using MDG.ScriptableObjects.Game;
 using MdgSchema.Common;
 using MdgSchema.Player;
 using Unity.Burst;
@@ -7,6 +8,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine;
 using static Unity.Mathematics.math;
 using GameSchema = MdgSchema.Game;
 using TerritorySchema = MdgSchema.Game.Territory;
@@ -17,7 +19,6 @@ namespace MDG.Game.Systems
     public class GameStatusSystem : ComponentSystem
     {
 
-        const int MinPlayers = 4;
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
         WorkerSystem workerSystem;
@@ -26,7 +27,7 @@ namespace MDG.Game.Systems
         EntityQuery territoryQuery;
         EntityId gameManagerEntityId = new EntityId(-1);
         bool startedGame = false;
-
+        GameConfig gameConfig;
 
         protected override void OnCreate()
         {
@@ -45,6 +46,8 @@ namespace MDG.Game.Systems
             commandSystem = World.GetExistingSystem<CommandSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
+            // Should be set by server and based on env later.
+            gameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
         }
 
 
@@ -79,19 +82,14 @@ namespace MDG.Game.Systems
 
         protected override void OnUpdate()
         {
-            // Will validate and limit player choice prior, so simply getting the count is enough.
-            // Four clients for 3 defenders and 1 invader.
-            bool startGame = playerQuery.CalculateEntityCount() == MinPlayers;
-          
-            if (startedGame)
+            if (!startedGame)
+            {
+                startedGame = playerQuery.CalculateEntityCount() == gameConfig.MinimumPlayers;
+            }
+            else
             {
                 bool timedOut = false;
-
-                // May want to keep this if decide to host multiple games in one go.
-
-
                 int claimed = 0;
-
                 Entities.With(territoryQuery).ForEach((ref TerritorySchema.TerritoryStatus.Component territoryStatus) =>
                 {
                     if (territoryStatus.Status == TerritorySchema.TerritoryStatusTypes.Claimed)
@@ -99,7 +97,6 @@ namespace MDG.Game.Systems
                         claimed += 1;
                     }
                 });
-                // If all territories are claimed.
                 if (claimed == territoryQuery.CalculateEntityCount())
                 {
                     componentUpdateSystem.SendEvent(new GameSchema.GameStatus.EndGame.Event(new GameSchema.GameEndEventPayload
@@ -124,6 +121,7 @@ namespace MDG.Game.Systems
                         }), spatialEntityId.EntityId);
                     }
                 });
+
 
             }
         }

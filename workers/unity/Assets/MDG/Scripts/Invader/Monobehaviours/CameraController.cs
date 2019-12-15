@@ -39,7 +39,6 @@ namespace MDG.Invader.Monobehaviours
             invaderConfig.PanningBounds = new Vector2(Screen.width, Screen.height);
             minZoom = invaderConfig.MinZoom;
             maxZoom = invaderConfig.MaxZoom;
-            Debug.Log($"width {Screen.width} and height {Screen.height}");
             cameraSettings = new Settings(invaderConfig.PanningBorder, invaderConfig.PanningBounds, invaderConfig.CameraPanSpeed, invaderConfig.ScrollSpeed);
         }
 

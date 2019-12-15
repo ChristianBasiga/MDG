@@ -13,10 +13,12 @@ using MdgSchema.Units;
 using MDG.Common.Systems.Spawn;
 using MDG.ScriptableObjects.Units;
 using System.Linq;
+using MdgSchema.Common.Util;
 
 // Need to change where this goes since longer monobehaviour.
 namespace MDG.Invader.Monobehaviours.Structures
 {
+    // Will reudce methods in Istructure interface to only required as cna simply subscribe to events as needed.
     public class UnitSpawnerStructure : MonoBehaviour, IStructure
     {
 
@@ -26,14 +28,25 @@ namespace MDG.Invader.Monobehaviours.Structures
 #pragma warning restore 649
         LinkedEntityComponent linkedStructure;
         SpawnRequestSystem spawnRequestSystem;
-        public Vector3 spawnOffset;
-
-
+        Vector3f[] spawnPoints;
+        Vector3f[] SpawnPoints {
+            get
+            {
+                if (spawnPoints == null)
+                {
+                    Transform spawnArea = transform.Find("SpawnAreas");
+                    spawnPoints = spawnArea.GetComponentsInChildren<Transform>().Skip(1).Select(t =>
+                    {
+                        Debug.Log("got spwn point " + t.position + "from " + t.name);
+                        return new Vector3f(t.position.x, 20, t.position.z);
+                    }).ToArray();
+                }
+                return spawnPoints;
+            }
+        }
+        int spawnPointIndex;
         Dictionary<UnitTypes, InvaderUnit> InvaderUnitScriptableObjects;
-
         StructureUIManager structureUIManager;
-
-
         
         private void Start()
         {
@@ -53,6 +66,7 @@ namespace MDG.Invader.Monobehaviours.Structures
                     }
                 };
             }
+           
         }
 
        
@@ -67,7 +81,14 @@ namespace MDG.Invader.Monobehaviours.Structures
             LinkedEntityComponent linkedEntityComponent = structureBehaviour.GetComponent<LinkedEntityComponent>();
             linkedStructure = linkedEntityComponent;
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
+            structureBehaviour.OnJobStarted += OnJobStarted;
         }
+
+        private void OnJobStarted(int jobIndex, ShopItem shopItem, LinkedEntityComponent arg3)
+        {
+            spawnPointIndex = jobIndex;
+        }
+
         // Create abstract class with startjob base sending StartJobRequest.
         // Should be in structure interface called start job as common argumens.
         public void StartJob(byte[] jobContext)
@@ -80,9 +101,10 @@ namespace MDG.Invader.Monobehaviours.Structures
             UnitConfig unitConfig = new UnitConfig
             {
                 ownerId = purchasePayload.purchaserId,
-                position = HelperFunctions.Vector3fFromUnityVector(linkedStructure.transform.position + spawnOffset),
+                position = SpawnPoints[spawnPointIndex],
                 unitType = shopUnit.unitType,
             };
+            Debug.Log("spawning at " + HelperFunctions.Vector3fToVector3(spawnPoints[spawnPointIndex]));
 
             Debug.Log("Shop unit construction time " + shopUnit.constructionTime);
 

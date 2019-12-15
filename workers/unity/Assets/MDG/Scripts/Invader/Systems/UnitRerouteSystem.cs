@@ -63,12 +63,12 @@ namespace MDG.Invader.Systems
                 {
                     if (!rerouteComponent.applied)
                     {
-                        // Add.
                         linearVelocityComponent.Velocity = rerouteComponent.subDestination;
                         rerouteComponent.applied = true;
                     }
                     else
                     {
+                        // I don't want to do this, cause will constantly reroute.
                         Vector3f velocityTowardsDestination = HelperFunctions.Subtract(rerouteComponent.destination, EntityPosition.Position);
                         linearVelocityComponent.Velocity = velocityTowardsDestination;
 
@@ -86,11 +86,12 @@ namespace MDG.Invader.Systems
 
                         /*
                         // I need let reroute just happen.
-                        Vector3f velocityTowardsDestination = rerouteComponent.destination - EntityPosition.Position;
-                        linearVelocityComponent.Velocity += velocityTowardsDestination * deltaTime;
+                        Vector3f velocityTowardsDestination = HelperFunctions.Subtract(rerouteComponent.destination,EntityPosition.Position);
+                        velocityTowardsDestination = HelperFunctions.Scale(velocityTowardsDestination,deltaTime);
 
-                        float dotProduct = Vector3.Dot(linearVelocityComponent.Velocity.ToUnityVector().normalized,
-                            velocityTowardsDestination.ToUnityVector().normalized);
+                        Vector3 convertedDestinationVelocity = HelperFunctions.Vector3fToVector3(HelperFunctions.Normalize(velocityTowardsDestination));
+                        Vector3 convertedVelocity = HelperFunctions.Vector3fToVector3(HelperFunctions.Normalize(linearVelocityComponent.Velocity));
+                        float dotProduct = Vector3.Dot(convertedDestinationVelocity, convertedVelocity);
                         // Then it's velocity is targeting destination likely.
                         if (dotProduct > 0.5f)
                         {
@@ -134,7 +135,7 @@ namespace MDG.Invader.Systems
                     float dotProduct = Vector3.Dot(collisionPointDistNormalized, newVelocity);
                     // It works, but it's trying routes that will fail since only take into account
                     // point not size of colliders in reroute
-                    if (dotProduct < 0.8f)
+                    if (dotProduct < 0.5f)
                     {
                         Vector3 potentialReroute = newVelocity * velocityMagnitude;
                         potentialReroute.y = currentVelocity.Y;
@@ -285,7 +286,7 @@ namespace MDG.Invader.Systems
                 allPotentialReroutes.Remove(scheduleRedirectJob.entityId);
                 // If there was a valid redirect, add the redirect component, otherwise Unit cannot move.
                 // This will be non spatial component
-                if (rerouteVector.HasValue && rerouteVector.Value != new Vector3(0,0,0))
+                if (rerouteVector.HasValue && rerouteVector.Value != Vector3.zero)
                 {
                     PositionSchema.LinearVelocity.Component linearVelocityComponent = EntityManager.GetComponentData<PositionSchema.LinearVelocity.Component>(entity);
                     EntityPosition.Component EntityPosition = EntityManager.GetComponentData<EntityPosition.Component>(entity);
@@ -296,7 +297,8 @@ namespace MDG.Invader.Systems
                     {
                         destination = commandListener.TargetPosition,
                         subDestination = HelperFunctions.Vector3fFromUnityVector(rerouteVector.Value),
-                        applied = false
+                        applied = false,
+                        framesPassed = 0
                     };
 
                     // Set destination as velocity plus current position to get destination

@@ -251,6 +251,7 @@ namespace MDG.Common.Systems.Structure
             NativeHashMap<EntityId, int> structureIdToBuildSpeed = new NativeHashMap<EntityId, int>( constructingQuery.CalculateEntityCount(),Allocator.TempJob);
             for (int i = 0; i < buildRequests.Count; ++i)
             {
+                Debug.Log("recieved build request");
                 ref readonly var buildRequest = ref buildRequests[i];
                 if (structureIdToBuildSpeed.TryGetValue(buildRequest.EntityId, out int buildRate))
                 {
@@ -261,10 +262,14 @@ namespace MDG.Common.Systems.Structure
                     structureIdToBuildSpeed.TryAdd(buildRequest.EntityId, buildRequest.Payload.BuildRate);
                 }
 
+                Debug.Log("sending response");
                 commandSystem.SendResponse(new StructureSchema.Structure.Build.Response
                 {
                     RequestId = buildRequest.RequestId,
-                    Payload = new StructureSchema.BuildResponsePayload()
+                    Payload = new StructureSchema.BuildResponsePayload
+                    {
+                        FinishedBuilding = true
+                    }
                 });
             }
             return structureIdToBuildSpeed;

@@ -60,7 +60,10 @@ namespace MDG.Templates
             CommonTemplates.AddRequiredGameEntityComponents(template, projectileConfig.startingPosition,
                 MdgSchema.Common.GameEntityTypes.Weapon, projectileConfig.projectileId);
 
-
+            template.AddComponent(new Owner.Snapshot
+            {
+                OwnerId = wielder
+            }, serverAttribute);
            
             template.AddComponent(new WeaponSchema.Weapon.Snapshot
             {
@@ -116,7 +119,6 @@ namespace MDG.Templates
             }
             else
             {
-                UnityEngine.Debug.Log("I have authority over this weapon");
             }
         }
     }

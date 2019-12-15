@@ -25,6 +25,10 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         Camera playerCamera;
         [Require] PointReader pointReader;
+
+
+        [SerializeField]
+        Transform crosshairs;
 #pragma warning restore 649
 
 
@@ -34,12 +38,6 @@ namespace MDG.Defender.Monobehaviours
         void Start()
         {
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
-
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
 
         }
 
@@ -82,12 +80,19 @@ namespace MDG.Defender.Monobehaviours
             };
             // How i get this position prod needs to change.
             Vector3 worldCoords = HelperFunctions.GetMousePosition(playerCamera);
-            Vector3f trapPosition = new Vector3f(worldCoords.x, 10, worldCoords.z);
-            spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
+
+            Vector2 pos = crosshairs.GetChild(0).transform.position;
+            Ray ray = playerCamera.ScreenPointToRay(pos);
+            if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity))
             {
-                Position = trapPosition,
-                TypeToSpawn = MdgSchema.Common.GameEntityTypes.Structure,
-            }, OnTrapSpawned, Converters.SerializeArguments(trapConfig));
+                Vector3f trapPosition = HelperFunctions.Vector3fFromUnityVector(hit.point);
+                trapPosition.Y = 20;
+                spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
+                {
+                    Position = trapPosition,
+                    TypeToSpawn = MdgSchema.Common.GameEntityTypes.Structure,
+                }, OnTrapSpawned, Converters.SerializeArguments(trapConfig));
+            }
         }
 
         void OnTrapSpawned(EntityId entityId)

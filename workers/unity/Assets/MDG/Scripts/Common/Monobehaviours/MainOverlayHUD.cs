@@ -50,21 +50,32 @@ namespace MDG.Common.MonoBehaviours
         public event RoleSelectedHandler OnRoleSelected;
         public GameEntityTypes RoleSelected { private set; get; }
 
+
+        public void SelectRole(string role)
+        {
+            GameEntityTypes type = (GameEntityTypes)System.Enum.Parse(typeof(GameEntityTypes), role);
+            OnRoleSelected?.Invoke(type);
+            RoleSelected = type;
+            StartCoroutine(TransitionUI());
+        }
+
         private void Start()
         {
             exitGameButton.gameObject.SetActive(false);
-            endGameText.gameObject.SetActive(false);    
+            endGameText.gameObject.SetActive(false);
             gameStatusHUD.SetActive(false);
-            // It's not great that gameobject unused exists, especially if fairly large.
-     //       defenderHUD.gameObject.SetActive(false);
-     //       invaderHUD.gameObject.SetActive(false);
         }
 
         private void Update()
         {
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                exitGameButton.gameObject.SetActive(exitGameButton.gameObject.activeInHierarchy);
+            }
         }
 
-        public void UpdatePoints(int points)
+
+        private void UpdatePoints(int points)
         {
             if (pointText == null)
             {
@@ -73,7 +84,7 @@ namespace MDG.Common.MonoBehaviours
             pointText.text = points.ToString();
         }
 
-        public void UpdateTime(float time)
+        private void UpdateTime(float time)
         {
             // Get minutes and remaining time after remving minutes
             int minutes = (int)(time / 60);
@@ -89,11 +100,10 @@ namespace MDG.Common.MonoBehaviours
             {
                 secondText = "0" + secondText;
             }
-
             timerText.text = $"{minuteText}:{secondText}";
         }
 
-        public void SetEndGameText(string text, bool won)
+        private void SetEndGameText(string text, bool won)
         {
             endGameText.text = text;
             endGameText.color = won ? Color.blue : Color.red;
@@ -101,20 +111,26 @@ namespace MDG.Common.MonoBehaviours
             exitGameButton.gameObject.SetActive(true);
         }
 
-
-        public void SelectRole(string role)
-        {
-            GameEntityTypes type = (GameEntityTypes) System.Enum.Parse(typeof(GameEntityTypes), role);
-            OnRoleSelected?.Invoke(type);
-            RoleSelected = type;
-            StartCoroutine(TransitionUI());
-        }
-
         IEnumerator TransitionUI()
         {
             roleSelectionUI.SetActive(false);
             UnityClientConnector unityClientConnector = GetComponent<UnityClientConnector>();
             yield return new WaitUntil(() => unityClientConnector.PlayerFinishedLoading);
+
+            // Assign UI callbacks.
+
+            GameStatusSynchronizer gameStatusSynchronizer = gameObject.AddComponent<GameStatusSynchronizer>();
+            gameStatusSynchronizer.OnWinGame += (string text) =>
+            {
+                SetEndGameText(text, true);
+            };
+            gameStatusSynchronizer.OnLoseGame += (string text) =>
+            {
+                SetEndGameText(text, false);
+            };
+            gameStatusSynchronizer.OnUpdateTime += UpdateTime;
+            PointSynchonizer pointSynchonizer = unityClientConnector.ClientGameObjectCreator.PlayerLink.GetComponent<PointSynchonizer>();
+            pointSynchonizer.OnPointUpdate += UpdatePoints;
             yield return new WaitForEndOfFrame();
             // Load in Loading screen until done loading.
             gameStatusHUD.SetActive(true);

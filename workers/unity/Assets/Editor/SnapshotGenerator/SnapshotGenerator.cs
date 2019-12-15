@@ -5,6 +5,7 @@ using WorldObjects = MDG.ScriptableObjects.World;
 using MdgSchema.Common.Util;
 using UnityEngine;
 using Snapshot = Improbable.Gdk.Core.Snapshot;
+using MDG.ScriptableObjects.Game;
 
 namespace MDG.Editor
 {
@@ -36,8 +37,9 @@ namespace MDG.Editor
 
         private static void AddGameManager(Snapshot snapshot)
         {
-            // Okayyy, so.. Snapshot and game objects don't get along.
-            snapshot.AddEntity(Templates.GameTemplates.CreateGameManagerTemplate());
+            //Todo: Do based on env
+            GameConfig gameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
+            snapshot.AddEntity(Templates.GameTemplates.CreateGameManagerTemplate(gameConfig));
         }
 
         private static void AddTerritories(Snapshot snapshot)

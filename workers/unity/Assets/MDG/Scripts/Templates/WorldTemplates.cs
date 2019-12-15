@@ -113,7 +113,23 @@ namespace MDG.Templates
             {
                 Status = TerritorySchema.TerritoryStatusTypes.Released
             }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.Collision.Snapshot
+            {
+                Collisions = new Dictionary<EntityId, CollisionSchema.CollisionPoint>(),
+                Triggers = new Dictionary<EntityId, CollisionSchema.CollisionPoint>(),
+                CollisionCount = 0
+            }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                IsTrigger = true,
+            }, serverAttribute);
+
+
             template.AddComponent(new Persistence.Snapshot(), serverAttribute);
+
+           
             return template;
         }
     }

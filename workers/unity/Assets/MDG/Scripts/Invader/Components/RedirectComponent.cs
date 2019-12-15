@@ -6,6 +6,7 @@ namespace MDG.Invader.Components
     {
         public Vector3f destination;
         public Vector3f subDestination;
+        public int framesPassed;
         public bool applied;
 
     }

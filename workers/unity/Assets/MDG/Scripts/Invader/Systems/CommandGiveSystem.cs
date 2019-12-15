@@ -17,6 +17,7 @@ using MDG.Invader.Monobehaviours;
 using MDG.Common;
 using MdgSchema.Common.Util;
 using MDG.Common.MonoBehaviours;
+using Unity.Burst;
 
 namespace MDG.Invader.Systems
 {
@@ -171,6 +172,13 @@ namespace MDG.Invader.Systems
                 return;
             }
 
+            // For handling click context commands.
+            if (workerUnitQuery.CalculateEntityCount() == 0 || !Input.GetMouseButtonDown(1))
+            {
+                return;
+            }
+
+
             CommandListener command = new CommandListener
             {
                 CommandType = CommandType.None
@@ -184,12 +192,6 @@ namespace MDG.Invader.Systems
             }
             else
             {
-                // For handling click context commands.
-                if (workerUnitQuery.CalculateEntityCount() == 0 || !Input.GetMouseButtonDown(1))
-                {
-                    return;
-                }
-
                 command = ProcessCommandGiven();
             }
 

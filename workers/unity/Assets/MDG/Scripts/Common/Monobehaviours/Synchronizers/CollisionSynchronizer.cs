@@ -3,6 +3,7 @@ using Improbable.Gdk.Subscriptions;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Entities;
 using UnityEngine;
 using CollisionSchema = MdgSchema.Common.Collision;
 
@@ -15,8 +16,6 @@ namespace MDG.Common.MonoBehaviours
         // So I can write into it, initially but not more than that??
         [Require] CollisionSchema.CollisionWriter collisionWriter;
 #pragma warning restore 649
-        // Amount before sync up with server.
-        const int collisionBufferSize = 10;
         Dictionary<EntityId, CollisionSchema.CollisionPoint> collisionBuffer;
 
         private void Awake()
@@ -24,48 +23,57 @@ namespace MDG.Common.MonoBehaviours
             collisionBuffer = new Dictionary<EntityId, CollisionSchema.CollisionPoint>();
             
         }
-        private void Start()
-        {
-            //StartCoroutine(SyncCollisions());
-            collisionWriter.OnAuthorityUpdate += CollisionWriter_OnAuthorityUpdate;
-        }
-
-        private void CollisionWriter_OnAuthorityUpdate(Improbable.Worker.CInterop.Authority obj)
-        {
-            Debug.Log("authority here");
-        }
-
         private void Update()
         {   
             collisionWriter.SendUpdate(new CollisionSchema.Collision.Update
             {
                 Collisions = collisionBuffer,
-                CollisionCount = collisionBuffer.Count
+                CollisionCount = collisionBuffer.Count,
             });
+
+            if (collisionBuffer.Count > 0)
+            {
+                collisionWriter.SendCollisionHappenEvent(new CollisionSchema.CollisionEventPayload
+                {
+                    CollidedWith = collisionBuffer
+                });
+            }
         }
 
         private void OnTriggerEnter(Collider other)
         {
-            Debug.Log("on collision enter");
             if (other.gameObject.TryGetComponent(out LinkedEntityComponent linkedEntityComponent))
             {
-                if (collisionBuffer.Count >= collisionBufferSize)
-                {
-                }
-
                 EntityId collidedId = linkedEntityComponent.EntityId;
-                CollisionSchema.CollisionPoint collisionPoint = new CollisionSchema.CollisionPoint
+
+                if (linkedEntityComponent.Worker.TryGetEntity(collidedId, out Entity entity))
                 {
-                    CollidingWith = collidedId,
-                    Distance = HelperFunctions.Vector3fFromUnityVector(other.transform.position - transform.position)
-                };
-                if (collisionBuffer.ContainsKey(collidedId))
-                {
-                    collisionBuffer[collidedId] = collisionPoint;
-                }
-                else
-                {
-                    collisionBuffer.Add(collidedId, collisionPoint);
+                    Debug.Log("collided with " + other.name);
+                    EntityManager entityManager = linkedEntityComponent.World.EntityManager;
+                    bool isTrigger = false;
+                    if (entityManager.HasComponent<CollisionSchema.BoxCollider.Component>(entity))
+                    {
+                        CollisionSchema.BoxCollider.Component boxCollider = entityManager.GetComponentData<CollisionSchema.BoxCollider.Component>(entity);
+                        isTrigger = boxCollider.IsTrigger;
+                    }
+                    else
+                    {
+                        Debug.Log("has no box colider component");
+                    }
+                    CollisionSchema.CollisionPoint collisionPoint = new CollisionSchema.CollisionPoint
+                    {
+                        CollidingWith = collidedId,
+                        Distance = HelperFunctions.Vector3fFromUnityVector(other.transform.position - transform.position),
+                        IsTrigger = isTrigger
+                    };
+                    if (collisionBuffer.ContainsKey(collidedId))
+                    {
+                        collisionBuffer[collidedId] = collisionPoint;
+                    }
+                    else
+                    {
+                        collisionBuffer.Add(collidedId, collisionPoint);
+                    }
                 }
             }
         }

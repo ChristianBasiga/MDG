@@ -15,5 +15,7 @@ namespace MDG.ScriptableObjects.Game
         public Vector3 WorldDimensions;
         public Vector3 InvaderSpawnPoint;
         public int CapicityPerRegion;
+        public float GameTime;
+        public int MinimumPlayers;
     }
 }

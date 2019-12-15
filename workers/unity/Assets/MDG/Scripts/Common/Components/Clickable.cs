@@ -1,6 +1,8 @@
 ﻿using Unity.Entities;
 using Improbable.Gdk.Core;
 using UnityEngine;
+using System;
+
 namespace MDG.Common.Components
 {
     // Used to update UI based on click, as well as used by other systems.

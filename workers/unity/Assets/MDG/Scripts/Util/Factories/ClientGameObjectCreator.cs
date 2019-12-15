@@ -27,6 +27,7 @@ using MDG.Common;
 using MDG.Common.MonoBehaviours;
 using MDG.Common.Systems.Spawn;
 using MDG.ScriptableObjects.Game;
+using MdgSchema.Game.Territory;
 
 namespace MDG
 {
@@ -169,6 +170,9 @@ namespace MDG
             }
             else if (metaData.EntityType.Equals("Territory"))
             {
+                entity.TryGetComponent(out Territory.Component territoryComponent);
+                pathToEntity = $"{pathToEntity}/{territoryComponent.TerritoryId}";
+                CreateEntityObject(entity, linker, pathToEntity);
             }
             else if (metaData.EntityType.Equals("Structure"))
             {
@@ -197,7 +201,7 @@ namespace MDG
             }
             else
             {
-                //_default.OnEntityCreated(entity, linker);
+                _default.OnEntityCreated(entity, linker);
             }
             OnEntityAdded?.Invoke(entity);
         }

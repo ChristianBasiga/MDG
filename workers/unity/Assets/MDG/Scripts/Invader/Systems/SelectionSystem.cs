@@ -6,6 +6,7 @@ using MDG.Common.MonoBehaviours;
 using MDG.Invader.Components;
 using MdgSchema.Common;
 using MdgSchema.Common.Util;
+using MdgSchema.Units;
 using System;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -18,18 +19,12 @@ namespace MDG.Invader.Systems {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(EntitySelectionGroup))]
     [UpdateBefore(typeof(CommandGiveSystem))]
+    [AlwaysUpdateSystem]
     public class SelectionSystem : ComponentSystem
     {
-
         public event Action<bool> OnUnitSelectionUpdated;
-
         JobHandle selectedJobHandle;
         EntityQuery selectorGroup;
-        NativeHashMap<EntityId, SelectionBounds> idToSelectionBounds;
-
-        NativeQueue<EntityId> selectedThisFrameFromJob;
-
-
         ClientGameObjectCreator clientGameObjectCreator;
 
         public struct SelectionBounds
@@ -39,35 +34,38 @@ namespace MDG.Invader.Systems {
         }
 
 
+        SelectionBounds? selectionBounds;
+        public bool SelectedThisFrame { get { return selectionBounds.HasValue; } }
+        EntityId invaderId;
+        EntityQuery clickableUnitQuery;
+
         // Prob just use init instead of onstart running
-        public void Init(ClientGameObjectCreator clientGameObjectCreator)
+        public void Init(ClientGameObjectCreator clientGameObjectCreator, EntityId invaderId)
         {
             this.clientGameObjectCreator = clientGameObjectCreator;
-            // Access from somewhere
+            this.invaderId = invaderId;
 
+        }
+
+        public void SetSelectionBounds(SelectionBounds selectionBounds)
+        {
+            this.selectionBounds = selectionBounds;
         }
 
         protected override void OnStartRunning()
         {
             base.OnStartRunning();
             selectorGroup = GetEntityQuery(typeof(Selection));
-            if (!selectedThisFrameFromJob.IsCreated)
-            {
-                selectedThisFrameFromJob = new NativeQueue<EntityId>(Allocator.Persistent);
-            }
-        }
-
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-            if (selectedThisFrameFromJob.IsCreated)
-            {
-                selectedThisFrameFromJob.Dispose();
-            }
+            clickableUnitQuery = GetEntityQuery(
+                ComponentType.ReadWrite<Clickable>(),
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadOnly<EntityPosition.Component>(),
+                ComponentType.ReadOnly<Unit.Component>());
         }
 
 
-        // Hindsight, should've still did bounds stuff until tested this thoroughly.
+
+        /* Unless I have multiple invaders all in same client, need not be a job.
         public struct GetSelectedBounds : IJobForEach<SpatialEntityId, Selection>
         {
             [WriteOnly]
@@ -85,7 +83,7 @@ namespace MDG.Invader.Systems {
                     topRight = topRight,
                 });
             }
-        }
+        }*/
 
         public struct RemoveSelections : IJobForEachWithEntity<Selection>
         {
@@ -105,81 +103,62 @@ namespace MDG.Invader.Systems {
             }
         }
 
-        public struct SetSelectedEntities : IJobForEach<SpatialEntityId, EntityPosition.Component, Clickable>
+        public struct SetSelectedEntities : IJobForEach<SpatialEntityId, EntityPosition.Component, Clickable, Unit.Component>
         {
-            [ReadOnly]
-            public NativeHashMap<EntityId, SelectionBounds> idToSelectionBounds;
+            public EntityId invaderId;
+            public SelectionBounds selectionBounds;
 
-            public NativeQueue<EntityId>.ParallelWriter selectedThisFrame;
+            public NativeQueue<bool>.ParallelWriter selectedQueue;
             // Instead of single, do double buffering, have a selected to read from, and one to writ eto?
-            public void Execute([ReadOnly] ref SpatialEntityId id, [ReadOnly] ref EntityPosition.Component EntityPosition, ref Clickable clickable)
+            public void Execute([ReadOnly] ref SpatialEntityId id, [ReadOnly] ref EntityPosition.Component EntityPosition, ref Clickable clickable,
+                [ReadOnly] ref Unit.Component unitComponent)
             {
-                NativeArray<EntityId> selectorIds = idToSelectionBounds.GetKeyArray(Allocator.Temp);
-                for (int i = 0; i < selectorIds.Length; ++i)
+                Vector3f position = EntityPosition.Position;
+                // Check if position of clickable entity is within selection bounds.
+                if (position.X > selectionBounds.botLeft.x && position.Z > selectionBounds.botLeft.y
+                    && position.X < selectionBounds.topRight.x && position.Z < selectionBounds.topRight.y)
                 {
-                    if (idToSelectionBounds.TryGetValue(selectorIds[i], out SelectionBounds selectionBounds))
-                    {
-                        Vector3f position = EntityPosition.Position;
-                        // Check if position of clickable entity is within selection bounds.
-                        if (position.X > selectionBounds.botLeft.x && position.Z > selectionBounds.botLeft.y 
-                            && position.X < selectionBounds.topRight.x && position.Z < selectionBounds.topRight.y)
-                        {
-                            clickable.Clicked = true;
-                            clickable.ClickedEntityId = selectorIds[i];
-                            selectedThisFrame.Enqueue(id.EntityId);
-                        }
-                    }
+                    clickable.Clicked = true;
+                    clickable.ClickedEntityId = invaderId;
+                    UnityEngine.Debug.Log("adding to selected queue");
+                    selectedQueue.Enqueue(true);
                 }
-                selectorIds.Dispose();
             }
         }
-
         protected override void OnUpdate()
         {
-            int selectorCount = selectorGroup.CalculateEntityCount();
-            if (selectorCount == 0)
+            if (!selectionBounds.HasValue)
             {
                 return;
             }
-            idToSelectionBounds = new NativeHashMap<EntityId, SelectionBounds>(selectorCount, Allocator.TempJob);
-            GetSelectedBounds getSelectedBounds = new GetSelectedBounds
-            {
-                idToSelectionBounds = idToSelectionBounds.AsParallelWriter()
-            };
-            JobHandle selectedBoundsJob = getSelectedBounds.Schedule(this);
 
-
-            // If selector count isn't 0, then new selection has been made this frame, reset Clickables.
             ResetSelectedEntities resetSelectedEntitiesJob = new ResetSelectedEntities();
-            selectedThisFrameFromJob.Clear();
-
             resetSelectedEntitiesJob.Schedule(this).Complete();
 
-
+            NativeQueue<bool> selected = new NativeQueue<bool>(Allocator.TempJob);
+            bool selectedThroughMono = false;
             Entities.ForEach((ref SpatialEntityId spatialEntityId, ref Clickable clickable) =>
             {
                 ClickableMonobehaviour clickableMonobehaviour = clientGameObjectCreator.GetLinkedGameObjectById(spatialEntityId.EntityId).GetComponent<ClickableMonobehaviour>();
                 if (clickableMonobehaviour != null && clickableMonobehaviour.SelectedThisFrame)
                 {
-                    UnityEngine.Debug.LogError("clicked on entity " + spatialEntityId.EntityId);
+                    selectedThroughMono = true;
                     clickable.Clicked = true;
                     clickable.ClickedEntityId = clientGameObjectCreator.PlayerLink.EntityId;
-                    selectedThisFrameFromJob.Enqueue(spatialEntityId.EntityId);
                 }
             });
-            selectedBoundsJob.Complete();
 
-            // ECS way would be for me to query clickables and check if any are currently clicked.
-            // idk if faster to have event and the extra memory or nah.
             SetSelectedEntities setSelectedEntities = new SetSelectedEntities
             {
-                idToSelectionBounds = idToSelectionBounds,
-                selectedThisFrame = selectedThisFrameFromJob.AsParallelWriter()
+                selectionBounds = selectionBounds.Value,
+                selectedQueue = selected.AsParallelWriter(),
+                invaderId = invaderId
             };
-            selectedJobHandle = setSelectedEntities.Schedule(this, selectedBoundsJob);
+            selectedJobHandle = setSelectedEntities.Schedule(clickableUnitQuery);
             selectedJobHandle.Complete();
-            OnUnitSelectionUpdated?.Invoke(selectedThisFrameFromJob.Count > 0);
-            idToSelectionBounds.Dispose();
+            OnUnitSelectionUpdated?.Invoke(selected.Count > 0 || selectedThroughMono);
+            selected.Dispose();
+            selectionBounds = null;
 
             RemoveSelections removeSelections = new RemoveSelections
             {

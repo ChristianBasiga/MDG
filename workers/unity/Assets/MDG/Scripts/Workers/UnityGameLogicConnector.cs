@@ -62,7 +62,7 @@ namespace MDG
            // Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
            // Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<StatMonitorSystem>();
-            //Worker.World.GetOrCreateSystem<SystemCleanupSystem>();
+           // Worker.World.GetOrCreateSystem<SystemCleanupSystem>();
             Worker.World.GetOrCreateSystem<StructureMonitorSystem>();
             Worker.World.GetOrCreateSystem<WeaponSystem>();
 

@@ -10,13 +10,8 @@ using GameSchema = MdgSchema.Game;
 
 namespace MDG.Common.Systems.Point
 {
-    /// <summary>
-    /// More needs to be complete for this to work.
-    /// I'll add all components needed to meet use cases and just add as needed though tests, but no other systems acting upon them.
-    /// </summary>
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
-    // Ideally, I switch this to a job component system.
     public class PointSystem : ComponentSystem
     {
         Dictionary<EntityId, int> idToPoints;

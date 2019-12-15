@@ -30,18 +30,13 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         Transform crosshairs;
 
-
 #pragma warning restore 649
 
-        Vector3 crosshairOffset = new Vector3(Screen.width * 0.8f, 0, 0);
         // Start is called before the first frame update
         void Start()
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
-            RectTransform rectTransform = GameObject.Find("DefenderHud").GetComponent<RectTransform>();
-            crosshairOffset = new Vector3(rectTransform.rect.width * 0.3f, rectTransform.rect.height * 0.6f, 0);
-            //GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
             Weapon = Resources.Load("ScriptableObjects/Weapons/DefenderProjectile") as Weapon;
         }
 
@@ -51,12 +46,11 @@ namespace MDG.Defender.Monobehaviours
             crosshairs.transform.position = Input.mousePosition;
             Vector2 pos = crosshairs.GetChild(0).transform.position;
             Ray ray = shootCamera.ScreenPointToRay(pos);
-            Physics.Raycast(ray , out RaycastHit raycastHit, Mathf.Infinity);
-            Vector3 direction = raycastHit.point - shootOrigin.position;
             shootOrigin.rotation = Quaternion.LookRotation(ray.direction);
+
             Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(shootOrigin.position);
             Projectile projectile = Weapon as Projectile;
-            Vector3f bulletLinearVelocity = HelperFunctions.Scale(HelperFunctions.Vector3fFromUnityVector(shootOrigin.forward), projectile.ProjectileSpeed);
+            Vector3f bulletLinearVelocity = HelperFunctions.Scale(HelperFunctions.Vector3fFromUnityVector(ray.direction), projectile.ProjectileSpeed);
 
             ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(projectile);
             projectileConfig.startingPosition = bulletStartingPosition;

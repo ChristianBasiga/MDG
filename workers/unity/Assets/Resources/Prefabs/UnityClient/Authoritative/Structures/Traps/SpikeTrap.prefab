@@ -169,7 +169,7 @@ GameObject:
   - component: {fileID: 5159809085012641639}
   - component: {fileID: -6194306666198491414}
   - component: {fileID: 2779500202940794066}
-  - component: {fileID: 8216408504647348733}
+  - component: {fileID: -4212740585914594409}
   m_Layer: 0
   m_Name: SpikeTrap
   m_TagString: Untagged
@@ -243,7 +243,7 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 2
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8216408504647348733
+--- !u!114 &-4212740585914594409
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -252,7 +252,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8956757783640227949}
   m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 84f13e1aa090ac140afacf14f33487d9, type: 3}
+  m_Script: {fileID: 11500000, guid: 0220bdba63d64944db3950f229d5d8d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &9149711739066230354

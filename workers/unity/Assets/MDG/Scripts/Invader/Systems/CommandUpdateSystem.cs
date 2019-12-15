@@ -33,6 +33,8 @@ using MDG.ScriptableObjects.Weapons;
 using MDG.Common.Systems.Structure;
 using MdgSchema.Common.Util;
 using StatSchema = MdgSchema.Common.Stats;
+using Unity.Burst;
+using MdgSchema.Common.Spawn;
 
 // DEFINITELY CAN SEPERATE THIS INTO THREE DIFFERENT CLASSES.
 // OR AT THE VERY LEAST MOVE THE RESPECTIVE JOBS IN OWN CLASSES.
@@ -49,14 +51,6 @@ namespace MDG.Invader.Systems
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class CommandUpdateSystem : ComponentSystem
     {
-
-
-        struct BuildPayload
-        {
-            public EntityId builderId;
-            public EntityId structureId;
-        }
-
         struct CollectPayload
         {
             public EntityId resourceId;
@@ -91,7 +85,6 @@ namespace MDG.Invader.Systems
         Dictionary<long, BuildCommand> requestIdToBuildCommand;
 
         private NativeHashMap<EntityId, BuildCommand> buildCommands;
-        private NativeQueue<BuildPayload> buildRequestsToSend;
 
         private PositionSystem positionSystem;
         private CommandSystem commandSystem;
@@ -107,19 +100,18 @@ namespace MDG.Invader.Systems
         private EntityQuery enemyQuery;
         private EntityQuery friendlyQuery;
         private EntityQuery attackQuery;
-
+        private EntityQuery respawningEnemyQuery;
 
         ClientGameObjectCreator clientGameObjectCreator;
         // Change this to dictionary so that weapons of units more expandible.
         Weapon unitWeapon;
 
 
-        // Refactor this to write to split buffers with velocity and apply at once. but that's polish.
         struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityPosition.Component, PositionSchema.LinearVelocity.Component,
             CollisionSchema.BoxCollider.Component, CommandListener>
         {
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
-            public void Execute(Entity entity, int jobIndex, [ReadOnly] ref MoveCommand moveCommand, [ReadOnly] ref EntityPosition.Component EntityPosition,
+            public void Execute(Entity entity, int jobIndex, ref MoveCommand moveCommand, [ReadOnly] ref EntityPosition.Component EntityPosition,
                 ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider,
                 ref CommandListener commandListener)
             {
@@ -197,13 +189,15 @@ namespace MDG.Invader.Systems
             }
         }
 
+
         struct GetKilledEnemiesJob : IJobForEach<SpatialEntityId, Enemy, StatSchema.Stats.Component>
         {
 
             public NativeHashMap<EntityId, bool>.ParallelWriter deadEnemies;
 
-            public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Enemy c1, [ReadOnly] ref StatSchema.Stats.Component c2)
+            public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Enemy c1, [ReadOnly] [ChangedFilter] ref StatSchema.Stats.Component c2)
             {
+                Debug.Log($"looking at entity id {spatialEntityId.EntityId} with health {c2.Health}");
                 if (c2.Health == 0)
                 {
                     deadEnemies.TryAdd(spatialEntityId.EntityId, true);
@@ -214,7 +208,6 @@ namespace MDG.Invader.Systems
         // So what I want to do is actually act upon the AttackPayload stuff.
         // Only those entities do I want to check if line of sight, since that is when they are prepping to attack.
         // Let default reroute collision syttem handle it for most part.
-
         struct MoveToAttackTargetJob : IJobForEachWithEntity<SpatialEntityId, AttackCommand, PositionSchema.LinearVelocity.Component,
             EntityPosition.Component, CombatStats>
         {
@@ -234,8 +227,9 @@ namespace MDG.Invader.Systems
                 ref PositionSchema.LinearVelocity.Component linearVelocityComponent, [ReadOnly] ref EntityPosition.Component EntityPosition, 
                 [ReadOnly] ref CombatStats combatStats)
             {
-                if (killedEnemies.TryGetValue(spatialEntityId.EntityId, out _))
-                {
+                Debug.Log("killed enemies length " + killedEnemies.Length);
+                if (killedEnemies.TryGetValue(attackCommand.target, out _))
+                {   
                     entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(AttackCommand));
                 }
                 else if (attackerToAttackeePosition.TryGetValue(attackCommand.target, out Vector3f targetPosition))
@@ -276,12 +270,11 @@ namespace MDG.Invader.Systems
         #endregion
 
         #region Build Command Jobs
-        struct MoveToBuildLocationJob: IJobForEachWithEntity<SpatialEntityId, BuildCommand, PositionSchema.LinearVelocity.Component,
+
+        struct MoveToBuildLocationJob : IJobForEachWithEntity<SpatialEntityId, BuildCommand, PositionSchema.LinearVelocity.Component,
             EntityPosition.Component>
         {
             public NativeHashMap<EntityId, BuildCommand>.ParallelWriter entitiesBuilding;
-
-
             public void Execute(Entity entity, int jobIndex, [ReadOnly] ref SpatialEntityId spatialEntityId, ref BuildCommand buildCommand, ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
             [ReadOnly] ref EntityPosition.Component EntityPositionComponent )
             {
@@ -294,7 +287,7 @@ namespace MDG.Invader.Systems
                 }
                 else if (distance <= buildCommand.minDistanceToBuild)
                 {
-                    if (!buildCommand.isBuilding)
+                    if (!buildCommand.structureId.IsValid() && !buildCommand.isBuilding)
                     {
                         buildCommand.isBuilding = true;
                         buildCommand.builderId = spatialEntityId.EntityId;
@@ -362,6 +355,12 @@ namespace MDG.Invader.Systems
                 null
             };
 
+            respawningEnemyQuery = GetEntityQuery(
+                ComponentType.ReadOnly<SpatialEntityId>(),
+                ComponentType.ReadOnly<Enemy>(),
+                ComponentType.ReadOnly<PendingRespawn.Component>()
+                );
+
             pendingCollects = new NativeQueue<CollectPayload>(Allocator.Persistent);
             pendingOccupy = new NativeQueue<CollectPayload>(Allocator.Persistent);
 
@@ -403,8 +402,6 @@ namespace MDG.Invader.Systems
         private void RunCommandJobs()
         {
             float deltaTime = Time.deltaTime;
-
-
             #region Attack Command Jobs
             CommonJobs.ClientJobs.TickAttackCooldownJob tickAttackCooldownJob = new CommonJobs.ClientJobs.TickAttackCooldownJob
             {
@@ -428,6 +425,7 @@ namespace MDG.Invader.Systems
 
             JobHandle getKilledEnemiesHandle = getKilledEnemiesJob.Schedule(this);
             NativeQueue<AttackPayload> attackPayloads = new NativeQueue<AttackPayload>(Allocator.TempJob);
+           
             MoveToAttackTargetJob moveToAttackTargetJob = new MoveToAttackTargetJob
             {
                 attackerToAttackeePosition = attackeePositions,
@@ -437,6 +435,8 @@ namespace MDG.Invader.Systems
             };
             JobHandle attackCommandDependancies = JobHandle.CombineDependencies(getKilledEnemiesHandle, getTargetPositionsHandle, tickAttackCoolDownHandle);
             JobHandle moveToAttackHandle = moveToAttackTargetJob.Schedule(attackQuery, attackCommandDependancies);
+           // getKilledEnemiesHandle.Complete();
+            //getTargetPositionsHandle.Complete()
             moveToAttackHandle.Complete();
 
 
@@ -505,7 +505,6 @@ namespace MDG.Invader.Systems
             ProcessPendingAttacks(pendingAttacks);
 
             JobHandle? updateBuildHandle = null;
-
             if (buildCommands.Length > 0)
             {
                 UpdateBuildCommandJob updateBuildCommandJob = new UpdateBuildCommandJob
@@ -519,6 +518,7 @@ namespace MDG.Invader.Systems
             moveToBuildHandle.Complete();
             ProcessBuildCommand(buildingUnits);
             buildingUnits.Dispose();
+            ProcessBuildResponses();
             if (updateBuildHandle.HasValue)
             {
                 updateBuildHandle.Value.Complete();
@@ -692,14 +692,7 @@ namespace MDG.Invader.Systems
                 }
             }
         }
-        private void HandleStructureSpawned(EntityId spawned) 
-        {
-
-        }
-        private void HandleBuildResponses()
-        {
-
-        }
+      
         #endregion
        
 
@@ -768,8 +761,6 @@ namespace MDG.Invader.Systems
             }
             attackPayloads.Dispose();
             return pendingAttacks;
-
-            // Some extra time to ru this one.
         }
 
         private void ProcessPendingAttacks(Queue<PendingAttack> pendingAttacks){
@@ -790,12 +781,9 @@ namespace MDG.Invader.Systems
                 {
                     CommonJobs.ClientJobs.RaycastHit raycastHit = pendingAttack.InLineOfSight.Dequeue();
                     Debug.Log("Hit with raycast " + raycastHit.entityId);
-
                     float distanceFromHit = HelperFunctions.Distance(attackPayload.startingPosition, raycastHit.position);
                     if ( distanceFromHit < closestInLineOfSight)
                     {
-                        // First check if it is trap, / floored. Lol. TECHNICALLY, floored should just be ignored in line of sight.
-                        // for now just check if trap then ignore.
                         closestInLineOfSight = distanceFromHit;
                         closestEntity = raycastHit;
                     }
@@ -812,7 +800,6 @@ namespace MDG.Invader.Systems
                     attackRange = stats.attackRange
                 });
 
-                Vector3f sameYTarget = new Vector3f(attackPayload.positionToAttack.X, attackPayload.startingPosition.Y, attackPayload.positionToAttack.Z);
 
                 // WOO them magic nums. Gotta update this.
                 // will retrieve this from scriptable object instead of hardcoding the nums here.
@@ -820,7 +807,8 @@ namespace MDG.Invader.Systems
                 ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(unitWeapon as Projectile);
                 projectileConfig.startingPosition = attackPayload.startingPosition;
                 // this part is fine
-                projectileConfig.linearVelocity = HelperFunctions.Subtract(sameYTarget, attackPayload.startingPosition);
+                Debug.Log($"{attackPayload.positionToAttack.X} {attackPayload.positionToAttack.Y} {attackPayload.positionToAttack.Z}");
+                projectileConfig.linearVelocity = HelperFunctions.Subtract(attackPayload.positionToAttack, attackPayload.startingPosition);
                 WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(unitWeapon);
                 weaponMetadata.wielderId = clientGameObjectCreator.PlayerLink.EntityId.Id;
                 byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
@@ -906,6 +894,11 @@ namespace MDG.Invader.Systems
             // Since sending build request
             for (int i = 0; i < builderIds.Length; ++i)
             {
+                workerSystem.TryGetEntity(builderIds[i], out Entity entity);
+                if (!EntityManager.HasComponent<BuildCommand>(entity))
+                {
+                    continue;
+                }
                 BuildCommand buildCommand = buildingUnits[builderIds[i]];
 
                 if (!buildCommand.structureId.IsValid())
@@ -921,7 +914,7 @@ namespace MDG.Invader.Systems
                                 health = 100,
                                 ownerId = clientGameObjectCreator.PlayerLink.EntityId.Id,
                                 structureType = StructureSchema.StructureType.Claiming,
-                                territoryId = -1
+                                territoryId = buildCommand.territoryId.Value.Id
                             };
                             break;
                         case StructureSchema.StructureType.Spawning:
@@ -953,11 +946,12 @@ namespace MDG.Invader.Systems
                 {
                     if (buildCommands.ContainsKey(buildCommand.builderId))
                     {
-                        return;
+                        continue;
                     }
                     // Otherwise send build requests.
                     // Maybe map   builder id to request id and that is the request cooldown.
                     // that way not sending every frame, but only after last build request processed.
+                    Debug.Log("Sending build request for structure with id " + buildCommand.structureId);
                     long requestId = commandSystem.SendCommand(new StructureSchema.Structure.Build.Request
                     {
                         TargetEntityId = buildCommand.structureId,
@@ -967,8 +961,8 @@ namespace MDG.Invader.Systems
                             BuildRate = 1
                         }
                     });
+                    // Later on check for response to this and revoke building command as needed.
                     requestIdToBuildCommand.Add(requestId,buildCommand);
-
                 }
             }
             builderIds.Dispose();
@@ -977,8 +971,27 @@ namespace MDG.Invader.Systems
         private void OnStructureBuilt(EntityId structureId, BuildCommand buildCommand)
         {
             buildCommand.structureId = structureId;
-            Debug.Log("Adding to build commands mapping");
-            Debug.Log("Added build command " + buildCommands.TryAdd(buildCommand.builderId, buildCommand));
+            buildCommands.TryAdd(buildCommand.builderId, buildCommand);
+        }
+
+        private void ProcessBuildResponses()
+        {
+            var responses = commandSystem.GetResponses<StructureSchema.Structure.Build.ReceivedResponse>();
+
+            for (int i = 0; i < responses.Count; ++i)
+            {
+                ref readonly var response = ref responses[i];
+                BuildCommand buildCommand = requestIdToBuildCommand[response.RequestId];
+                switch (response.StatusCode)
+                {
+                    case Improbable.Worker.CInterop.StatusCode.Success:
+                        bool stopBuilding = response.ResponsePayload.Value.FinishedBuilding || response.ResponsePayload.Value.AlreadyBuilt;
+                        buildCommand.isBuilding = !stopBuilding;
+                        workerSystem.TryGetEntity(buildCommand.builderId, out Entity builderEntity);
+                        PostUpdateCommands.RemoveComponent(builderEntity, typeof(BuildCommand));
+                        break;
+                }
+            }
         }
     }
 }

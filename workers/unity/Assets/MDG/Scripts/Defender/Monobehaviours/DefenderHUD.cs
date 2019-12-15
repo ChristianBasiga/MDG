@@ -53,12 +53,6 @@ namespace MDG.Defender.Monobehaviours
             {
                 clientGameObjectCreator.OnEntityAdded += OnEntityAdded;
             }
-
-            // Subsribe to main overlay hud.
-            DefenderSynchronizer defenderSynchronizer = GetComponent<DefenderSynchronizer>();
-            defenderSynchronizer.OnLoseGame += DisplayLoseGameUI;
-            defenderSynchronizer.OnWinGame += DisplayWinGameUI;
-            pointReader.OnValueUpdate += mainOverlayHUD.UpdatePoints;
             errorText.gameObject.SetActive(false);
         }
 
@@ -102,18 +96,5 @@ namespace MDG.Defender.Monobehaviours
             errorText.gameObject.SetActive(false);
             errorClearRoutine = null;
         }
-
-
-
-        private void DisplayLoseGameUI()
-        {
-            mainOverlayHUD.SetEndGameText("You failed to stop the invasion.", false);
-        }
-
-        private void DisplayWinGameUI()
-        {
-            mainOverlayHUD.SetEndGameText("You have stopped the Invasion", true);
-        }
-
     }
 }

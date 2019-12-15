@@ -31,11 +31,19 @@ namespace MDG.Invader.Monobehaviours.Structures {
             float pct = buildEventPayload.BuildProgress / (float)buildEventPayload.EstimatedBuildCompletion;
             if (gameObject.activeInHierarchy)
             {
-                StartCoroutine(HelperFunctions.UpdateFill(constructionProgressUI, pct, null, 1, () => !this.gameObject.activeInHierarchy));
+                StartCoroutine(HelperFunctions.UpdateFill(constructionProgressUI, pct, OnFillUpdated, 1, () => !this.gameObject.activeInHierarchy));
             }
             else
             {
                 constructionProgressUI.fillAmount = pct;
+            }
+        }
+
+        private void OnFillUpdated(float pct)
+        {
+            if ((int)pct == 1)
+            {
+                constructionProgressUI.gameObject.SetActive(false);
             }
         }
     }

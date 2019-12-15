@@ -24,7 +24,6 @@ namespace MDG.Common.Jobs
             {
                 if (c1.attackCooldown > 0)
                 {
-                    Debug.Log("ticking down attack cooldown");
                     c1.attackCooldown  = Mathf.Max(0, c1.attackCooldown - deltaTime);
                     // We ONly tick attack cooldown, do nothing to range so it should remain the same, why would it ever reach 0.
                 }

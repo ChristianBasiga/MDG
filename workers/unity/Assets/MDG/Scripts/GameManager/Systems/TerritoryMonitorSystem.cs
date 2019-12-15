@@ -27,9 +27,15 @@ namespace MDG.Game.Systems
                 ComponentType.ReadWrite<TerritorySchema.TerritoryStatus.ComponentAuthority>(),
                 ComponentType.ReadOnly<SpatialEntityId>()
                 );
-            territoryIds = territoryQuery.ToComponentDataArray<SpatialEntityId>(Unity.Collections.Allocator.Persistent);
-            territoryEntities = territoryQuery.ToEntityArray(Allocator.Persistent);
             commandSystem = World.GetExistingSystem<CommandSystem>();
+        }
+
+
+        protected override void OnStartRunning()
+        {
+            base.OnStartRunning();
+            territoryEntities = territoryQuery.ToEntityArray(Allocator.Persistent);
+            territoryIds = territoryQuery.ToComponentDataArray<SpatialEntityId>(Unity.Collections.Allocator.Persistent);
         }
 
         protected override void OnDestroy()
@@ -63,7 +69,7 @@ namespace MDG.Game.Systems
                     case TerritorySchema.TerritoryStatusTypes.Claiming:
                         float updatedProgress = territoryStatusComponent.ClaimProgress + deltaTime;
                         updatedProgress = math.min(updatedProgress, territoryComponent.TimeToClaim);
-                        territoryStatusComponent.ClaimProgress += deltaTime;
+                        territoryStatusComponent.ClaimProgress = updatedProgress;
                         if (territoryStatusComponent.ClaimProgress == territoryComponent.TimeToClaim)
                         {
                             territoryStatusComponent.Status = TerritorySchema.TerritoryStatusTypes.Claimed;
@@ -96,10 +102,17 @@ namespace MDG.Game.Systems
                     commandSystem.SendResponse(new TerritorySchema.TerritoryStatus.UpdateClaim.Response
                     {
                         RequestId = request.RequestId,
-                        Payload = new TerritorySchema.UpdateTerritoryStatusResponse()
+                        Payload = new TerritorySchema.UpdateTerritoryStatusResponse(),
                     });
                 }
             }
+
+            UpdateTerritoryStatusJob updateTerritoryStatusJob = new UpdateTerritoryStatusJob
+            {
+                deltaTime = UnityEngine.Time.deltaTime,
+                updates = territoryStatusRequests
+            };
+            updateTerritoryStatusJob.Schedule(this).Complete();
             territoryStatusRequests.Dispose();
         }
     }

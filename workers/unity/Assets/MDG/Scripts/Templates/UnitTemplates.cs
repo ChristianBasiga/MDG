@@ -56,15 +56,19 @@ namespace MDG.Templates
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {
                 Position = new Vector3f(0,0,0),
-                Dimensions = new Vector3f(15, 0, 15)
+                Dimensions = new Vector3f(30, 0, 30)
             }, serverAttribute);
 
             UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(spawnArgs);
-            Debug.Log("Unit config has owner id " + unitConfig.ownerId);
             template.AddComponent(new Unit.Snapshot
             {
                 OwnerId = new EntityId(unitConfig.ownerId),
                 Type = unitConfig.unitType
+            }, serverAttribute);
+
+            template.AddComponent(new Owner.Snapshot
+            {
+                OwnerId = new EntityId(unitConfig.ownerId)
             }, serverAttribute);
 
             template.AddComponent(new StatSchema.MovementSpeed.Snapshot

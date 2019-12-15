@@ -26,10 +26,6 @@ namespace MDG.Defender.Monobehaviours
 
 
         UnityClientConnector clientConnector;
-        public delegate void OnGameEndEventHandler();
-        public OnGameEndEventHandler OnWinGame;
-        public OnGameEndEventHandler OnLoseGame;
-        public OnGameEndEventHandler OnEndGame;
 
         private void Start()
         {
@@ -39,6 +35,10 @@ namespace MDG.Defender.Monobehaviours
             GetComponent<HealthSynchronizer>().OnHealthBarUpdated += OnHealthUpdate;
         }
 
+        private void GameStatusSynchronizer_OnWinGame()
+        {
+            throw new System.NotImplementedException();
+        }
 
         private void OnHealthUpdate(int percentageHealth)
         {
@@ -48,26 +48,6 @@ namespace MDG.Defender.Monobehaviours
             }
         }
 
-        private void Update()
-        {
-            // For now just repeat this, later today move this to a common component
-            var endGameEventMessages = componentUpdateSystem.GetEventsReceived<GameSchema.GameStatus.EndGame.Event>(clientConnector.GameManagerEntity.SpatialOSEntityId);
-            if (endGameEventMessages.Count > 0)
-            {
-                ref readonly var endGameEvent = ref endGameEventMessages[0];
-
-                switch (endGameEvent.Event.Payload.WinConditionMet)
-                {
-                    case GameSchema.WinConditions.TimedOut:
-                        OnWinGame?.Invoke();
-                        break;
-                    case GameSchema.WinConditions.TerritoriesClaimed:
-                        OnLoseGame?.Invoke();
-                        break;
-                }
-                OnEndGame?.Invoke();
-            }
-        }
 
         private void OnRespawnActiveChange(bool respawning)
         {
