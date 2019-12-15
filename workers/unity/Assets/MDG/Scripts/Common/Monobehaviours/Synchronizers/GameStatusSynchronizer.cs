@@ -14,6 +14,7 @@ namespace MDG.Common.MonoBehaviours
 {
     public class GameStatusSynchronizer : MonoBehaviour
     {
+        public event Action<GameSchema.StartGameEventPayload> OnStartGame;
         public event Action<float> OnUpdateTime;
         public event Action<string> OnWinGame;
         public event Action<string> OnLoseGame;
@@ -27,11 +28,19 @@ namespace MDG.Common.MonoBehaviours
             clientConnector = GetComponent<UnityClientConnector>();
             mainOverlayHUD = GetComponent<MainOverlayHUD>();
             componentUpdateSystem = clientConnector.Worker.World.GetExistingSystem<ComponentUpdateSystem>();
+            
         }
 
         // Update is called once per frame
         void Update()
         {
+
+            var startGameEvent = componentUpdateSystem.GetEventsReceived<GameSchema.GameStatus.StartGame.Event>(clientConnector.GameManagerEntity.SpatialOSEntityId);
+            if (startGameEvent.Count > 0)
+            {
+                OnStartGame?.Invoke(startGameEvent[0].Event.Payload);
+            }
+
             var statusSnapshot = componentUpdateSystem.GetComponent<GameSchema.GameStatus.Snapshot>(clientConnector.GameManagerEntity.SpatialOSEntityId);
             OnUpdateTime?.Invoke(statusSnapshot.TimeLeft);
             // For now just repeat this, later today move this to a common component

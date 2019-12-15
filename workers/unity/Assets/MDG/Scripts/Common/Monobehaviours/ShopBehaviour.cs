@@ -24,12 +24,6 @@ namespace MDG.Common.MonoBehaviours.Shopping
 
         public delegate void ShopActionEventHandler(ShopItem shopItem, LinkedEntityComponent purchaser);
         public event ShopActionEventHandler OnPurchaseItem;
-        // Start is called before the first frame update
-        void Start()
-        {
-
-            // So really shop behaviour needs the build menu?????
-        }
 
         public void TryPurchase(ShopItem shopItem, LinkedEntityComponent purchaser)
         {

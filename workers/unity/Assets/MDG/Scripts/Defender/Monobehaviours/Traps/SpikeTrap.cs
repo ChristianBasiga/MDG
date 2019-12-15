@@ -20,7 +20,6 @@ namespace MDG.Defender.Monobehaviours.Traps
         public void ProcessTrapTriggered(List<EntityId> enemyIds)
         {
             StartCoroutine(PlayTrapAnimation());
-            Debug.Log("I happen");
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             CommandSystem commandSystem = linkedEntityComponent.World.GetExistingSystem<CommandSystem>();
             foreach (EntityId enemyId in enemyIds)

@@ -38,8 +38,10 @@ namespace MDG
 
         public List<SpatialOSEntity> TerritoryEntities { private set; get; }
 
+        public bool PlayerJoiningRoom { get { return playerJoinRequestId.HasValue; } }
         public bool PlayerFinishedLoading { private set; get; }
-
+        private long? playerJoinRequestId = null;
+        CommandSystem commandSystem;
         MainOverlayHUD mainOverlayHUD;
 
         private async void Start()
@@ -121,40 +123,50 @@ namespace MDG
 
         //Move this and the creation requests to manager and just have this call it from manager.
         private void OnCreatePlayerResponse(EntityId createdEntityId)
-        {            
-                if (PlayerRole == GameEntityTypes.Hunter)
+        {
+            if (PlayerRole == GameEntityTypes.Hunter)
+            {
+                AddInvaderSystems();
+                SpawnRequestSystem spawnRequestSystem = Worker.World.GetExistingSystem<SpawnRequestSystem>();
+                var invaderUnitSpawnPoints = GameConfig.InvaderUnitSpawnPoints;
+                var amountOfPoints = invaderUnitSpawnPoints.Length;
+                for (int i = 0; i < amountOfPoints; ++i)
                 {
-                    AddInvaderSystems();
-                    SpawnRequestSystem spawnRequestSystem = Worker.World.GetExistingSystem<SpawnRequestSystem>();
-                    var invaderUnitSpawnPoints = GameConfig.InvaderUnitSpawnPoints;
-                    var amountOfPoints = invaderUnitSpawnPoints.Length;
-                    for (int i = 0; i < amountOfPoints; ++i)
+                    UnitConfig unitConfig = new UnitConfig
                     {
-                        UnitConfig unitConfig = new UnitConfig
-                        {
-                            ownerId = createdEntityId.Id,
-                            position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
-                            unitType = MdgSchema.Units.UnitTypes.Worker
-                        };
-                        spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
-                        {
-                            Position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
-                            Count = 1,
-                            TypeToSpawn = GameEntityTypes.Unit
-                        }, null, Converters.SerializeArguments(unitConfig));
-                    }
+                        ownerId = createdEntityId.Id,
+                        position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
+                        unitType = MdgSchema.Units.UnitTypes.Worker
+                    };
+                    spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
+                    {
+                        Position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
+                        Count = 1,
+                        TypeToSpawn = GameEntityTypes.Unit
+                    },null, Converters.SerializeArguments(unitConfig));
                 }
-                else if (PlayerRole == GameEntityTypes.Hunted)
+            }
+            else if (PlayerRole == GameEntityTypes.Hunted)
+            {
+              
+            }
+
+            playerJoinRequestId = commandSystem.SendCommand(new GameSchema.GameStatus.JoinGame.Request
+            {
+                Payload = new GameSchema.PlayerJoinRequest
                 {
-                    // AddDefenderSystems (if any), maybe do do it on server side.
-                }
-                PlayerFinishedLoading = true;
+                    PlayerRole = PlayerRole
+                },
+                TargetEntityId = GameManagerEntity.SpatialOSEntityId
+            });
+            Debug.Log("sent join game request " + playerJoinRequestId);
         }
 
         protected override void HandleWorkerConnectionEstablished()
         {
             PlayerLifecycleHelper.AddClientSystems(Worker.World, false);
-            
+
+            commandSystem = Worker.World.GetExistingSystem<CommandSystem>();
 
             // Try removing all systems incase any of them are culrpit and see if positions synced.
             // if still no go, then look at monobehaviours and see what's up there. 
@@ -213,6 +225,29 @@ namespace MDG
         public void CloseConnection()
         {
             Application.Quit();
+        }
+
+        private void Update()
+        {
+            if (playerJoinRequestId.HasValue)
+            {
+                Debug.Log("checking responses");
+                var responses = commandSystem.GetResponse<GameSchema.GameStatus.JoinGame.ReceivedResponse>(playerJoinRequestId.Value);
+                Debug.Log($"Got {responses.Count} responses");
+                if (responses.Count > 0)
+                {
+                    switch (responses[0].StatusCode)
+                    {
+                        case StatusCode.Success:
+                            playerJoinRequestId = null;
+                            PlayerFinishedLoading = true;
+                            break;
+                        default:
+                            Debug.LogError("Failed to join the game");
+                            break;
+                    }
+                }
+            }
         }
     }
 }

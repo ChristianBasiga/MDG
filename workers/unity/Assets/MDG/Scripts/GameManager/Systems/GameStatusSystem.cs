@@ -16,6 +16,7 @@ namespace MDG.Game.Systems
 {
     [DisableAutoCreation]
     [AlwaysUpdateSystem]
+    [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
     public class GameStatusSystem : ComponentSystem
     {
 
@@ -27,8 +28,9 @@ namespace MDG.Game.Systems
         EntityQuery territoryQuery;
         EntityId gameManagerEntityId = new EntityId(-1);
         bool startedGame = false;
+        bool sentStartBroadcast = false;
         GameConfig gameConfig;
-
+        int playersJoined = 0;
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -84,7 +86,28 @@ namespace MDG.Game.Systems
         {
             if (!startedGame)
             {
-                startedGame = playerQuery.CalculateEntityCount() == gameConfig.MinimumPlayers;
+                var joinRequests = commandSystem.GetRequests<GameSchema.GameStatus.JoinGame.ReceivedRequest>(gameManagerEntityId);
+                // Do based on role later, this is fine for now.
+                playersJoined += joinRequests.Count;
+                startedGame = playersJoined == gameConfig.MinimumPlayers;
+                for (int i = 0; i < joinRequests.Count; ++i)
+                {
+                    Debug.Log("recieved join request with role " + joinRequests[i].Payload.PlayerRole);
+                    commandSystem.SendResponse(new GameSchema.GameStatus.JoinGame.Response
+                    {
+                        RequestId = joinRequests[i].RequestId,
+                        Payload = new GameSchema.PlayerJoinResponse()
+                    }); 
+                }
+            }
+            else if (!sentStartBroadcast)
+            {
+                componentUpdateSystem.SendEvent(new GameSchema.GameStatus.StartGame.Event(new GameSchema.StartGameEventPayload
+                {
+                    // Later randomly generate and components to players will have session id they belong to.
+                    SessionId = 1
+                }), gameManagerEntityId);
+                sentStartBroadcast = true;
             }
             else
             {
@@ -121,8 +144,6 @@ namespace MDG.Game.Systems
                         }), spatialEntityId.EntityId);
                     }
                 });
-
-
             }
         }
     }

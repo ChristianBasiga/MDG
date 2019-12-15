@@ -45,7 +45,7 @@ namespace MDG.Common.MonoBehaviours
             if (other.gameObject.TryGetComponent(out LinkedEntityComponent linkedEntityComponent))
             {
                 EntityId collidedId = linkedEntityComponent.EntityId;
-
+                Debug.Log("checking collisions for " + linkedEntityComponent.EntityId);
                 if (linkedEntityComponent.Worker.TryGetEntity(collidedId, out Entity entity))
                 {
                     Debug.Log("collided with " + other.name);

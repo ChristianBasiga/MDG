@@ -86,7 +86,7 @@ namespace MDG.Defender.Monobehaviours
             if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity))
             {
                 Vector3f trapPosition = HelperFunctions.Vector3fFromUnityVector(hit.point);
-                trapPosition.Y = 20;
+                trapPosition.Y = 8;
                 spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                 {
                     Position = trapPosition,

@@ -15,7 +15,11 @@ namespace MDG.Common.MonoBehaviours
 
 #pragma warning disable 649
 
-        // Player HUDS
+        [SerializeField]
+        GameObject preScreen;
+
+        [SerializeField]
+        Text loadingScreen;
 
         [SerializeField]
         Canvas defenderHUD;
@@ -43,6 +47,8 @@ namespace MDG.Common.MonoBehaviours
 
         [SerializeField]
         Text timerText;
+
+
 #pragma warning restore 649
 
 
@@ -61,6 +67,7 @@ namespace MDG.Common.MonoBehaviours
 
         private void Start()
         {
+            loadingScreen.transform.parent.gameObject.SetActive(false);
             exitGameButton.gameObject.SetActive(false);
             endGameText.gameObject.SetActive(false);
             gameStatusHUD.SetActive(false);
@@ -114,27 +121,40 @@ namespace MDG.Common.MonoBehaviours
         IEnumerator TransitionUI()
         {
             roleSelectionUI.SetActive(false);
+            loadingScreen.transform.parent.gameObject.SetActive(true);
             UnityClientConnector unityClientConnector = GetComponent<UnityClientConnector>();
-            yield return new WaitUntil(() => unityClientConnector.PlayerFinishedLoading);
 
-            // Assign UI callbacks.
-
+            yield return new WaitUntil(() => unityClientConnector.GameManagerEntity.SpatialOSEntityId.IsValid());
             GameStatusSynchronizer gameStatusSynchronizer = gameObject.AddComponent<GameStatusSynchronizer>();
             gameStatusSynchronizer.OnWinGame += (string text) =>
             {
                 SetEndGameText(text, true);
+                uiCamera.gameObject.SetActive(true);
             };
             gameStatusSynchronizer.OnLoseGame += (string text) =>
             {
                 SetEndGameText(text, false);
+                uiCamera.gameObject.SetActive(true);
             };
             gameStatusSynchronizer.OnUpdateTime += UpdateTime;
+            gameStatusSynchronizer.OnStartGame += GameStatusSynchronizer_OnStartGame;
+            yield return new WaitForEndOfFrame();
+
+            yield return new WaitUntil(() => unityClientConnector.PlayerJoiningRoom);
             PointSynchonizer pointSynchonizer = unityClientConnector.ClientGameObjectCreator.PlayerLink.GetComponent<PointSynchonizer>();
             pointSynchonizer.OnPointUpdate += UpdatePoints;
-            yield return new WaitForEndOfFrame();
-            // Load in Loading screen until done loading.
+            loadingScreen.text = "Waiting for players";
+            yield return new WaitUntil(() => unityClientConnector.PlayerFinishedLoading);
+            yield return new WaitUntil(() => !loadingScreen.transform.parent.gameObject.activeInHierarchy);
             gameStatusHUD.SetActive(true);
             uiCamera.gameObject.SetActive(false);
+            preScreen.SetActive(false);
+        }
+
+        private void GameStatusSynchronizer_OnStartGame(MdgSchema.Game.StartGameEventPayload sessionInfo)
+        {
+            UnityEngine.Debug.Log("game started");
+            loadingScreen.transform.parent.gameObject.SetActive(false);
         }
     }
 }

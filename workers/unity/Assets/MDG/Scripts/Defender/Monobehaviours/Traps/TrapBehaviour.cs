@@ -50,7 +50,7 @@ namespace MDG.Defender.Monobehaviours.Traps
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             EntityManager entityManager = linkedEntityComponent.World.EntityManager;
-
+            Debug.Log("Handle enemy collisions is called");
             List<EntityId> enemyIds = await Task.Run(() =>
             {
                // As refetching cache multiple times for checking if has enemy component may incur I / O making it async.
@@ -63,6 +63,7 @@ namespace MDG.Defender.Monobehaviours.Traps
 
             if (enemyIds.Count > 0)
             {
+                UnityEngine.Debug.Log("ran into enemies");
                 GetComponent<ITrap>().ProcessTrapTriggered(enemyIds);
                 //Go on cooldown.
                 CommandSystem commandSystem = linkedEntityComponent.World.GetExistingSystem<CommandSystem>();

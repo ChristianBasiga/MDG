@@ -77,14 +77,12 @@ namespace MDG.Invader.Monobehaviours {
 
             shopBehaviour = GetComponent<ShopBehaviour>();
             shopBehaviour.OnPurchaseItem += GiveBuildCommand;
-
             LoadInStuctureOverlays();
         }
 
        
         private void OnSelectionUpdated(bool selectionMade)
         {
-            Debug.Log("i happen???? " + selectionMade);
             structureBuildMenu.transform.parent.gameObject.SetActive(selectionMade);
         }
 
@@ -93,7 +91,6 @@ namespace MDG.Invader.Monobehaviours {
         {
             TypeToOverlay = new Dictionary<StructureType, StructureUIManager>();
 
-            // Really making load time long as fuck lol.
             object[] overlays = Resources.LoadAll("UserInterface/StructureOverlays/");
 
             int length = overlays.Length;
@@ -146,7 +143,6 @@ namespace MDG.Invader.Monobehaviours {
 
         private void SetupBuildCommand(ScriptableObjects.Items.ShopItem shopItem)
         {
-            Debug.Log("I happen " + shopItem);
             selectedStructure = shopItem as ScriptableObjects.Structures.Structure;
         }
 

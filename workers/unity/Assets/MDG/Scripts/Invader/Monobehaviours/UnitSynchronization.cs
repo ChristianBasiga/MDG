@@ -23,6 +23,7 @@ public class UnitSynchronization : MonoBehaviour
 
     private void OnHealthUpdated(int pct)
     {
+        Debug.Log("here??");
         if (pct == 0)
         {
             Destroy(gameObject);
