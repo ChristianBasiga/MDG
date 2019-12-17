@@ -46,9 +46,9 @@ namespace MDG.Common.MonoBehaviours
             {
                 EntityId collidedId = linkedEntityComponent.EntityId;
                 Debug.Log("checking collisions for " + linkedEntityComponent.EntityId);
-                if (linkedEntityComponent.Worker.TryGetEntity(collidedId, out Entity entity))
+                if (linkedEntityComponent.Worker != null && linkedEntityComponent.Worker.TryGetEntity(collidedId, out Entity entity))
                 {
-                    Debug.Log("collided with " + other.name);
+    
                     EntityManager entityManager = linkedEntityComponent.World.EntityManager;
                     bool isTrigger = false;
                     if (entityManager.HasComponent<CollisionSchema.BoxCollider.Component>(entity))

@@ -109,9 +109,11 @@ namespace MDG.Templates
             template.AddComponent(new StructureSchema.ClaimStructure.Snapshot{
                 TerritoryClaiming = new EntityId(claimConfig.territoryId)
             }, serverAttribute);
+
+            // Could add collisions here for structure.
         }
 
-        private static void GetTrapStructureTemplate(EntityTemplate template, TrapConfig trapConfig, string workerId, string serverAttribute)
+        private static void GetTrapStructureTemplate(EntityTemplate template, TrapConfig trapConfig, string clientAttribute, string serverAttribute)
         {
             template.AddComponent(new StructureSchema.Trap.Snapshot
             {
@@ -129,7 +131,7 @@ namespace MDG.Templates
             {
                 Collisions = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>(),
                 Triggers = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>()
-            }, serverAttribute);
+            }, clientAttribute);
         }
     }
 
@@ -139,7 +141,7 @@ namespace MDG.Templates
         {
             if (!authoritative)
             {
-             //   entityManager.AddComponent<Enemy>(entity);
+               entityManager.AddComponent<Enemy>(entity);
             }
         }
     }
