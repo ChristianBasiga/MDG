@@ -48,8 +48,6 @@ namespace MDG
         private readonly IEntityGameObjectCreator _default;
         private readonly Unity.Entities.World _world;
         private readonly string _workerType;
-        private ComponentUpdateSystem ComponentUpdateSystem;
-        GameConfig gameConfig;
 
         // Link to player at this client.
         LinkedEntityComponent playerLink; 
@@ -70,15 +68,13 @@ namespace MDG
 
         public List<LinkedEntityComponent> otherPlayerLinks { private set; get; }
 
-        public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType, GameConfig gameConfig)
+        public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType)
         {
             this._default = _default;
             this._world = world;
             this._workerType = workerType;
-            this.gameConfig = gameConfig;
             EntityToGameObjects = new Dictionary<EntityId, GameObject>();
             otherPlayerLinks = new List<LinkedEntityComponent>();
-            ComponentUpdateSystem = _world.GetExistingSystem<ComponentUpdateSystem>();
         }
 
         public void OnEntityCreated(SpatialOSEntity entity, EntityGameObjectLinker linker)

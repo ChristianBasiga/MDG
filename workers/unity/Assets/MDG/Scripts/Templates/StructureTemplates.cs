@@ -3,6 +3,7 @@ using Improbable.Gdk.Core;
 using InventorySchema = MdgSchema.Common.Inventory;
 using StructureSchema = MdgSchema.Common.Structure;
 using CollisionSchema = MdgSchema.Common.Collision;
+using PointSchema = MdgSchema.Common.Point;
 using MDG.DTO;
 using Improbable.Gdk.PlayerLifecycle;
 using Unity.Entities;
@@ -45,6 +46,7 @@ namespace MDG.Templates
                 OwnerId = new EntityId(structureConfig.ownerId)
             }, serverAttribute);
 
+          
             entityTemplate.AddComponent(new EntityRotation.Snapshot
             {
                 Rotation = new Vector3f(0,0,0)
@@ -73,6 +75,12 @@ namespace MDG.Templates
 
         private static void GetSpawnStructureTemplate(EntityTemplate template, SpawnStructureConfig structureConfig, string clientAttribute, string serverAttribute)
         {
+
+            template.AddComponent(new PointSchema.Point.Snapshot
+            {
+                Value = 100
+            }, serverAttribute);
+
             template.AddComponent(new Stats.Snapshot
             {
                 Health = structureConfig.health
@@ -103,6 +111,11 @@ namespace MDG.Templates
 
         private static void GetClaimStructureTemplate(EntityTemplate template, ClaimConfig claimConfig, string serverAttribute)
         {
+
+            template.AddComponent(new PointSchema.Point.Snapshot
+            {
+                Value = 1000
+            }, serverAttribute);
             template.AddComponent(new Stats.Snapshot
             {
                 Health = claimConfig.health

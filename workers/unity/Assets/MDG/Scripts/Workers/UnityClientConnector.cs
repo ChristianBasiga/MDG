@@ -183,7 +183,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = false;
 
             GameObjectCreatorFromMetadata defaultCreator = new GameObjectCreatorFromMetadata(Worker.WorkerType, Worker.Origin, Worker.LogDispatcher);
-            ClientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType, GameConfig);
+            ClientGameObjectCreator = new ClientGameObjectCreator(defaultCreator, Worker.World, Worker.WorkerType);
             ClientGameObjectCreator.OnEntityAdded += OnNewEntityAdded;
             ClientGameObjectCreator.OnGameObjectSpawned += OnLinkedGameObjectSpawned;
             GameObjectCreationHelper.EnableStandardGameObjectCreation(Worker.World, ClientGameObjectCreator);

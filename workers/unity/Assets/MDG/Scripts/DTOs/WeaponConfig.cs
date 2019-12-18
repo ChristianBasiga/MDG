@@ -14,6 +14,7 @@ namespace MDG.DTO
         public string prefabName;
         public long wielderId;
         public float attackCooldown;
+        // For now all weapons triggers.
 
     }
 

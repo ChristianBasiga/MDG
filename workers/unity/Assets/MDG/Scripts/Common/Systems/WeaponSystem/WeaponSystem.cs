@@ -35,6 +35,7 @@ namespace MDG.Common.Systems.Weapon
         struct DamageRequestPayload
         {
             public EntityId weapon_id;
+            // Could make this optional so not all deaths result in points.
             public PointSchema.Point.Component pointComponent;
             public StatSchema.Stats.DamageEntity.Request request;
             // Purely for not having to re get weapon entity, etc.
@@ -151,8 +152,11 @@ namespace MDG.Common.Systems.Weapon
             {
 
                 int currentHits = damageComponent.Hits;
-                foreach (KeyValuePair<EntityId, CollisionPoint> entityIdToCollision in collisionComponent.Collisions)
+                foreach (KeyValuePair<EntityId, CollisionPoint> entityIdToCollision in collisionComponent.Triggers)
                 {
+                    UnityEngine.Debug.Log("hey here");
+                    // Later don't query worker to be in view, just use component update system
+                    // to get snapshot.
                     if (workerSystem.TryGetEntity(entityIdToCollision.Value.CollidingWith, out Entity collidedEntity))
                     {
                         // If collidee not enemy, and what collision hit is enemy on respective client. This makes it so enemies not hitting each other 
@@ -170,15 +174,22 @@ namespace MDG.Common.Systems.Weapon
                                 },
                                 TargetEntityId = entityIdToCollision.Key,
                             };
-                            PointSchema.Point.Component pointComponent = EntityManager.GetComponentData<PointSchema.Point.Component>(collidedEntity);
-                            long requestId = commandSystem.SendCommand(request);
-                            pendingDamageRequests.Add(requestId, new DamageRequestPayload
+                            if (componentUpdateSystem.HasComponent(PointSchema.Point.ComponentId, entityIdToCollision.Key))
                             {
-                                weapon_id = spatialEntityId.EntityId,
-                                weaponComponent = weaponComponent,
-                                request = request,
-                                pointComponent = pointComponent
-                            });
+                                PointSchema.Point.Component pointComponent = EntityManager.GetComponentData<PointSchema.Point.Component>(collidedEntity);
+                                long requestId = commandSystem.SendCommand(request);
+                                pendingDamageRequests.Add(requestId, new DamageRequestPayload
+                                {
+                                    weapon_id = spatialEntityId.EntityId,
+                                    weaponComponent = weaponComponent,
+                                    request = request,
+                                    pointComponent = pointComponent
+                                });
+                            }
+                            else
+                            {
+                                UnityEngine.Debug.Log("no point component");
+                            }
                         }
                     }
                 }

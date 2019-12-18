@@ -56,6 +56,7 @@ namespace MDG.Common.MonoBehaviours
         public event RoleSelectedHandler OnRoleSelected;
         public GameEntityTypes RoleSelected { private set; get; }
 
+        // Add stuff for user name.
 
         public void SelectRole(string role)
         {

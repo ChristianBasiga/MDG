@@ -31,6 +31,7 @@ namespace MDG.Common.MonoBehaviours
                 CollisionSchema.Collision.Update update;
                 if (boxColliderReader.Data.IsTrigger)
                 {
+                    Debug.Log("adding to triggers for id " + GetComponent<LinkedEntityComponent>().EntityId);
                     update = new CollisionSchema.Collision.Update
                     {
                         Triggers = collisionBuffer,
@@ -75,14 +76,16 @@ namespace MDG.Common.MonoBehaviours
       //      UpdateCollisionBuffer(other.gameObject);
         }
 
-        private void UpdateCollisionBuffer(GameObject gameObject)
+        private void UpdateCollisionBuffer(GameObject collidingObject)
         {
-            if (gameObject.TryGetComponent(out LinkedEntityComponent linkedEntityComponent))
+            if (collidingObject.TryGetComponent(out LinkedEntityComponent linkedEntityComponent))
             {
                 dirtyBit = true;
                 EntityId collidedId = linkedEntityComponent.EntityId;
+                Debug.Log("checking collisions of " + GetComponent<LinkedEntityComponent>().EntityId);
                 if (linkedEntityComponent.Worker != null && linkedEntityComponent.Worker.TryGetEntity(collidedId, out Entity entity))
                 {
+                    Debug.Log("colliding with " + linkedEntityComponent.EntityId);
                     EntityManager entityManager = linkedEntityComponent.World.EntityManager;
                     bool isTrigger = false;
                     if (entityManager.HasComponent<CollisionSchema.BoxCollider.Component>(entity))
@@ -96,7 +99,7 @@ namespace MDG.Common.MonoBehaviours
                     CollisionSchema.CollisionPoint collisionPoint = new CollisionSchema.CollisionPoint
                     {
                         CollidingWith = collidedId,
-                        Distance = HelperFunctions.Vector3fFromUnityVector(gameObject.transform.position - transform.position),
+                        Distance = HelperFunctions.Vector3fFromUnityVector(collidingObject.transform.position - transform.position),
                         IsTrigger = isTrigger
                     };
                     if (collisionBuffer.ContainsKey(collidedId))
