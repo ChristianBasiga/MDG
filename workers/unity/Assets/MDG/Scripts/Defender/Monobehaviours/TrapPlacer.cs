@@ -49,24 +49,23 @@ namespace MDG.Defender.Monobehaviours
             {
                 PointRequestSystem pointRequestSystem = linkedEntityComponent.World.GetExistingSystem<PointRequestSystem>();
 
-                // If can't physically place, this point spent needs to be revoked.
-                // Add that later / restructure this.
-                pointRequestSystem.AddPointRequest(new PointRequest
+                if (PlaceTrap(trap))
                 {
-                    EntityUpdating = linkedEntityComponent.EntityId,
-                    PointUpdate = -trap.Cost
-                });
-                PlaceTrap(trap);
+                    pointRequestSystem.AddPointRequest(new PointRequest
+                    {
+                        EntityUpdating = linkedEntityComponent.EntityId,
+                        PointUpdate = -trap.Cost
+                    });
+                }
             }
         }
 
 
         // Perhaps let placing trap be a monobehaviour on it's own like shooter is.
         // wll be better for later setting up UI for where to place trap.
-        public void PlaceTrap(ScriptableStructures.Trap trap)
+        public bool PlaceTrap(ScriptableStructures.Trap trap)
         {
             SpawnRequestSystem spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
-
             TrapConfig trapConfig = new TrapConfig
             {
                 prefabName = trap.PrefabPath,
@@ -92,6 +91,13 @@ namespace MDG.Defender.Monobehaviours
                     Position = trapPosition,
                     TypeToSpawn = MdgSchema.Common.GameEntityTypes.Structure,
                 }, OnTrapSpawned, Converters.SerializeArguments(trapConfig));
+                return true;
+            }
+            else
+            {
+                Debug.Log("Ever here?");
+                // Else return the cost to points as chose incorrect stop.
+                return false;
             }
         }
 

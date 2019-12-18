@@ -35,7 +35,16 @@ namespace MDG.Common.MonoBehaviours
             {
                 StartCoroutine(HelperFunctions.UpdateFill(healthbar, percentageHealth, (float pct) =>
                 {
-                    OnHealthBarUpdated?.Invoke((int)pct);
+                    int truncated = (int)pct;
+                    // If no call back kill me.
+                    if (truncated <= 0 && OnHealthBarUpdated == null)
+                    {
+                        Destroy(gameObject);
+                    }
+                    else
+                    {
+                        OnHealthBarUpdated?.Invoke(truncated);
+                    }
                 }));
             }
         }
