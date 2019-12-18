@@ -14,14 +14,12 @@ namespace MDG.Invader.Monobehaviours.Structures {
         [Require] StructureSchema.StructureReader structureReader = null;
 
 
+        [SerializeField]
         Image constructionProgressUI;
 
         // Start is called before the first frame update
         void Start()
         {
-            Transform structureHud = transform.Find("StructureHUD");
-            constructionProgressUI = structureHud.Find("ConstructionProgress").GetComponent<Image>();
-
             structureReader.OnBuildingEvent += UpdateConstructionProgress;
         }
 

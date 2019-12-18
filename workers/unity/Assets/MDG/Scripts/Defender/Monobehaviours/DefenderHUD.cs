@@ -13,62 +13,30 @@ namespace MDG.Defender.Monobehaviours
     public class DefenderHUD : MonoBehaviour
     {
 #pragma warning disable 649
+
         [SerializeField]
         Text errorText;
-        [Require] PointReader pointReader;
-        // These shouldn't be as a child of player. Later on have ui oader like I dow ith structure behaviour
-        // to load those in.
+
         [SerializeField]
-        TeammatePanel[] teammatePanels;
+        Text pointText;
+
+        [SerializeField]
+        Image crossHairs;
+
+        [SerializeField]
+        Image playerHealthBar;
 #pragma warning restore 649
 
-        MainOverlayHUD mainOverlayHUD;
-        int teammatesLoaded = 0;
         bool newErrorPassed = false;
         string text;
         IEnumerator errorClearRoutine;
-
         ClientGameObjectCreator clientGameObjectCreator;
 
         // Start is called before the first frame update
         void Start()
         {
-            GameObject clientWorker = GameObject.Find("ClientWorker");
-            mainOverlayHUD = clientWorker.GetComponent<MainOverlayHUD>();
-
-            UnityClientConnector unityClientConnector = clientWorker.GetComponent<UnityClientConnector>();
-            clientGameObjectCreator = unityClientConnector.ClientGameObjectCreator;
-
-            // So defender synhronizre could instantiate defender hud, pass itself in to subcribe to events accordingly.
-            // makes it so hud doesn't have to be a child, stupid optimization. Call it.
-
-
-            var defenderLinks = clientGameObjectCreator.otherPlayerLinks.FindAll((link) => link.TryGetComponent(typeof(DefenderSynchronizer), out _));
-            for (int i = 0; i < defenderLinks.Count; ++i)
-            {
-                teammatePanels[teammatesLoaded++].SetPlayer(defenderLinks[i]);
-                
-            }
-            if (teammatesLoaded != teammatePanels.Length)
-            {
-                clientGameObjectCreator.OnEntityAdded += OnEntityAdded;
-            }
             errorText.gameObject.SetActive(false);
         }
-
-        private void OnEntityAdded(Improbable.Gdk.GameObjectCreation.SpatialOSEntity obj)
-        {
-            if (teammatesLoaded < teammatePanels.Length && obj.TryGetComponent(out GameMetadata.Component gameMetadata) && gameMetadata.Type == GameEntityTypes.Hunted)
-            {
-                GameObject linkedDefender = clientGameObjectCreator.GetLinkedGameObjectById(obj.SpatialOSEntityId);
-                if (linkedDefender.CompareTag("Player"))
-                {
-                    return;
-                }
-                teammatePanels[teammatesLoaded++].SetPlayer(linkedDefender.GetComponent<LinkedEntityComponent>());
-            }
-        }
-
         // Need more granular way to do this.
         public void SetErrorText(string errorMsg)
         {
@@ -79,6 +47,11 @@ namespace MDG.Defender.Monobehaviours
                 errorClearRoutine = ClearError();
                 StartCoroutine(errorClearRoutine);
             }
+        }
+
+        public void OnUpdateHealth(float healthPct)
+        {
+            StartCoroutine(HelperFunctions.UpdateFill(playerHealthBar, healthPct));
         }
 
         IEnumerator ClearError()
@@ -95,6 +68,11 @@ namespace MDG.Defender.Monobehaviours
             }
             errorText.gameObject.SetActive(false);
             errorClearRoutine = null;
+        }
+
+        private void Update()
+        {
+            crossHairs.transform.position = Input.mousePosition;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
+using MDG.Invader.Monobehaviours.UserInterface;
 using MDG.ScriptableObjects.Items;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,6 +13,9 @@ namespace MDG.Invader.Monobehaviours.Structures
     public class StructureUIManager : MonoBehaviour
     {
         public StructureSchema.StructureType StructureType;
+
+
+        public BuildMenu buildMenu;
         public Text errorText;
         public JobSlot[] jobQueueUI;
         public StructureBehaviour structureBehaviour;

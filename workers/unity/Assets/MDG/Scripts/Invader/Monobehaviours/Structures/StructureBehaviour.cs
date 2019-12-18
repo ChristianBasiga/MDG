@@ -1,5 +1,6 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
+using MDG.Common.MonoBehaviours;
 using MDG.Common.MonoBehaviours.Shopping;
 using MDG.DTO;
 using MDG.Invader.Monobehaviours.UserInterface;
@@ -48,11 +49,7 @@ namespace MDG.Invader.Monobehaviours.Structures
         private ShopItem[] jobQueue;
         StructureUIManager structureUIManager;
 
-        [SerializeField]
-        BuildMenu buildMenu;
         public IStructure ConcreteStructureBehaviour { set; get; }
-
-
 
         private void OnMouseDown()
         {
@@ -83,15 +80,14 @@ namespace MDG.Invader.Monobehaviours.Structures
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             componentUpdateSystem = linkedEntityComponent.World.GetExistingSystem<ComponentUpdateSystem>();
 
+
             ConcreteStructureBehaviour = GetComponent<IStructure>();
             ConcreteStructureBehaviour.Link(this);
 
             invaderLink = linkedEntityComponent.World.GetExistingSystem<CommandGiveSystem>().InvaderLink;
-            structureUIManager = invaderLink.GetComponent<HunterController>().GetStructureOverlay(ConcreteStructureBehaviour.GetStructureType());
-            
-            // This line right here is horrible
-            buildMenu = structureUIManager.transform.GetChild(0).Find("BuildMenu").GetComponent<BuildMenu>();
-            buildMenu.OnOptionConfirmed += BuildMenu_OnOptionSelected;
+            // Should get from global state somewhere, not storing in invade hud, that's silly.
+            structureUIManager = invaderLink.GetComponent<InvaderHud>().GetStructureOverlay(ConcreteStructureBehaviour.GetStructureType());
+            structureUIManager.buildMenu.OnOptionConfirmed += BuildMenu_OnOptionSelected;
         }
 
         private void Update()

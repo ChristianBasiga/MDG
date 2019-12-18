@@ -86,13 +86,18 @@ namespace MDG
             if (!entity.HasComponent<Metadata.Component>()) return;
             Metadata.Component metaData = entity.GetComponent<Metadata.Component>();
 
-            string pathToEntity = $"Prefabs/{_workerType}"; 
-
+            string pathToEntity = $"Prefabs/{_workerType}";
+            bool isAlly = false;
             if (metaData.EntityType.Equals("Player"))
             {
                 bool hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
                 string pathToPlayer = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
 
+
+                GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
+                WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
+                worker.TryGetEntity(entity.SpatialOSEntityId, out Entity ecsEntity);
+                GameEntityTypes type = gameMetaData.Type;
                 LinkedEntityComponent playerLink = PlayerLink;
                 if (playerLink != null)
                 {
@@ -104,18 +109,16 @@ namespace MDG
                     if (gameMetadata.Type == GameEntityTypes.Hunted)
                     {
                         pathToPlayer = $"{pathToEntity}/Defender";
+                        isAlly = type == GameEntityTypes.Hunted;
                     }
                     else if (gameMetadata.Type == GameEntityTypes.Hunter)
                     {
                         pathToEntity = $"{pathToEntity}/Invader";
+
                     }
                 }
 
 
-                GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
-                WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
-                worker.TryGetEntity(entity.SpatialOSEntityId, out Entity ecsEntity);
-                GameEntityTypes type = gameMetaData.Type;
 
                 if (type == GameEntityTypes.Hunter)
                 {
@@ -123,7 +126,7 @@ namespace MDG
                 }
                 else
                 {
-                    PlayerArchtypes.AddDefenderArchtype(worker.EntityManager, ecsEntity, hasAuthority);
+                    PlayerArchtypes.AddDefenderArchtype(worker.EntityManager, ecsEntity, hasAuthority, isAlly);
                 }
 
                 pathToPlayer = $"{pathToPlayer}/{type.ToString()}";

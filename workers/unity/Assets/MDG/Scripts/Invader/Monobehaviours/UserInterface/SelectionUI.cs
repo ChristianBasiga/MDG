@@ -1,25 +1,22 @@
-﻿using MDG.Invader.Monobehaviours;
+﻿using MDG.Invader.Monobehaviours.InputProcessors;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace MDG.Invader.Monobehaviours.UserInterface
 {
+    [RequireComponent(typeof(SelectionController))]
     public class SelectionUI : MonoBehaviour
     {
         private Rect selectionGridRect;
         public GUIContent selectionGridSkin;
-        // Start is called before the first frame update
+
         void Start()
         {
-            // Tbh, this is really just selectionGUI.
             SelectionController selectionController = GetComponent<SelectionController>();
             selectionController.OnSelectionStart += SpawnSelectionGrid;
             selectionController.OnSelection += UpdateSelectionGrid;
             selectionController.OnSelectionEnd += DespawnSelectionGrid;
-
-
-
         }
 
         public void SpawnSelectionGrid(SelectionController.SelectionPayload payload)

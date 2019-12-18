@@ -1,11 +1,13 @@
 ﻿using Improbable.Gdk.Subscriptions;
 using MDG.Common;
+using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours;
 using MDG.ScriptableObjects.Game;
 using UnityEngine;
 using PositionSchema = MdgSchema.Common.Position;
 namespace MDG.Defender.Monobehaviours {
     
-    public class PlayerMove : MonoBehaviour
+    public class PlayerMove : MonoBehaviour, IProcessInput
     {
         public delegate void PlayerMoveHandler(Vector3 position, Vector3 rotation);
         public event PlayerMoveHandler OnPlayerMove;
@@ -26,6 +28,8 @@ namespace MDG.Defender.Monobehaviours {
         //This will have reference to the reader and writer of component.
         void Start()
         {
+
+            AddToManager();
             /*
             GetComponent<DefenderSynchronizer>().OnEndGame += () => {
                 this.enabled = false;
@@ -35,7 +39,7 @@ namespace MDG.Defender.Monobehaviours {
             // Oh I'm wylin, InputCommands has to take this.
             inputConfig = Resources.Load("ScriptableObjects/GameConfigs/MouseKeyInputConfig") as InputConfig;
             GetComponent<PlayerLook>().Init(defenderConfig, inputConfig);
-            GetComponent<DefenderInputCommands>().Init(inputConfig);
+            GetComponent<LoadoutSelector>().Init(inputConfig);
             //this.gameObject.SetActive(alse);
         }
 
@@ -43,14 +47,6 @@ namespace MDG.Defender.Monobehaviours {
         {
             this.defenderConfig = defenderConfig;
             this.inputConfig = inputConfig;
-        }
-
-
-        // Update is called once per frame
-        void Update()
-        {
-            PlayerMovement();
-            InputJump();
         }
 
         void PlayerMovement()
@@ -86,6 +82,17 @@ namespace MDG.Defender.Monobehaviours {
         private void OnPlayerMoveHandler()
         {
             OnPlayerMove?.Invoke(transform.position, transform.rotation.eulerAngles);
+        }
+
+        public void AddToManager()
+        {
+            GetComponent<InputProcessorManager>().AddInputProcessor(this);
+        }
+
+        public void ProcessInput()
+        {
+            PlayerMovement();
+            InputJump();
         }
     }
 }

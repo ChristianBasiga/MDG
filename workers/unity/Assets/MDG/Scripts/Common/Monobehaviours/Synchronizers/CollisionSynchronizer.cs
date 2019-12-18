@@ -13,42 +13,76 @@ namespace MDG.Common.MonoBehaviours
     public class CollisionSynchronizer : MonoBehaviour
     {
 #pragma warning disable 649
-        // So I can write into it, initially but not more than that??
         [Require] CollisionSchema.CollisionWriter collisionWriter;
+        [Require] CollisionSchema.BoxColliderReader boxColliderReader;
 #pragma warning restore 649
         Dictionary<EntityId, CollisionSchema.CollisionPoint> collisionBuffer;
-
+        bool dirtyBit = false;
         private void Awake()
         {
             collisionBuffer = new Dictionary<EntityId, CollisionSchema.CollisionPoint>();
             
         }
         private void Update()
-        {   
-            collisionWriter.SendUpdate(new CollisionSchema.Collision.Update
+        {
+            if (dirtyBit)
             {
-                Collisions = collisionBuffer,
-                CollisionCount = collisionBuffer.Count,
-            });
-
-            if (collisionBuffer.Count > 0)
-            {
-                collisionWriter.SendCollisionHappenEvent(new CollisionSchema.CollisionEventPayload
+                dirtyBit = false;
+                CollisionSchema.Collision.Update update;
+                if (boxColliderReader.Data.IsTrigger)
                 {
-                    CollidedWith = collisionBuffer
-                });
+                    update = new CollisionSchema.Collision.Update
+                    {
+                        Triggers = collisionBuffer,
+                        TriggerCount = collisionBuffer.Count
+                    };
+                    if (collisionBuffer.Count > 0)
+                    {
+                        collisionWriter.SendTriggerHappenEvent(new CollisionSchema.CollisionEventPayload
+                        {
+                            CollidedWith = collisionBuffer
+                        });
+                    }
+                }
+                else
+                {
+                    update = new CollisionSchema.Collision.Update
+                    {
+                        Collisions = collisionBuffer,
+                        CollisionCount = collisionBuffer.Count,
+
+                    };
+
+                    if (collisionBuffer.Count > 0)
+                    {
+                        collisionWriter.SendCollisionHappenEvent(new CollisionSchema.CollisionEventPayload
+                        {
+                            CollidedWith = collisionBuffer
+                        });
+                    }
+                }
+                collisionWriter.SendUpdate(update);
             }
         }
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.gameObject.TryGetComponent(out LinkedEntityComponent linkedEntityComponent))
+            UpdateCollisionBuffer(other.gameObject);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+      //      UpdateCollisionBuffer(other.gameObject);
+        }
+
+        private void UpdateCollisionBuffer(GameObject gameObject)
+        {
+            if (gameObject.TryGetComponent(out LinkedEntityComponent linkedEntityComponent))
             {
+                dirtyBit = true;
                 EntityId collidedId = linkedEntityComponent.EntityId;
-                Debug.Log("checking collisions for " + linkedEntityComponent.EntityId);
                 if (linkedEntityComponent.Worker != null && linkedEntityComponent.Worker.TryGetEntity(collidedId, out Entity entity))
                 {
-    
                     EntityManager entityManager = linkedEntityComponent.World.EntityManager;
                     bool isTrigger = false;
                     if (entityManager.HasComponent<CollisionSchema.BoxCollider.Component>(entity))
@@ -58,12 +92,11 @@ namespace MDG.Common.MonoBehaviours
                     }
                     else
                     {
-                        Debug.Log("has no box colider component");
                     }
                     CollisionSchema.CollisionPoint collisionPoint = new CollisionSchema.CollisionPoint
                     {
                         CollidingWith = collidedId,
-                        Distance = HelperFunctions.Vector3fFromUnityVector(other.transform.position - transform.position),
+                        Distance = HelperFunctions.Vector3fFromUnityVector(gameObject.transform.position - transform.position),
                         IsTrigger = isTrigger
                     };
                     if (collisionBuffer.ContainsKey(collidedId))
@@ -83,6 +116,7 @@ namespace MDG.Common.MonoBehaviours
         {
             if (other.gameObject.TryGetComponent(out LinkedEntityComponent linkedEntityComponent))
             {
+                dirtyBit = true;
                 collisionBuffer.Remove(linkedEntityComponent.EntityId);
             }
         }

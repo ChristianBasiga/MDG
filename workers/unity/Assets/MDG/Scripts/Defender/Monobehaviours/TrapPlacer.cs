@@ -25,13 +25,10 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         Camera playerCamera;
         [Require] PointReader pointReader;
-
-
-        [SerializeField]
-        Transform crosshairs;
 #pragma warning restore 649
 
 
+        DefenderSynchronizer defenderSynchronizer;
         PointRequest? pointRequestSent = null;
 
         // Start is called before the first frame update
@@ -39,6 +36,7 @@ namespace MDG.Defender.Monobehaviours
         {
             linkedEntityComponent = GetComponent<LinkedEntityComponent>();
 
+            defenderSynchronizer = GetComponent<DefenderSynchronizer>();
         }
 
         public void TryPlaceTrap(ScriptableStructures.Trap trap)
@@ -47,11 +45,14 @@ namespace MDG.Defender.Monobehaviours
             if (comparingValue < trap.Cost)
             {
                 // Should be thrown as erro then caught by hud instead
-                GetComponent<DefenderHUD>().SetErrorText("Not enough points");
+                defenderSynchronizer.DefenderHUD.SetErrorText("Not enough points");
             }
             else
             {
                 PointRequestSystem pointRequestSystem = linkedEntityComponent.World.GetExistingSystem<PointRequestSystem>();
+
+                // If can't physically place, this point spent needs to be revoked.
+                // Add that later / restructure this.
                 pointRequestSystem.AddPointRequest(new PointRequest
                 {
                     EntityUpdating = linkedEntityComponent.EntityId,
@@ -78,12 +79,10 @@ namespace MDG.Defender.Monobehaviours
                 OneTimeUse = trap.OneTimeUse,
                 ownerId = linkedEntityComponent.EntityId.Id
             };
-            // How i get this position prod needs to change.
             Vector3 worldCoords = HelperFunctions.GetMousePosition(playerCamera);
 
-            Vector2 pos = crosshairs.GetChild(0).transform.position;
-            Ray ray = playerCamera.ScreenPointToRay(pos);
-            if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity))
+            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity) && !hit.collider.CompareTag("Player"))
             {
                 Vector3f trapPosition = HelperFunctions.Vector3fFromUnityVector(hit.point);
                 trapPosition.Y = 10;

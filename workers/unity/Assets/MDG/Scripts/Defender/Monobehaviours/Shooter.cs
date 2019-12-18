@@ -27,10 +27,9 @@ namespace MDG.Defender.Monobehaviours
         [SerializeField]
         Transform shootOrigin;
 
-        [SerializeField]
-        Transform crosshairs;
-
 #pragma warning restore 649
+
+        
 
         // Start is called before the first frame update
         void Start()
@@ -43,9 +42,8 @@ namespace MDG.Defender.Monobehaviours
         public void Shoot()
         {
             LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
-            crosshairs.transform.position = Input.mousePosition;
-            Vector2 pos = crosshairs.GetChild(0).transform.position;
-            Ray ray = shootCamera.ScreenPointToRay(pos);
+
+            Ray ray = shootCamera.ScreenPointToRay(Input.mousePosition);
             shootOrigin.rotation = Quaternion.LookRotation(ray.direction);
 
             Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(shootOrigin.position);

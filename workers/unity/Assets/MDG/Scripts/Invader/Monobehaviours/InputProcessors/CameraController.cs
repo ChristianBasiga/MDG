@@ -4,10 +4,12 @@ using UnityEngine;
 using Unity.Entities;
 using Improbable;
 using MDG.ScriptableObjects.Game;
+using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours;
 
-namespace MDG.Invader.Monobehaviours
+namespace MDG.Invader.Monobehaviours.InputProcessors
 {
-    public class CameraController : MonoBehaviour
+    public class CameraController : MonoBehaviour, IProcessInput
     {
         public class Settings
         {
@@ -31,6 +33,7 @@ namespace MDG.Invader.Monobehaviours
         Camera viewCamera;
         private void Start()
         {
+            AddToManager();
             viewCamera = GetComponent<Camera>();
             // Loading all at once prob fine, for now but ideally I load in single place, and everywhere else reache sit
             // to avoid I/O or move I/O fetches to async
@@ -42,11 +45,11 @@ namespace MDG.Invader.Monobehaviours
             cameraSettings = new Settings(invaderConfig.PanningBorder, invaderConfig.PanningBounds, invaderConfig.CameraPanSpeed, invaderConfig.ScrollSpeed);
         }
 
-        void Update()
+        public void ProcessInput()
         {
             Vector3 mousePosition = Input.mousePosition;
             Vector3 newCameraPosition = transform.position;
-            if (mousePosition.y > Screen.height || mousePosition.y < 0 || mousePosition.x > Screen.width ||  mousePosition.x < 0)
+            if (mousePosition.y > Screen.height || mousePosition.y < 0 || mousePosition.x > Screen.width || mousePosition.x < 0)
             {
                 return;
             }
@@ -67,12 +70,17 @@ namespace MDG.Invader.Monobehaviours
                 newCameraPosition.x += -cameraSettings.panningSpeed * Time.deltaTime;
             }
             float scroll = Input.GetAxis("Mouse ScrollWheel");
-           // transform.position.y -= scroll * cameraSettings.scrollSpeed * 100.0f * Time.deltaTime;
+            // transform.position.y -= scroll * cameraSettings.scrollSpeed * 100.0f * Time.deltaTime;
             viewCamera.orthographicSize -= scroll * cameraSettings.scrollSpeed * 100.0f * Time.deltaTime;
             viewCamera.orthographicSize = Mathf.Clamp(viewCamera.orthographicSize, minZoom, maxZoom);
             newCameraPosition.x = Mathf.Clamp(newCameraPosition.x, -cameraSettings.panningBounds.x, cameraSettings.panningBounds.x);
             newCameraPosition.z = Mathf.Clamp(newCameraPosition.z, -cameraSettings.panningBounds.y, cameraSettings.panningBounds.y);
             transform.position = newCameraPosition;
+        }
+
+        public void AddToManager()
+        {
+            GetComponent<InputProcessorManager>().AddInputProcessor(this);
         }
     }
 }

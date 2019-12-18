@@ -1,6 +1,8 @@
 ﻿using Improbable;
 using Improbable.Gdk.Subscriptions;
 using MDG.Common;
+using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours;
 using MDG.ScriptableObjects.Game;
 using MdgSchema.Common;
 using MdgSchema.Common.Util;
@@ -10,7 +12,7 @@ using PositionSchema = MdgSchema.Common.Position;
 namespace MDG.Defender.Monobehaviours
 {
     // Update this to be on body and reference camera.
-    public class PlayerLook : MonoBehaviour
+    public class PlayerLook : MonoBehaviour, IProcessInput
     {
 #pragma warning disable 649
         [SerializeField]
@@ -45,6 +47,8 @@ namespace MDG.Defender.Monobehaviours
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             };*/
+            // Really just make abstract calss instead of interface at this point.
+            AddToManager();
         }
 
 
@@ -53,22 +57,6 @@ namespace MDG.Defender.Monobehaviours
             this.inputConfig = inputConfig;
             this.defenderConfig = defenderConfig;
         }
-        // Update is called once per frame
-        void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None;
-            }
-            if (Application.isPlaying)
-            {
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-                CameraRotation();
-            }
-        }
-
 
         void LockCursor()
         {
@@ -100,6 +88,26 @@ namespace MDG.Defender.Monobehaviours
         void ClampYAxisRotation()
         {
             mouseY = Mathf.Clamp(mouseY, -20, 60);
+        }
+
+        public void AddToManager()
+        {
+            GetComponent<InputProcessorManager>().AddInputProcessor(this);
+        }
+
+        public void ProcessInput()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+            }
+            if (Application.isPlaying)
+            {
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+                CameraRotation();
+            }
         }
     }
 }

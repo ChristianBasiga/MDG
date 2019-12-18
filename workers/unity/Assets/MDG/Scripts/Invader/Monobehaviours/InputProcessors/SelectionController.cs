@@ -1,12 +1,14 @@
-﻿using System;
+﻿using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace MDG.Invader.Monobehaviours
+namespace MDG.Invader.Monobehaviours.InputProcessors
 {
-    public class SelectionController : MonoBehaviour
+    public class SelectionController : MonoBehaviour, IProcessInput
     {
         public struct SelectionPayload
         {
@@ -19,15 +21,20 @@ namespace MDG.Invader.Monobehaviours
         public event SelectionEventHandler OnSelectionStart;
         public event SelectionEventHandler OnSelection;
         public event SelectionEventHandler OnSelectionEnd;
-        [SerializeField]
         private Vector3 startSelection;
 
+
+        private void Start()
+        {
+            AddToManager();
+        }
         Vector3 GetSelectionScale()
         {
             Vector3 selectionSize = new Vector3(Input.mousePosition.x - startSelection.x, startSelection.y - Input.mousePosition.y);
             return selectionSize;
         }
-        void Update()
+     
+        public void ProcessInput()
         {
             // Later on replace this with input config as well, not priority though.
             if (Input.GetMouseButtonDown(0))
@@ -43,6 +50,11 @@ namespace MDG.Invader.Monobehaviours
             {
                 OnSelectionEnd?.Invoke(new SelectionPayload { startPosition = startSelection, scale = GetSelectionScale(), endPosition = Input.mousePosition });
             }
+        }
+
+        public void AddToManager()
+        {
+            GetComponent<InputProcessorManager>().AddInputProcessor(this);
         }
     }
 }

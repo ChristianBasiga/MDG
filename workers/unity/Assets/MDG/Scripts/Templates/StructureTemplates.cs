@@ -33,7 +33,7 @@ namespace MDG.Templates
                     GetClaimStructureTemplate(entityTemplate, Converters.DeserializeArguments<ClaimConfig>(structureArgs), serverAttribute);
                     break;
                 case StructureSchema.StructureType.Trap:
-                    GetTrapStructureTemplate(entityTemplate, Converters.DeserializeArguments<TrapConfig>(structureArgs), clientWorkerId, serverAttribute);
+                    GetTrapStructureTemplate(entityTemplate, Converters.DeserializeArguments<TrapConfig>(structureArgs), clientAttribute, serverAttribute);
                     break;
             }
 
@@ -88,6 +88,12 @@ namespace MDG.Templates
                 Inventory = new System.Collections.Generic.Dictionary<int, InventorySchema.Item>()
             }, serverAttribute);
 
+
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                IsTrigger = false
+            }, serverAttribute);    
+
             template.AddComponent(new CollisionSchema.Collision.Snapshot
             {
                 Collisions = new System.Collections.Generic.Dictionary<EntityId, CollisionSchema.CollisionPoint>(),
@@ -104,6 +110,11 @@ namespace MDG.Templates
             template.AddComponent(new StatsMetadata.Snapshot
             {
                 Health = claimConfig.health
+            }, serverAttribute);
+
+            template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
+            {
+                IsTrigger = false
             }, serverAttribute);
 
             template.AddComponent(new StructureSchema.ClaimStructure.Snapshot{

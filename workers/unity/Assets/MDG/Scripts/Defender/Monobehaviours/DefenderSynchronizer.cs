@@ -4,35 +4,65 @@ using Improbable.Gdk.Subscriptions;
 using MdgSchema.Common;
 using UnityEngine;
 using SpawnSchema = MdgSchema.Common.Spawn;
+using StatSchema = MdgSchema.Common.Stats;
 using GameSchema = MdgSchema.Game;
 using MDG.ScriptableObjects.Game;
 using MDG.Common.MonoBehaviours;
+using MDG.Common.Interfaces;
+using System.Collections;
 
 namespace MDG.Defender.Monobehaviours
 {
     // Finish synchronization of defender.
     // Change this to PlayerSynchronizer as common end game behaviour
-    public class DefenderSynchronizer : MonoBehaviour
+    public class DefenderSynchronizer : MonoBehaviour, IPlayerSynchronizer
     {
 #pragma warning disable 649
-
         [Require] SpawnSchema.PendingRespawnReader pendingRespawnReader;
-
-
-        ComponentUpdateSystem componentUpdateSystem;
-        [SerializeField]
-        public Camera Camera { set; get; }
+        [Require] StatSchema.StatsReader statsReader;
+        [Require] StatSchema.StatsMetadataReader statsMetadataReader;
 #pragma warning restore 649
 
-
-        UnityClientConnector clientConnector;
+        public DefenderHUD DefenderHUD { private set; get; }
+        TeamStatusUpdater teamStatusUpdater;
+        public UnityClientConnector ClientWorker { private set; get; }
 
         private void Start()
         {
-            clientConnector = GameObject.Find("ClientWorker").GetComponent<UnityClientConnector>();
             pendingRespawnReader.OnRespawnActiveUpdate += OnRespawnActiveChange;
-            componentUpdateSystem = GetComponent<LinkedEntityComponent>().World.GetExistingSystem<ComponentUpdateSystem>();
-            GetComponent<HealthSynchronizer>().OnHealthBarUpdated += OnHealthUpdate;
+            ClientWorker.ClientGameObjectCreator.OnEntityAdded += OnEntityAdded;
+            StartCoroutine(InitUIRefs());
+            statsReader.OnHealthUpdate += OnHealthUpdate;
+        }
+
+        private IEnumerator InitUIRefs()
+        {
+            yield return new WaitUntil(() => ClientWorker != null && ClientWorker.LoadedUI != null);
+            // This method won't scale well.
+            ClientWorker.LoadedUI.TryGetValue("DefenderHud", out GameObject hudObject);
+            DefenderHUD = hudObject.GetComponent<DefenderHUD>();
+
+            ClientWorker.LoadedUI.TryGetValue("TeammateCanvas", out GameObject statusUpdater);
+            teamStatusUpdater = statusUpdater.transform.GetChild(0).GetComponent<TeamStatusUpdater>();
+
+            var defenderLinks = ClientWorker.ClientGameObjectCreator.otherPlayerLinks.FindAll((link) => link.TryGetComponent(typeof(DefenderSynchronizer), out _));
+            for (int i = 0; i < defenderLinks.Count; ++i)
+            {
+                teamStatusUpdater.AddTeammate(defenderLinks[i]);
+            }
+        }
+
+        private void OnEntityAdded(Improbable.Gdk.GameObjectCreation.SpatialOSEntity obj)
+        {
+            if (obj.TryGetComponent(out GameMetadata.Component gameMetadata) && gameMetadata.Type == GameEntityTypes.Hunted)
+            {
+                GameObject linkedDefender = ClientWorker.ClientGameObjectCreator.GetLinkedGameObjectById(obj.SpatialOSEntityId);
+                if (linkedDefender.CompareTag("Player"))
+                {
+                    return;
+                }
+                teamStatusUpdater.AddTeammate(linkedDefender.GetComponent<LinkedEntityComponent>());
+            }
         }
 
         private void GameStatusSynchronizer_OnWinGame()
@@ -40,12 +70,10 @@ namespace MDG.Defender.Monobehaviours
             throw new System.NotImplementedException();
         }
 
-        private void OnHealthUpdate(int percentageHealth)
+        private void OnHealthUpdate(int currentHealth)
         {
-            if (percentageHealth == 1)
-            {
-                gameObject.SetActive(false);
-            }
+            float pct = currentHealth / (float)statsMetadataReader.Data.Health;
+            DefenderHUD.OnUpdateHealth(pct);
         }
 
 
@@ -55,6 +83,11 @@ namespace MDG.Defender.Monobehaviours
             {
                 gameObject.SetActive(true);
             }
+        }
+
+        public void LinkClientWorker(UnityClientConnector unityClientConnector)
+        {
+            ClientWorker = unityClientConnector;
         }
     }
 }

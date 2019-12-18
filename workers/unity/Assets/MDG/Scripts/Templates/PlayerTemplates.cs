@@ -174,13 +174,19 @@ namespace MDG.Templates
         {
             
         }
-        public static void AddDefenderArchtype(EntityManager entityManager, Entity entity, bool authoritative)
+        public static void AddDefenderArchtype(EntityManager entityManager, Entity entity, bool authoritative, bool isAlly = false)
         {
             if (!authoritative)
             {
-                Debug.Log("Adding enemy component to defender");
-                entityManager.AddComponent<Enemy>(entity);
-                entityManager.AddComponent<Clickable>(entity);
+                if (!isAlly)
+                {
+                    // MAybe instead of creation stage, once al players gathered load bit more
+                    // and that is when I add these extra components appropriately.
+                    // prob cleaner that way
+                    Debug.Log("Adding enemy component to defender");
+                    entityManager.AddComponent<Enemy>(entity);
+                    entityManager.AddComponent<Clickable>(entity);
+                }
             }
             else
             {

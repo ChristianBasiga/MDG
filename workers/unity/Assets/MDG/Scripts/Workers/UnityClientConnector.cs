@@ -24,6 +24,7 @@ using MDG.Common;
 using MDG.DTO;
 using Improbable.Gdk.Subscriptions;
 using System.Collections.Generic;
+using MDG.Common.Interfaces;
 
 namespace MDG
 {
@@ -31,6 +32,7 @@ namespace MDG
     {
         public const string WorkerType = "UnityClient";
         public GameEntityTypes PlayerRole { private set; get; }
+        public Dictionary<string, GameObject> LoadedUI { private set; get; }
         public ClientGameObjectCreator ClientGameObjectCreator { get; private set; }
         public GameConfig GameConfig { private set; get; }
 
@@ -148,7 +150,7 @@ namespace MDG
             }
             else if (PlayerRole == GameEntityTypes.Hunted)
             {
-              
+                StartCoroutine(LoadDefenderUI());
             }
 
             playerJoinRequestId = commandSystem.SendCommand(new GameSchema.GameStatus.JoinGame.Request
@@ -193,6 +195,10 @@ namespace MDG
             {
                 obj.SetActive(false);
                 StartCoroutine(ActivateAfterSync(obj));
+                if (obj.TryGetComponent(out IPlayerSynchronizer playerSynchronizer))
+                {
+                    playerSynchronizer.LinkClientWorker(this);
+                }
             }
         }
 
@@ -221,6 +227,22 @@ namespace MDG
             Worker.World.DestroySystem(Worker.World.GetExistingSystem<CommandUpdateSystem>());
             Worker.World.DestroySystem(Worker.World.GetExistingSystem<UnitRerouteSystem>());
         }
+
+
+        private IEnumerator LoadDefenderUI()
+        {
+            object[] defenderUI = Resources.LoadAll("UserInterface/DefenderUI/");
+            LoadedUI = new Dictionary<string, GameObject>();
+            for (int i = 0; i < defenderUI.Length; ++i)
+            {
+                GameObject gameObject = defenderUI[i] as GameObject;
+                GameObject instance = Instantiate(gameObject);
+                Debug.Log("gameObject name " + gameObject.name);
+                LoadedUI.Add(gameObject.name, instance);
+                yield return new WaitForEndOfFrame();
+            }
+        }
+        
 
         public void CloseConnection()
         {

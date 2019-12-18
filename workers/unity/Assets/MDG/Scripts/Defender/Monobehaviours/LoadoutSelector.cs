@@ -2,6 +2,7 @@
 using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
 using MDG.Common;
+using MDG.Common.Interfaces;
 using MDG.Common.MonoBehaviours;
 using MDG.Common.Systems.Point;
 using MDG.Common.Systems.Spawn;
@@ -16,39 +17,52 @@ using ScriptableStructures = MDG.ScriptableObjects.Structures;
 
 namespace MDG.Defender.Monobehaviours
 {
-    public class DefenderInputCommands : MonoBehaviour
+    public class LoadoutSelector : MonoBehaviour, IProcessInput
     {
         TrapPlacer trapPlacer;
         Shooter shooter;
-        LinkedEntityComponent linkedEntityComponent;
         InputConfig inputConfig;
 
-#pragma warning disable 649
-        [SerializeField]
-        LoadoutSlot[] loadoutSlots;
-#pragma warning restore 649
+        Loadout loadout;
+        Loadout Loadout
+        {
+            get
+            {
+                if (loadout == null)
+                {
+                    GameObject go = GameObject.Find("Loadout");
+                    if (go != null)
+                        loadout = GameObject.Find("Loadout").GetComponent<Loadout>();
+                }
+                return loadout;
+            }
+        } 
 
-        int selectedSlot = 0;
         // Start is called before the first frame update
         void Start()
         {
-            linkedEntityComponent = GetComponent<LinkedEntityComponent>();
             shooter = GetComponent<Shooter>();
             trapPlacer = GetComponent<TrapPlacer>();
+            AddToManager();
+            StartCoroutine(LoadLoadout());
+           
+        }
 
-         //   GetComponent<DefenderSynchronizer>().OnEndGame += () => { this.enabled = false; };
-
-            // FOr now just load in all traps and set it.
+        IEnumerator LoadLoadout()
+        {
+            yield return new WaitUntil(() => Loadout != null);
+            // Where it gets loadout needs to be set elsewhere. How sets loadout will be different. These loaded in stuff is options.
+            // but that will be aler.
             Object[] traps = Resources.LoadAll("ScriptableObjects/Traps");
             if (traps != null)
             {
+                loadout.SetSlot(0, GetComponent<Shooter>().Weapon);
+                loadout.SelectSlot(0);
                 for (int i = 0; i < traps.Length; ++i)
                 {
                     ScriptableStructures.Trap loadedInTrap = traps[i] as ScriptableStructures.Trap;
-                    loadoutSlots[i + 1].SetItem(loadedInTrap);
+                    loadout.SetSlot(i + 1, loadedInTrap);
                 }
-                loadoutSlots[0].SetItem(GetComponent<Shooter>().Weapon);
-                loadoutSlots[0].Toggle(true);
             }
             else
             {
@@ -61,36 +75,36 @@ namespace MDG.Defender.Monobehaviours
             this.inputConfig = inputConfig;
         }
 
-        // Update is called once per frame
-        void Update()
+      
+        public void AddToManager()
         {
+            GetComponent<InputProcessorManager>().AddInputProcessor(this);
+        }
 
+        public void ProcessInput()
+        {
             if (inputConfig == null)
             {
                 return;
             }
 
-            for (int i = 0; i < loadoutSlots.Length; ++i)
+            for (int i = 0; loadout != null && i < loadout.LoadoutLength; ++i)
             {
                 bool selectionMade = Input.GetKeyDown((i + 1).ToString());
-                if (selectionMade && i != selectedSlot)
+                if (selectionMade)
                 {
-                    loadoutSlots[selectedSlot].Toggle(false);
-                    loadoutSlots[i].Toggle(true);
-                    selectedSlot = i;
+                    loadout.SelectSlot(i);  
                 }
             }
-
             if (Input.GetButtonDown(inputConfig.LeftClickAxis))
             {
                 ProcessSelection();
             }
         }
 
-
         void ProcessSelection()
         {
-            LoadoutSlot selectedLoadoutSlot = loadoutSlots[selectedSlot];
+            LoadoutSlot selectedLoadoutSlot = loadout.Selection;
             switch (selectedLoadoutSlot.SlotType)
             {
                 case LoadoutSlot.SlotOptions.Weapon:
@@ -104,7 +118,5 @@ namespace MDG.Defender.Monobehaviours
                     break;
             }
         }
-
-        
     }
 }

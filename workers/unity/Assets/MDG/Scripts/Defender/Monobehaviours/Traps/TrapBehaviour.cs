@@ -38,7 +38,10 @@ namespace MDG.Defender.Monobehaviours.Traps
 
         private void OnTrapCollision(Dictionary<EntityId, CollisionSchema.CollisionPoint> collisions)
         {
-            if (processingTrigger) return;
+            if (processingTrigger) {
+                Debug.Log("still proccessing");
+                return;
+            }
             processingTrigger = true;
             if (!onCoolDown)
             {
