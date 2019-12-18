@@ -211,7 +211,7 @@ namespace MDG
             _default.OnEntityRemoved(entityId);
             GameObject linkedGameObject;
 
-            if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObject))
+            if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObject) && linkedGameObject != null)
             {
                 // Perhaps custom death and / or death behaviour that plays specific animation.
                 // Or both. Regardless doesn't just make it dissapear.
