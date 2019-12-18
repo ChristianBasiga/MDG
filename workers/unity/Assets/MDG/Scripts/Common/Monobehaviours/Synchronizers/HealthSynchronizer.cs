@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using StatSchema = MdgSchema.Common.Stats;
 
 
-namespace MDG.Common.MonoBehaviours
+namespace MDG.Common.MonoBehaviours.Synchronizers
 {
     public class HealthSynchronizer : MonoBehaviour
     {

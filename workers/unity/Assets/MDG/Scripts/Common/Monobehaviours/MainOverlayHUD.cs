@@ -4,6 +4,7 @@ using UnityEngine;
 using MdgSchema.Common;
 using Improbable.Gdk.Core;
 using UnityEngine.UI;
+using MDG.Common.MonoBehaviours.Synchronizers;
 
 namespace MDG.Common.MonoBehaviours
 {

@@ -7,7 +7,7 @@ using Unity.Entities;
 using UnityEngine;
 using CollisionSchema = MdgSchema.Common.Collision;
 
-namespace MDG.Common.MonoBehaviours
+namespace MDG.Common.MonoBehaviours.Synchronizers
 {
     [RequireComponent(typeof(Collider))]
     public class CollisionSynchronizer : MonoBehaviour

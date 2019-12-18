@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace MDG.Common.MonoBehaviours
+namespace MDG.Common.MonoBehaviours.Synchronizers
 {
     public class EntityTransformSynchronizer : MonoBehaviour
     {

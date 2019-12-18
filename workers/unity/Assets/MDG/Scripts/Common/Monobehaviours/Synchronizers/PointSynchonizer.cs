@@ -2,7 +2,7 @@
 using UnityEngine;
 using PointSchema = MdgSchema.Common.Point;
 
-namespace MDG.Common.MonoBehaviours
+namespace MDG.Common.MonoBehaviours.Synchronizers
 {
     public class PointSynchonizer : MonoBehaviour
     {

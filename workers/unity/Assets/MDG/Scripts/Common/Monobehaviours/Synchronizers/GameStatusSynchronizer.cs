@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using GameSchema = MdgSchema.Game;
 
-namespace MDG.Common.MonoBehaviours
+namespace MDG.Common.MonoBehaviours.Synchronizers
 {
     public class GameStatusSynchronizer : MonoBehaviour
     {
