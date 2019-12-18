@@ -1086,7 +1086,7 @@ GameObject:
   - component: {fileID: 8515724560485601882}
   - component: {fileID: 5061811472926061137}
   - component: {fileID: 5910827630698930417}
-  - component: {fileID: 5143028349094036736}
+  - component: {fileID: 3039083705938738718}
   m_Layer: 5
   m_Name: SpawnStructureOverlay
   m_TagString: Untagged
@@ -1174,7 +1174,7 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &5143028349094036736
+--- !u!114 &3039083705938738718
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1187,6 +1187,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   StructureType: 1
+  buildMenu: {fileID: 8124307969470489516}
   errorText: {fileID: 7425022661266691374}
   jobQueueUI:
   - {fileID: 8599364174389265529}

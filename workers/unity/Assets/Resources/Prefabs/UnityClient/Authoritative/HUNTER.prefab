@@ -195,6 +195,7 @@ GameObject:
   - component: {fileID: 1280729861235480965}
   - component: {fileID: -8108990803714514219}
   - component: {fileID: 1255802130449727179}
+  - component: {fileID: 917459290}
   m_Layer: 0
   m_Name: HUNTER
   m_TagString: Player
@@ -242,7 +243,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75e1ddfca95207b42838a592a52b1978, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startSelection: {x: 0, y: 0, z: 0}
 --- !u!114 &6062508732198000141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -250,12 +250,11 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1504375286995258532}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f33e9f8fcc72d824f97213b66d5cabfe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  structureBuildMenu: {fileID: 6089516098808605646}
 --- !u!114 &6310861206903642914
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -263,11 +262,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1504375286995258532}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 555e101d860e5104da54a6120c3ee674, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  structureBuildMenu: {fileID: 6089516098808605646}
+  numberOfUnitsText: {fileID: 5716724142332157452}
+  pointText: {fileID: 2085933932214800585}
 --- !u!20 &1155651501
 Camera:
   m_ObjectHideFlags: 0
@@ -361,6 +363,18 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4c05fb3da6dbd247abc726e4178a329, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &917459290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1504375286995258532}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ca426d9a43a7db4fb47fdf313f8fb0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1885726712343497981
@@ -667,7 +681,7 @@ Canvas:
   m_GameObject: {fileID: 5631502929629302078}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_Camera: {fileID: 1155651501}
   m_PlaneDistance: 100
   m_PixelPerfect: 0

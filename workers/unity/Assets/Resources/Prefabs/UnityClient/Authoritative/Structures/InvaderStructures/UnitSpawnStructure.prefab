@@ -125,6 +125,7 @@ GameObject:
   - component: {fileID: 338875312028485050}
   - component: {fileID: -3923287933496635019}
   - component: {fileID: 5897495909207982106}
+  - component: {fileID: 9065347045580664253}
   m_Layer: 0
   m_Name: UnitSpawnStructure
   m_TagString: Untagged
@@ -220,7 +221,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   JobCapacity: 2
-  buildMenu: {fileID: 0}
 --- !u!114 &6560795642615149224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -233,6 +233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45404753152a5b747829b4cf2ff140bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  constructionProgressUI: {fileID: 618207027799069481}
 --- !u!114 &6330627888228630112
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -305,6 +306,18 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0220bdba63d64944db3950f229d5d8d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &9065347045580664253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1872774323955901914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37e9dea542ce5e24a9ffbfaa911d07e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &2462483088731299393

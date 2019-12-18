@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f28ca15c5d9800847b5dc810ce7a9f88, type: 3}
+  m_Name: BaseGameConfig
+  m_EditorClassIdentifier: 
+  InvaderUnitSpawnPoints:
+  - {x: -350, y: 26, z: 308.80005}
+  - {x: -300, y: 26, z: 308.8}
+  - {x: -250, y: 26, z: 308.8}
+  SpawnStructureSpawnPoints:
+  - {x: 0, y: 0, z: 0}
+  DefenderSpawnPoints:
+  - {x: 616.2, y: 20, z: -399.4001}
+  - {x: 374.5999, y: 20, z: -399.4001}
+  - {x: 486.3, y: 20, z: -399.4001}
+  WorldDimensions: {x: 1000, y: 0, z: 1000}
+  InvaderSpawnPoint: {x: 0, y: 1000, z: 0}
+  CapicityPerRegion: 50
+  GameTime: 100
+  MinimumPlayers: 2

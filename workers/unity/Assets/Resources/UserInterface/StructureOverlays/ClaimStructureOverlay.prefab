@@ -503,7 +503,7 @@ GameObject:
   - component: {fileID: 1620651054225769101}
   - component: {fileID: 2769556977765589638}
   - component: {fileID: 3627405113111523366}
-  - component: {fileID: 2814730913654412759}
+  - component: {fileID: 2807659538736716279}
   m_Layer: 5
   m_Name: ClaimStructureOverlay
   m_TagString: Untagged
@@ -591,7 +591,7 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &2814730913654412759
+--- !u!114 &2807659538736716279
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -604,6 +604,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   StructureType: 3
+  buildMenu: {fileID: 1220208177182995323}
   errorText: {fileID: 529913029835081209}
   jobQueueUI:
   - {fileID: 1659382902260782254}

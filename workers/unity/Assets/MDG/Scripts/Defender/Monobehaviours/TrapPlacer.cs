@@ -1,16 +1,14 @@
-﻿using Improbable;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using ScriptableStructures = MDG.ScriptableObjects.Structures;
-using MDG.Common.Systems.Spawn;
+﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using MDG.DTO;
 using MDG.Common;
-using Improbable.Gdk.Core;
 using MDG.Common.Systems.Point;
+using MDG.Common.Systems.Spawn;
+using MDG.DTO;
 using MdgSchema.Common.Point;
 using MdgSchema.Common.Util;
+using UnityEngine;
+using System.Linq;
+using ScriptableStructures = MDG.ScriptableObjects.Structures;
 
 namespace MDG.Defender.Monobehaviours
 {
@@ -79,12 +77,15 @@ namespace MDG.Defender.Monobehaviours
                 OneTimeUse = trap.OneTimeUse,
                 ownerId = linkedEntityComponent.EntityId.Id
             };
-            Vector3 worldCoords = HelperFunctions.GetMousePosition(playerCamera);
-
             Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity) && !hit.collider.CompareTag("Player"))
+            RaycastHit[] raycastHits = Physics.RaycastAll(ray, Mathf.Infinity);
+            RaycastHit? hit = raycastHits.FirstOrDefault((potential) =>
             {
-                Vector3f trapPosition = HelperFunctions.Vector3fFromUnityVector(hit.point);
+                return !potential.collider.CompareTag("Player");
+            });
+            if (hit.HasValue)
+            {
+                Vector3f trapPosition = HelperFunctions.Vector3fFromUnityVector(hit.Value.point);
                 trapPosition.Y = 10;
                 spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                 {
