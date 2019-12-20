@@ -1,11 +1,10 @@
 package mdg_schema.common.spawn;
-import "improbable/vector3.schema";
 import "common/metadata.schema";
-
+import "common/util.schema";
 type SpawnRequest {
     mdg_schema.common.GameEntityTypes type_to_spawn = 1;
     int32 type_id = 2;
-    improbable.Vector3f position = 3;
+    mdg_schema.common.util.Vector3f position = 3;
     int32 count = 4;
 }
 

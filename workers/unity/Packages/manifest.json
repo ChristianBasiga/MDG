@@ -1,25 +1,27 @@
 {
   "dependencies": {
-    "com.improbable.gdk.buildsystem": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.buildsystem",
-    "com.improbable.gdk.core": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.core",
-    "com.improbable.gdk.deploymentlauncher": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.deploymentlauncher",
-    "com.improbable.gdk.gameobjectcreation": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.gameobjectcreation",
-    "com.improbable.gdk.mobile": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.mobile",
-    "com.improbable.gdk.playerlifecycle": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.playerlifecycle",
-    "com.improbable.gdk.testutils": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.testutils",
-    "com.improbable.gdk.tools": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.tools",
-    "com.improbable.gdk.transformsynchronization": "file:../../../../gdk-for-unity/workers/unity/Packages/com.improbable.gdk.transformsynchronization",
     "com.unity.ads": "2.0.8",
     "com.unity.analytics": "3.3.2",
-    "com.unity.entities": "0.1.1-preview",
-    "com.unity.mathematics": "1.1.0",
-    "com.unity.package-manager-ui": "2.1.2",
+    "com.unity.ide.rider": "1.0.8",
+    "com.unity.package-manager-ui": "2.2.0",
     "com.unity.postprocessing": "2.1.7",
     "com.unity.purchasing": "2.0.6",
-    "com.unity.rendering.hybrid": "0.1.1-preview",
-    "com.unity.textmeshpro": "2.0.0",
-    "com.unity.timeline": "1.0.0",
+    "com.unity.test-framework": "1.0.13",
+    "com.unity.textmeshpro": "2.0.1",
+    "com.unity.timeline": "1.1.0",
+    "com.unity.ugui": "1.0.0",
     "com.unity.xr.legacyinputhelpers": "2.0.2",
+    "io.improbable.gdk.buildsystem": "0.3.1",
+    "io.improbable.gdk.core": "0.3.1",
+    "io.improbable.gdk.debug": "0.3.1",
+    "io.improbable.gdk.deploymentlauncher": "0.3.1",
+    "io.improbable.gdk.gameobjectcreation": "0.3.1",
+    "io.improbable.gdk.mobile": "0.3.1",
+    "io.improbable.gdk.playerlifecycle": "0.3.1",
+    "io.improbable.gdk.querybasedinteresthelper": "0.3.1",
+    "io.improbable.gdk.testutils": "0.3.1",
+    "io.improbable.gdk.tools": "0.3.1",
+    "io.improbable.gdk.transformsynchronization": "0.3.1",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
     "com.unity.modules.assetbundle": "1.0.0",
@@ -51,10 +53,14 @@
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
   },
-  "testables": [
-    "com.unity.collections",
-    "com.unity.entities",
-    "com.unity.jobs",
-    "com.unity.test-framework.performance"
+  "registry": "https://packages.unity.com",
+  "scopedRegistries": [
+    {
+      "name": "Improbable",
+      "url": "https://npm.improbable.io/gdk-for-unity/",
+      "scopes": [
+        "io.improbable"
+      ]
+    }
   ]
 }

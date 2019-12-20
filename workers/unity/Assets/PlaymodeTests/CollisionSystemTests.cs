@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Improbable;
 using Improbable.Gdk.Core;
-using Improbable.Worker.CInterop;
 using MDG;
 using NUnit.Framework;
 using UnityEngine;
@@ -14,6 +13,8 @@ using PositionSchema = MdgSchema.Common.Position;
 using SpawnSystems = MDG.Common.Systems.Spawn;
 using PositionSystems = MDG.Common.Systems.Position;
 using MDG.Common.Datastructures;
+using MdgSchema.Common.Util;
+using MDG.Common;
 
 namespace PlaymodeTests
 {
@@ -83,7 +84,7 @@ namespace PlaymodeTests
             EntityId secondSpawned = new EntityId(-1);
 
             // So it should be within the collider of first, barely at edge.
-            Vector3f secondPosition = firstPosition + new Vector3f(boxCollider.Dimensions.X * 2, 0, 0);
+            Vector3f secondPosition = HelperFunctions.Add(firstPosition, new Vector3f(boxCollider.Dimensions.X * 2, 0, 0));
 
             spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
             {
@@ -115,7 +116,7 @@ namespace PlaymodeTests
 
             workerSystem.EntityManager.SetComponentData(secondEntity, new PositionSchema.LinearVelocity.Component
             {
-                Velocity = firstPosition - secondPosition
+                Velocity = HelperFunctions.Subtract(firstPosition,secondPosition)
             });
             CollisionSchema.Collision.Component firstCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(firstEntity);
             CollisionSchema.Collision.Component secondCollision = workerSystem.EntityManager.GetComponentData<CollisionSchema.Collision.Component>(secondEntity);

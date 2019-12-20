@@ -4,10 +4,10 @@ using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
 using Improbable.Gdk.Subscriptions;
 using MDG;
-using MDG.ClientSide.UserInterface;
 using MDG.Common.Components;
 using MDG.Invader.Components;
 using MdgSchema.Common;
+using MdgSchema.Common.Util;
 using MdgSchema.Units;
 using NUnit.Framework;
 using Unity.Entities;
@@ -109,7 +109,7 @@ namespace PlaymodeTests
             SpawnSchema.SpawnRequest payload = new SpawnSchema.SpawnRequest
             {
                 TypeToSpawn = MdgSchema.Common.GameEntityTypes.Unit,
-                Position = new Improbable.Vector3f(1,1,1)
+                Position = new Vector3f(1,1,1)
             };
             EntityId unitEntityId = new EntityId(-1);
             spawnReqSystem.RequestSpawn(payload,
@@ -121,7 +121,7 @@ namespace PlaymodeTests
             yield return new WaitUntil(() => { return unitEntityId.IsValid(); });
             yield return new WaitForEndOfFrame();
 
-            GameObject unitObject = clientWorker.GetComponent<UnityClientConnector>().clientGameObjectCreator.GetLinkedGameObjectById(unitEntityId);
+            GameObject unitObject = clientWorker.GetComponent<UnityClientConnector>().ClientGameObjectCreator.GetLinkedGameObjectById(unitEntityId);
             EntityManager entityManager = workerSystem.EntityManager;
             Assert.IsNotNull(unitObject, $"Linked GameObject not created for Unit with entity id {unitEntityId}");
             Assert.True(unitObject.name.Contains("authoritative"), "Non authoritative unit created for authoritative client");
@@ -146,7 +146,7 @@ namespace PlaymodeTests
             int initialAmountOfUnitsInScene = GameObject.FindGameObjectsWithTag("Unit").Length;
             LinkedEntityComponent linkedUnit = GameObject.FindGameObjectWithTag("Unit").GetComponent<LinkedEntityComponent>();
 
-            Improbable.Vector3f respawnPosition = new Improbable.Vector3f(1, 1, 1);
+            Vector3f respawnPosition = new Vector3f(1, 1, 1);
             WorkerInWorld workerInWorld = null;
             yield return new WaitUntil(() =>
             {

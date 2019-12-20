@@ -1,7 +1,6 @@
 package mdg_schema.common.collision;
 // All common components be in 800 range.
 import "improbable/standard_library.schema";
-import "improbable/vector3.schema";
 import "common/metadata.schema";
 enum ColliderType{
     SPHERE = 1;

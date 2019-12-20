@@ -9,5 +9,6 @@ enum StructureType{
 component StructureMetadata{
     id = 952;
     StructureType structure_type = 1;
-    int32 construction_time = 3;
+    int32 construction_time = 2;
+    EntityId owner_id = 3;
 }
