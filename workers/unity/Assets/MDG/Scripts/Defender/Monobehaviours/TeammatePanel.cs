@@ -32,6 +32,7 @@ namespace MDG.Defender.Monobehaviours
 
         private void UpdateHealthBar(int fill)
         {
+            Debug.Log("I eve happen??");
             healthbar.fillAmount = fill;
         }
 

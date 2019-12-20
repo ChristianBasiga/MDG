@@ -59,6 +59,7 @@ namespace MDG.Defender.Monobehaviours
                 GameObject linkedDefender = ClientWorker.ClientGameObjectCreator.GetLinkedGameObjectById(obj.SpatialOSEntityId);
                 if (linkedDefender.CompareTag("Player"))
                 {
+                    Debug.Log("here?");
                     return;
                 }
                 teamStatusUpdater.AddTeammate(linkedDefender.GetComponent<LinkedEntityComponent>());

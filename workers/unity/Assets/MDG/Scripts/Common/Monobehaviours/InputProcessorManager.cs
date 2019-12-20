@@ -42,7 +42,6 @@ namespace MDG.Common.MonoBehaviours
 
         public void DisableInputProcessors()
         {
-            Debug.Log("Get to here");
             for (int i = 0; i < inputProcessors.Count; ++i)
             {
                 inputProcessors[i].Disable();

@@ -204,7 +204,6 @@ namespace MDG.Game.Systems
             List<EntityId> deletedPlayers = entitySystem.GetEntitiesRemoved().FindAll(id => playerIds.Contains(id));
             for (int i = 0; i < deletedPlayers.Count; ++i)
             {
-                Debug.Log("I'm happening right??");
                 playerIds.Remove(deletedPlayers[i]);
             }
         }

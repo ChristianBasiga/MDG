@@ -1133,10 +1133,10 @@ GameObject:
   m_Component:
   - component: {fileID: 75549174696508509}
   - component: {fileID: 2909370908904995481}
-  - component: {fileID: 1085594466165667637}
   - component: {fileID: 7775301137140309612}
   - component: {fileID: 5478630840021229591}
   - component: {fileID: -5242753329184740657}
+  - component: {fileID: -1211072342727784786}
   m_Layer: 0
   m_Name: HUNTED
   m_TagString: Untagged
@@ -1170,18 +1170,6 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2c025beae939ba54a91a665f7c624431, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1085594466165667637
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2565051592765713897}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 970ff5c0aca59ea48a1bad0b31347f0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &7775301137140309612
@@ -1223,6 +1211,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healthbar: {fileID: 0}
+--- !u!114 &-1211072342727784786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2565051592765713897}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dba9f6408ea9064da0f8560620cd3b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2633085915298265195
 GameObject:
   m_ObjectHideFlags: 0

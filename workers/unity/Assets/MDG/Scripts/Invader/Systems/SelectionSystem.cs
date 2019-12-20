@@ -36,14 +36,12 @@ namespace MDG.Invader.Systems {
 
         SelectionBounds? selectionBounds;
         public bool SelectedThisFrame { get { return selectionBounds.HasValue; } }
-        EntityId invaderId;
         EntityQuery clickableUnitQuery;
 
         // Prob just use init instead of onstart running
-        public void Init(ClientGameObjectCreator clientGameObjectCreator, EntityId invaderId)
+        public void Init(ClientGameObjectCreator clientGameObjectCreator)
         {
             this.clientGameObjectCreator = clientGameObjectCreator;
-            this.invaderId = invaderId;
 
         }
 
@@ -152,7 +150,7 @@ namespace MDG.Invader.Systems {
             {
                 selectionBounds = selectionBounds.Value,
                 selectedQueue = selected.AsParallelWriter(),
-                invaderId = invaderId
+                invaderId = clientGameObjectCreator.PlayerLink.EntityId
             };
             selectedJobHandle = setSelectedEntities.Schedule(clickableUnitQuery);
             selectedJobHandle.Complete();
