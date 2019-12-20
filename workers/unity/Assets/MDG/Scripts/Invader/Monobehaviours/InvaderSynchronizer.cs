@@ -42,9 +42,6 @@ namespace MDG.Invader.Monobehaviours {
         ScriptableObjects.Structures.Structure selectedStructure;
 
         ShopBehaviour shopBehaviour;
-
-
-
         // Could just run search, again but dirty and this is also dirty, rethink this part later.
         EntityId clickedTerritory;
 
@@ -135,6 +132,7 @@ namespace MDG.Invader.Monobehaviours {
         {
             if (EventSystem.current.IsPointerOverGameObject())
             {
+                Debug.Log("Stuck here???");
                return;
             }
 

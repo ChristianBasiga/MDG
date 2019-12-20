@@ -232,11 +232,12 @@ namespace MDG
 
         private void AddInvaderSystems()
         {
+         //   yield return new WaitUntil(() => ClientGameObjectCreator.PlayerLink != null);
             Worker.World.GetOrCreateSystem<SelectionSystem>().Enabled = true;
             Worker.World.GetOrCreateSystem<SelectionSystem>().Init(ClientGameObjectCreator, ClientGameObjectCreator.PlayerLink.EntityId);
             Worker.World.GetOrCreateSystem<CommandGiveSystem>().Enabled = true;
             Worker.World.GetOrCreateSystem<CommandUpdateSystem>().Enabled = true;
-        //    Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = true;
+            //    Worker.World.GetOrCreateSystem<UnitRerouteSystem>().Enabled = true;
         }
 
 
@@ -269,8 +270,6 @@ namespace MDG
 
         public void CloseConnection()
         {
-            // When it closes connection, delete player entity
-            // so all entities owned by player get orphaned and removed by clean up systesm.
             commandSystem.SendCommand(new WorldCommands.DeleteEntity.Request
             {
                 EntityId = ClientGameObjectCreator.PlayerLink.EntityId

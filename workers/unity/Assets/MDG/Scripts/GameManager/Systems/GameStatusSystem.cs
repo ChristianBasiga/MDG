@@ -55,6 +55,7 @@ namespace MDG.Game.Systems
         {
             base.OnCreate();
             territoryQuery = GetEntityQuery(
+                ComponentType.ReadOnly<SpatialEntityId>(),
                 ComponentType.ReadOnly<TerritorySchema.Territory.Component>(),
                 ComponentType.ReadOnly<TerritorySchema.TerritoryStatus.Component>()
                 );
@@ -91,6 +92,12 @@ namespace MDG.Game.Systems
 
         protected override void OnUpdate()
         {
+
+            CheckDeletedPlayers();  
+            if (playerIds.Count == 0 && startedGame)
+            {
+                ResetGameState();
+            }
             if (!startedGame)
             {
                 var joinRequests = commandSystem.GetRequests<GameSchema.GameStatus.JoinGame.ReceivedRequest>(gameManagerEntityId);
@@ -148,9 +155,15 @@ namespace MDG.Game.Systems
             }
             else if (!endedGame)
             {
+                if (playerIds.Count == 0)
+                {
+                    Debug.Log("I ever happen");
+                    ResetGameState();
+                    return;
+                }
                 bool timedOut = false;
                 int claimed = 0;
-                Entities.With(territoryQuery).ForEach((ref TerritorySchema.TerritoryStatus.Component territoryStatus) =>
+                Entities.With(territoryQuery).ForEach((ref SpatialEntityId spatialEntityId, ref TerritorySchema.TerritoryStatus.Component territoryStatus) =>
                 {
                     if (territoryStatus.Status == TerritorySchema.TerritoryStatusTypes.Claimed)
                     {
@@ -165,7 +178,6 @@ namespace MDG.Game.Systems
                     }), gameManagerEntityId);
                     OnEndGame();
                 }
-
                 Entities.With(gameStatusQuery).ForEach((ref SpatialEntityId spatialEntityId, ref GameSchema.GameStatus.Component gameStatus) =>
                 {
                     if (gameStatus.TimeLeft > 0)
@@ -192,6 +204,7 @@ namespace MDG.Game.Systems
             List<EntityId> deletedPlayers = entitySystem.GetEntitiesRemoved().FindAll(id => playerIds.Contains(id));
             for (int i = 0; i < deletedPlayers.Count; ++i)
             {
+                Debug.Log("I'm happening right??");
                 playerIds.Remove(deletedPlayers[i]);
             }
         }
@@ -203,9 +216,33 @@ namespace MDG.Game.Systems
             {
                 GameState = GameSchema.GameStates.Over
             }, gameManagerEntityId);
-            playerIds.Clear();
+        }
+
+        private void ResetGameState()
+        {
             startedGame = false;
             sentStartBroadcast = false;
+            endedGame = false;
+            componentUpdateSystem.SendUpdate(new GameSchema.GameStatus.Update
+            {
+                GameState = GameSchema.GameStates.RoleSelection,
+                TimeLeft = gameConfig.GameTime
+            }, gameManagerEntityId);
+
+            NativeArray<SpatialEntityId> territoryEntities = territoryQuery.ToComponentDataArray<SpatialEntityId>(Allocator.TempJob);
+            for (int i = 0; i < territoryEntities.Length; ++i)
+            {
+                commandSystem.SendCommand(new TerritorySchema.TerritoryStatus.UpdateClaim.Request
+                {
+                    AllowShortCircuiting = true,
+                    TargetEntityId = territoryEntities[i].EntityId,
+                    Payload = new TerritorySchema.UpdateTerritoryStatusRequest
+                    {
+                        Status = TerritorySchema.TerritoryStatusTypes.Released
+                    }
+                });
+            }
+            territoryEntities.Dispose();
         }
     }
 }
