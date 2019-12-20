@@ -138,6 +138,7 @@ namespace MDG
                 LinkedEntityComponent linkedEntityComponent = g.GetComponent<LinkedEntityComponent>();
                 if (!hasAuthority)
                 {
+                    g.tag = type.ToString();
                     otherPlayerLinks.Add(linkedEntityComponent);
                 }
                 else

@@ -44,13 +44,14 @@ namespace MDG.Defender.Monobehaviours
 
             ClientWorker.LoadedUI.TryGetValue("TeammateCanvas", out GameObject statusUpdater);
             teamStatusUpdater = statusUpdater.transform.GetChild(0).GetComponent<TeamStatusUpdater>();
-
-            var defenderLinks = ClientWorker.ClientGameObjectCreator.otherPlayerLinks.FindAll((link) => link.TryGetComponent(typeof(DefenderSynchronizer), out _));
+            var defenderLinks = ClientWorker.ClientGameObjectCreator.otherPlayerLinks.FindAll((link) => link.CompareTag(GameEntityTypes.Hunted.ToString()));
             for (int i = 0; i < defenderLinks.Count; ++i)
             {
                 teamStatusUpdater.AddTeammate(defenderLinks[i]);
             }
         }
+
+
 
         private void OnEntityAdded(Improbable.Gdk.GameObjectCreation.SpatialOSEntity obj)
         {

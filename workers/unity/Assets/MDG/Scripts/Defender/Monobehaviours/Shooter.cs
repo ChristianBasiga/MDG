@@ -29,6 +29,9 @@ namespace MDG.Defender.Monobehaviours
 
 #pragma warning restore 649
 
+
+        float timeSinceLastShot = 0;
+
         
 
         // Start is called before the first frame update
@@ -41,30 +44,38 @@ namespace MDG.Defender.Monobehaviours
 
         public void Shoot()
         {
-            LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
-
-            Ray ray = shootCamera.ScreenPointToRay(Input.mousePosition);
-            shootOrigin.rotation = Quaternion.LookRotation(ray.direction);
-
-            Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(shootOrigin.position);
-            Projectile projectile = Weapon as Projectile;
-            Vector3f bulletLinearVelocity = HelperFunctions.Scale(HelperFunctions.Vector3fFromUnityVector(ray.direction), projectile.ProjectileSpeed);
-
-            ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(projectile);
-            projectileConfig.startingPosition = bulletStartingPosition;
-            projectileConfig.linearVelocity = bulletLinearVelocity;
-
-            WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(Weapon);
-            weaponMetadata.wielderId = linkedEntityComponent.EntityId.Id;
-
-            byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
-            byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
-
-            spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
+            if (timeSinceLastShot > 0)
             {
-                Position = bulletStartingPosition,
-                TypeToSpawn = MdgSchema.Common.GameEntityTypes.Weapon,
-            }, OnBulletSpawned, serializedWeaponMetadata, serializedWeapondata);
+                timeSinceLastShot -= Time.deltaTime;
+            }
+            else
+            {
+                timeSinceLastShot = Weapon.AttackCooldown;
+                LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
+
+                Ray ray = shootCamera.ScreenPointToRay(Input.mousePosition);
+                shootOrigin.rotation = Quaternion.LookRotation(ray.direction);
+
+                Vector3f bulletStartingPosition = HelperFunctions.Vector3fFromUnityVector(shootOrigin.position);
+                Projectile projectile = Weapon as Projectile;
+                Vector3f bulletLinearVelocity = HelperFunctions.Scale(HelperFunctions.Vector3fFromUnityVector(ray.direction), projectile.ProjectileSpeed);
+
+                ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(projectile);
+                projectileConfig.startingPosition = bulletStartingPosition;
+                projectileConfig.linearVelocity = bulletLinearVelocity;
+
+                WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(Weapon);
+                weaponMetadata.wielderId = linkedEntityComponent.EntityId.Id;
+
+                byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
+                byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
+
+                spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
+                {
+                    Position = bulletStartingPosition,
+                    TypeToSpawn = MdgSchema.Common.GameEntityTypes.Weapon,
+                }, OnBulletSpawned, serializedWeaponMetadata, serializedWeapondata);
+            }
         }
 
         void OnBulletSpawned(EntityId entityId)
