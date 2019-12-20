@@ -41,7 +41,6 @@ namespace MDG.Game.Systems
         bool sentStartBroadcast = false;
         bool endedGame = false;
         GameConfig gameConfig;
-        int playersJoined = 0;
 
 
         #region public methods
@@ -72,7 +71,6 @@ namespace MDG.Game.Systems
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             // Should be set by server and based on env later.
             gameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
-
             logger = workerSystem.LogDispatcher;
             playerIds = new HashSet<EntityId>();
         }
@@ -97,12 +95,10 @@ namespace MDG.Game.Systems
             {
                 var joinRequests = commandSystem.GetRequests<GameSchema.GameStatus.JoinGame.ReceivedRequest>(gameManagerEntityId);
                 // Do based on role later, this is fine for now.
-                startedGame = playersJoined == gameConfig.MinimumPlayers;
                 for (int i = 0; i < joinRequests.Count; ++i)
                 {
                     ref readonly var joinRequest = ref joinRequests[i];
                     Debug.Log($"recieved join request with role {joinRequest.Payload.PlayerRole} and id {joinRequest.Payload.EntityId}");
-
                     if (playerIds.Contains(joinRequest.Payload.EntityId))
                     {
                         /* Make own log dispatcher extending SpatialOS logger later.
@@ -130,9 +126,9 @@ namespace MDG.Game.Systems
                             }
                         });
                         playerIds.Add(joinRequest.Payload.EntityId);
-                        playersJoined += 1;
                     }
                 }
+                startedGame = playerIds.Count.Equals(gameConfig.MinimumPlayers);
             }
             else if (!sentStartBroadcast)
             {
@@ -188,8 +184,6 @@ namespace MDG.Game.Systems
                         OnEndGame();
                     }
                 });
-
-            
             }
         }
 
@@ -209,6 +203,9 @@ namespace MDG.Game.Systems
             {
                 GameState = GameSchema.GameStates.Over
             }, gameManagerEntityId);
+            playerIds.Clear();
+            startedGame = false;
+            sentStartBroadcast = false;
         }
     }
 }

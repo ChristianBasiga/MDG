@@ -132,9 +132,14 @@ namespace MDG
                 pathToPlayer = $"{pathToPlayer}/{type.ToString()}";
                 Debug.Log("Path to Player " + pathToPlayer);
                 GameObject g = CreateEntityObject(entity, linker, pathToPlayer);
+                LinkedEntityComponent linkedEntityComponent = g.GetComponent<LinkedEntityComponent>();
                 if (!hasAuthority)
                 {
-                    otherPlayerLinks.Add(g.GetComponent<LinkedEntityComponent>());
+                    otherPlayerLinks.Add(linkedEntityComponent);
+                }
+                else
+                {
+                    playerLink = linkedEntityComponent;
                 }
             }
             else if (metaData.EntityType.Equals("Unit"))
