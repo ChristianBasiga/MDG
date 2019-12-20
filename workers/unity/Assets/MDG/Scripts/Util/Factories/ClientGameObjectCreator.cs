@@ -220,12 +220,6 @@ namespace MDG
                 {
                     return;
                 }
-                if (linkedGameObject.CompareTag("Player"))
-                {
-                    // Clean up all entities it owns.
-                    // Remove active systems.
-                }
-                // Add check for reusable.
                 else
                 {
                     UnityObjectDestroyer.Destroy(linkedGameObject);

@@ -137,6 +137,7 @@ namespace MDG.Common.Systems.Position
         #region Event Handlers
         private void OnMovedRegion(QuadNode quadNode)
         {
+            // With current demo, they will never enter new region.
             if (entitiesThatMovedRegionBuffer.TryGetValue(quadNode.entityId, out Vector3f updatedPosition))
             {
                 entitiesThatMovedRegionBuffer[quadNode.entityId] = quadNode.position;
@@ -219,13 +220,17 @@ namespace MDG.Common.Systems.Position
             }
 
             AddNewEntitiesToQuadTree();
-            NativeHashMap<EntityId, Vector3f> entitiesThatMovedRegions = new NativeHashMap<EntityId, Vector3f>(applyVelocityQuery.CalculateEntityCount(), Allocator.TempJob);
-            foreach (KeyValuePair<EntityId, Vector3f> positionUpdate in entitiesThatMovedRegionBuffer)
+          //  NativeHashMap<EntityId, Vector3f> entitiesThatMovedRegions = new NativeHashMap<EntityId, Vector3f>(applyVelocityQuery.CalculateEntityCount(), Allocator.TempJob);
+           /* foreach (KeyValuePair<EntityId, Vector3f> positionUpdate in entitiesThatMovedRegionBuffer)
             {
                 entitiesThatMovedRegions.TryAdd(positionUpdate.Key, positionUpdate.Value);
-            }
+            }*/
             applyVelocityHandle.Complete();
 
+
+            /* For sake of demo since not many entities
+             * they don't be moving regions at all, so maybe position not being updated
+             * is issue for lag as is out of sync for load balancers????????
             if (entitiesThatMovedRegions.Length > 0)
             {
                 UpdateSpatialPositionJob updateSpatialPositionJob = new UpdateSpatialPositionJob
@@ -235,14 +240,14 @@ namespace MDG.Common.Systems.Position
                 // Runs updating spatialOS position with entity transform in background while update entities in tree
                 // and remove from quad tree removed entities.
                 spatialPosUpdateJobHandle = updateSpatialPositionJob.Schedule(updateSpatialPositionQuery);
-            }
+            }*/
             UpdateEntitiesInTree();
             ShakeQuadTree();
             if (spatialPosUpdateJobHandle.HasValue)
             {
                 spatialPosUpdateJobHandle.Value.Complete();
             }
-            entitiesThatMovedRegions.Dispose();
+         //   entitiesThatMovedRegions.Dispose();
         }
 
         // Iterates through newly added entities and inserts into quad tree.
@@ -255,6 +260,8 @@ namespace MDG.Common.Systems.Position
                 if (!spatialPartitioning.FindEntity(spatialEntityId.EntityId).HasValue)
                 {
                     spatialPartitioning.Insert(spatialEntityId.EntityId, EntityPosition.Position);
+
+
                 }
             });
         }
@@ -263,11 +270,25 @@ namespace MDG.Common.Systems.Position
         // over a couple frames is fine.
         private void UpdateEntitiesInTree()
         {
+
+            // For now auto updating position, could do in one go.
+            NativeHashMap<EntityId, Vector3f> entitiesThatMovedRegions = new NativeHashMap<EntityId, Vector3f>(applyVelocityQuery.CalculateEntityCount(), Allocator.TempJob);
+
             // For each entityId to update, first check using the position to update to if still within region.
             while (updateQueue.IsCreated && updateQueue.TryDequeue(out UpdatePayload updatePayload))
             {
+                entitiesThatMovedRegions.TryAdd(updatePayload.EntityUpdating, updatePayload.NewPosition);
                 spatialPartitioning.MoveEntity(updatePayload.EntityUpdating, updatePayload.NewPosition);
             }
+
+            UpdateSpatialPositionJob updateSpatialPositionJob = new UpdateSpatialPositionJob
+            {
+                toUpdate = entitiesThatMovedRegions
+            };
+            // Runs updating spatialOS position with entity transform in background while update entities in tree
+            // and remove from quad tree removed entities.
+            spatialPosUpdateJobHandle = updateSpatialPositionJob.Schedule(updateSpatialPositionQuery);
+            entitiesThatMovedRegions.Dispose(spatialPosUpdateJobHandle.Value);
         }
 
         // Prunes tree of any entities in quad tree that are no longer active.
@@ -275,6 +296,8 @@ namespace MDG.Common.Systems.Position
         // or keep subdivided, but still prune. Worry about this later.
         private void ShakeQuadTree()
         {
+            Debug.Log("Ignring shaking of tree for now incase it caused spikes");
+            /*
             // Shaking is expensive, could do smarter, and prune per region, make entities to remove also subdivided.
             int shakesThisFrame = 0;
             while (shakesThisFrame < shakesPerFrame && toPruneOff.Count > 0)
@@ -283,7 +306,7 @@ namespace MDG.Common.Systems.Position
                 EntityId toRemove = toPruneOff.Dequeue();
                 spatialPartitioning.Remove(toRemove);
                 shakesThisFrame += 1;
-            }
+            }*/
         }
         #endregion
     }

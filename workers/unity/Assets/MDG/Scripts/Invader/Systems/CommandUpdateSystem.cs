@@ -107,6 +107,15 @@ namespace MDG.Invader.Systems
         Weapon unitWeapon;
 
 
+        /// <summary>
+        /// Combine these move jobs into single job that switches on command listener.
+        /// Also can avoid altering archtype and overhead of that, not sure how expensive that is though.
+        /// but maintainign one archtype better than maintaining three that are mostly the same.
+        /// Would switch twice, one twitch for determining how get velocity, but would mean
+        /// job expect occupy payloads and attackee positions even if not needed. Like cmonn take advanage of data orientation my guy
+        /// even if ignores rule of small
+        /// </summary>
+
         struct MoveCommandJob : IJobForEachWithEntity<MoveCommand, EntityPosition.Component, PositionSchema.LinearVelocity.Component,
             CollisionSchema.BoxCollider.Component, CommandListener>
         {

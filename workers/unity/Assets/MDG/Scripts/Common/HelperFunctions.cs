@@ -152,6 +152,10 @@ namespace MDG.Common
         #region UI related helper functions.
         public static IEnumerator UpdateFill(UnityEngine.UI.Image image, float pct, Action<float> OnFillUpdated = null, float timeToUpdate = 2.2f, System.Func<bool> interruptCheck = null)
         {
+            if (image == null)
+            {
+                yield break;
+            }
             if (pct == image.fillAmount)
             {
                 yield return new WaitForEndOfFrame();

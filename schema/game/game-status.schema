@@ -6,6 +6,13 @@ enum WinConditions{
     TerritoriesClaimed = 2;
 }
 
+enum GameStates{
+    RoleSelection = 1;
+    WaitingForPlayers = 2;
+    Playing = 3;
+    Over = 4;
+}
+
 
 type StartGameEventPayload{
     int32 session_id = 1;

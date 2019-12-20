@@ -118,5 +118,15 @@ namespace MDG.Defender.Monobehaviours
                     break;
             }
         }
+
+        public void Disable()
+        {
+            
+        }
+
+        public void Enable()
+        {
+            
+        }
     }
 }

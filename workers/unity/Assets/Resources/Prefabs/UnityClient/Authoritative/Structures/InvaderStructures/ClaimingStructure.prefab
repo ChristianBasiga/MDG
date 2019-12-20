@@ -180,7 +180,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7206942676595562691}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 221.34563, y: 196.66904, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_Children:
   - {fileID: 2176931463224479587}
@@ -257,6 +257,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45404753152a5b747829b4cf2ff140bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  constructionProgressUI: {fileID: 0}
 --- !u!114 &5344704523460918562
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -270,7 +271,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   JobCapacity: 0
-  buildMenu: {fileID: 0}
 --- !u!114 &6094803585582774702
 MonoBehaviour:
   m_ObjectHideFlags: 0

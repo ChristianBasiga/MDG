@@ -82,5 +82,13 @@ namespace MDG.Invader.Monobehaviours.InputProcessors
         {
             GetComponent<InputProcessorManager>().AddInputProcessor(this);
         }
+
+        public void Disable()
+        {
+        }
+
+        public void Enable()
+        {
+        }
     }
 }

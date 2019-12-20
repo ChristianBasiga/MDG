@@ -76,7 +76,7 @@ namespace MDG.Defender.Monobehaviours {
         void InputJump()
         {
 
-           
+           // Maybe re-add this for fuck of it?
         }
 
         private void OnPlayerMoveHandler()
@@ -93,6 +93,14 @@ namespace MDG.Defender.Monobehaviours {
         {
             PlayerMovement();
             InputJump();
+        }
+
+        public void Disable()
+        {
+        }
+
+        public void Enable()
+        {
         }
     }
 }

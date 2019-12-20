@@ -32,12 +32,6 @@ namespace MDG.Defender.Monobehaviours
         DefenderConfig defenderConfig;
         InputConfig inputConfig;
 
-        private void Awake()
-        {
-            LockCursor();
-            Cursor.visible = false;
-        }
-
         // Start is called before the first frame update
         void Start()
         {
@@ -49,6 +43,7 @@ namespace MDG.Defender.Monobehaviours
             };*/
             // Really just make abstract calss instead of interface at this point.
             AddToManager();
+            Cursor.visible = false;
         }
 
 
@@ -60,8 +55,14 @@ namespace MDG.Defender.Monobehaviours
 
         void LockCursor()
         {
-
+            Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
+        }
+
+        void UnlockCursor()
+        {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
 
         void CameraRotation()
@@ -70,6 +71,7 @@ namespace MDG.Defender.Monobehaviours
             {
                 return;
             }
+            Debug.Log("Do I happen?");
             //The angles of rotation.
             mouseX += Input.GetAxis(inputConfig.XMouseMovement) * defenderConfig.MouseSensitivty * Time.deltaTime;
             mouseY -= Input.GetAxis(inputConfig.YMouseMovement) * defenderConfig.MouseSensitivty * Time.deltaTime;
@@ -99,15 +101,23 @@ namespace MDG.Defender.Monobehaviours
         {
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None;
+                UnlockCursor();
             }
-            if (Application.isPlaying)
+            else if (Application.isFocused)
             {
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
+                LockCursor();
                 CameraRotation();
             }
+        }
+
+        public void Disable()
+        {
+            UnlockCursor();
+        }
+
+        public void Enable()
+        {
+            LockCursor();
         }
     }
 }

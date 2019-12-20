@@ -11,5 +11,7 @@ namespace MDG.Common.Interfaces
     {
         void AddToManager();
         void ProcessInput();
+        void Disable();
+        void Enable();
     }
 }

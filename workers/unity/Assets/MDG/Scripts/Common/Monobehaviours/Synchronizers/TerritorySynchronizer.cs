@@ -7,40 +7,57 @@ namespace MDG.Common.MonoBehaviours.Synchronizers
     public class TerritorySynchronizer : MonoBehaviour
     {
 
-        [SerializeField]
-        Image claimedImage;
-        [SerializeField]
-        Image claimingImage;
-        [SerializeField]
-        Image freeImage;
 
-        // Add warning drowner for this later.
+        Material baseMaterial;
+#pragma warning disable 649
+        [SerializeField]
+        Material claimedImage;
+        [SerializeField]
+        Material claimingImage;
+        [SerializeField]
+        Material freeImage;
+
+        [SerializeField]
+        //Image claimProgress;
         [Require] TerritorySchema.TerritoryStatusReader territoryStatusReader;
+#pragma warning restore 649
+
+        MeshRenderer meshRenderer;
+
         // Start is called before the first frame update
         void Start()
         {
-            claimedImage.gameObject.SetActive(false);
-            claimingImage.gameObject.SetActive(false);
-            freeImage.gameObject.SetActive(false);
+           // claimProgress.gameObject.SetActive(false);
+
+            meshRenderer = GetComponent<MeshRenderer>();
+            baseMaterial = meshRenderer.material;
             territoryStatusReader.OnStatusUpdate += OnTerritoryStatusUpdate;
+            territoryStatusReader.OnClaimProgressUpdate += UpdateClaimProgressbar;
+            // Add caim progress bar here too, might as well, this is already ui.
+        }
+
+        private void UpdateClaimProgressbar(float obj)
+        {
+            // suppose would be this.
+            Debug.Log("Claim progress " + obj);
         }
 
         private void OnTerritoryStatusUpdate(TerritorySchema.TerritoryStatusTypes status)
         {
-            claimedImage.gameObject.SetActive(false);
-            claimingImage.gameObject.SetActive(false);
-            freeImage.gameObject.SetActive(false);
-
             switch (status)
             {
                 case TerritorySchema.TerritoryStatusTypes.Claimed:
-                    claimedImage.gameObject.SetActive(true);
+                    meshRenderer.material = claimedImage;
+               //     claimProgress.gameObject.SetActive(false);
                     break;
+                // Should be a bar.
                 case TerritorySchema.TerritoryStatusTypes.Claiming:
-                    claimingImage.gameObject.SetActive(true);
+                    meshRenderer.material = claimingImage;
+                 //   claimProgress.gameObject.SetActive(true);
                     break;
                 case TerritorySchema.TerritoryStatusTypes.Released:
-                    freeImage.gameObject.SetActive(true);
+                    meshRenderer.material = baseMaterial;
+                   // claimProgress.gameObject.SetActive(false);
                     break;
             }
         }
