@@ -2,6 +2,7 @@
 using MDG.ScriptableObjects.Game;
 using MdgSchema.Common;
 using MdgSchema.Player;
+using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -17,20 +18,40 @@ namespace MDG.Game.Systems
     [DisableAutoCreation]
     [AlwaysUpdateSystem]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
+    [UpdateBefore(typeof(SystemCleanupSystem))]
     public class GameStatusSystem : ComponentSystem
     {
+        private ILogDispatcher logger;
+
 
         CommandSystem commandSystem;
         ComponentUpdateSystem componentUpdateSystem;
         WorkerSystem workerSystem;
+        EntitySystem entitySystem;
+
         EntityQuery gameStatusQuery;
         EntityQuery playerQuery;
         EntityQuery territoryQuery;
         EntityId gameManagerEntityId = new EntityId(-1);
+        HashSet<EntityId> playerIds;
+
+
+        // These flags are not scalable for multiple sessions at once, replace later.
         bool startedGame = false;
         bool sentStartBroadcast = false;
+        bool endedGame = false;
         GameConfig gameConfig;
         int playersJoined = 0;
+
+
+        #region public methods
+
+        public bool PlayerInGame(EntityId entityId)
+        {
+            return playerIds.Contains(entityId);
+        }
+        #endregion
+
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -47,9 +68,13 @@ namespace MDG.Game.Systems
             gameStatusQuery.SetFilter(GameSchema.GameStatus.ComponentAuthority.Authoritative);
             commandSystem = World.GetExistingSystem<CommandSystem>();
             componentUpdateSystem = World.GetExistingSystem<ComponentUpdateSystem>();
+            entitySystem = World.GetExistingSystem<EntitySystem>();
             workerSystem = World.GetExistingSystem<WorkerSystem>();
             // Should be set by server and based on env later.
             gameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
+
+            logger = workerSystem.LogDispatcher;
+            playerIds = new HashSet<EntityId>();
         }
 
 
@@ -61,26 +86,10 @@ namespace MDG.Game.Systems
             spatialEntityIds.Dispose();
         }
 
-        struct CheckEnoughPlayersJob : IJobForEach<PlayerMetaData.Component, GameMetadata.Component>
+        protected override void OnDestroy()
         {
-            public NativeArray<bool> invaderSpawned;
-            public NativeArray<int> defendersSpawnedCount;
-            public void Execute([ReadOnly] ref PlayerMetaData.Component c0, [ReadOnly] ref GameMetadata.Component c1)
-            {
-                switch (c1.Type)
-                {
-                    case GameEntityTypes.Hunted:
-                        defendersSpawnedCount[0] += 1;
-                        break;
-                    case GameEntityTypes.Hunter:
-                        invaderSpawned[0] = true;
-                        break;
-                }
-            }
+            base.OnDestroy();
         }
-
-
-
 
         protected override void OnUpdate()
         {
@@ -88,16 +97,41 @@ namespace MDG.Game.Systems
             {
                 var joinRequests = commandSystem.GetRequests<GameSchema.GameStatus.JoinGame.ReceivedRequest>(gameManagerEntityId);
                 // Do based on role later, this is fine for now.
-                playersJoined += joinRequests.Count;
                 startedGame = playersJoined == gameConfig.MinimumPlayers;
                 for (int i = 0; i < joinRequests.Count; ++i)
                 {
-                    Debug.Log("recieved join request with role " + joinRequests[i].Payload.PlayerRole);
-                    commandSystem.SendResponse(new GameSchema.GameStatus.JoinGame.Response
+                    ref readonly var joinRequest = ref joinRequests[i];
+                    Debug.Log($"recieved join request with role {joinRequest.Payload.PlayerRole} and id {joinRequest.Payload.EntityId}");
+
+                    if (playerIds.Contains(joinRequest.Payload.EntityId))
                     {
-                        RequestId = joinRequests[i].RequestId,
-                        Payload = new GameSchema.PlayerJoinResponse()
-                    }); 
+                        /* Make own log dispatcher extending SpatialOS logger later.
+                        logger.HandleLog(LogType.Log, new LogEvent
+                        {
+                            f
+                        })*/
+                        string message = $"{joinRequest.Payload.EntityId} has already joined the game";
+                        Debug.Log(message);
+                        commandSystem.SendResponse(new GameSchema.GameStatus.JoinGame.Response
+                        {
+                            FailureMessage = message,
+                            RequestId = joinRequest.RequestId
+                        });
+                    }
+                    else
+                    {
+                        commandSystem.SendResponse(new GameSchema.GameStatus.JoinGame.Response
+                        {
+                            RequestId = joinRequest.RequestId,
+                            Payload = new GameSchema.PlayerJoinResponse
+                            {
+                                EntityId = joinRequest.Payload.EntityId,
+                                PlayerRole = joinRequest.Payload.PlayerRole
+                            }
+                        });
+                        playerIds.Add(joinRequest.Payload.EntityId);
+                        playersJoined += 1;
+                    }
                 }
             }
             else if (!sentStartBroadcast)
@@ -108,8 +142,15 @@ namespace MDG.Game.Systems
                     SessionId = 1
                 }), gameManagerEntityId);
                 sentStartBroadcast = true;
+
+                componentUpdateSystem.SendUpdate(new GameSchema.GameStatus.Update
+                {
+                    GameState = GameSchema.GameStates.Playing
+                }, gameManagerEntityId);
+
+                // Right now it only sends events not actually maintain state initself.
             }
-            else
+            else if (!endedGame)
             {
                 bool timedOut = false;
                 int claimed = 0;
@@ -126,6 +167,7 @@ namespace MDG.Game.Systems
                     {
                         WinConditionMet = GameSchema.WinConditions.TerritoriesClaimed
                     }), gameManagerEntityId);
+                    OnEndGame();
                 }
 
                 Entities.With(gameStatusQuery).ForEach((ref SpatialEntityId spatialEntityId, ref GameSchema.GameStatus.Component gameStatus) =>
@@ -140,11 +182,33 @@ namespace MDG.Game.Systems
                         // Gotta rise game over event.
                         componentUpdateSystem.SendEvent(new GameSchema.GameStatus.EndGame.Event(new GameSchema.GameEndEventPayload
                         {
-                            WinConditionMet = GameSchema.WinConditions.TimedOut
+                            WinConditionMet = GameSchema.WinConditions.TimedOut,
+                            GameState = GameSchema.GameStates.Over
                         }), spatialEntityId.EntityId);
+                        OnEndGame();
                     }
                 });
+
+            
             }
+        }
+
+        private void CheckDeletedPlayers()
+        {
+            List<EntityId> deletedPlayers = entitySystem.GetEntitiesRemoved().FindAll(id => playerIds.Contains(id));
+            for (int i = 0; i < deletedPlayers.Count; ++i)
+            {
+                playerIds.Remove(deletedPlayers[i]);
+            }
+        }
+
+        private void OnEndGame()
+        {
+            endedGame = true;
+            componentUpdateSystem.SendUpdate(new GameSchema.GameStatus.Update
+            {
+                GameState = GameSchema.GameStates.Over
+            }, gameManagerEntityId);
         }
     }
 }

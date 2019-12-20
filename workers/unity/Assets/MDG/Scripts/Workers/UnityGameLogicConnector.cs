@@ -19,6 +19,7 @@ using MDG.Common.Systems.Stat;
 using MDG.Common.Systems.Weapon;
 using MDG.Common.Systems.Structure;
 using MDG.Templates;
+using MDG.Game.Systems;
 
 namespace MDG
 {
@@ -62,12 +63,13 @@ namespace MDG
            // Worker.World.GetOrCreateSystem<InventoryRequestHandlerSystem>();
            // Worker.World.GetOrCreateSystem<ResourceRequestHandlerSystem>();
             Worker.World.GetOrCreateSystem<StatMonitorSystem>();
-           // Worker.World.GetOrCreateSystem<SystemCleanupSystem>();
+            Worker.World.GetOrCreateSystem<SystemCleanupSystem>();
             Worker.World.GetOrCreateSystem<StructureMonitorSystem>();
             Worker.World.GetOrCreateSystem<WeaponSystem>();
 
-            Worker.World.GetOrCreateSystem<Game.Systems.GameStatusSystem>();
-            Worker.World.GetOrCreateSystem<Game.Systems.TerritoryMonitorSystem>();
+            Worker.World.GetOrCreateSystem<GameStatusSystem>();
+            Worker.World.GetOrCreateSystem<TerritoryMonitorSystem>();
+
             Worker.World.GetOrCreateSystem<RespawnMonitorSystem>();
             Worker.World.GetOrCreateSystem<PointSystem>();
             Worker.World.GetOrCreateSystem<TimeManagementSystem>();

@@ -3,14 +3,15 @@ using MDG.Common.MonoBehaviours.Synchronizers;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using GameSchema = MdgSchema.Game;
 namespace MDG.Common.MonoBehaviours
 {
     public class InputProcessorManager : MonoBehaviour
     {
-        GameStatusSynchronizer gameStatusSynchronizer;
         // Later on will be keyed based on game state.
         List<IProcessInput> inputProcessors;
+
+        Dictionary<GameSchema.GameStates, List<IProcessInput>> inputHandlers;
         bool endedGame;
         public void AddInputProcessor(IProcessInput inputProcessor)
         {
@@ -29,7 +30,7 @@ namespace MDG.Common.MonoBehaviours
             gameStatusSynchronizer.OnEndGame += DisableInputProcessors;
         }
 
-        void EnableInputProcessors(MdgSchema.Game.StartGameEventPayload startGameEventPayload)
+        public void EnableInputProcessors(MdgSchema.Game.StartGameEventPayload startGameEventPayload)
         {
             Debug.Log($"Starting game with session id {startGameEventPayload.SessionId}");
             for (int i = 0; i < inputProcessors.Count; ++i)
@@ -39,8 +40,9 @@ namespace MDG.Common.MonoBehaviours
         }
 
 
-        void DisableInputProcessors()
+        public void DisableInputProcessors()
         {
+            Debug.Log("Get to here");
             for (int i = 0; i < inputProcessors.Count; ++i)
             {
                 inputProcessors[i].Disable();
@@ -53,6 +55,7 @@ namespace MDG.Common.MonoBehaviours
 
             if (Application.isPlaying && inputProcessors != null && !endedGame)
             {
+                Debug.Log("Still happening when game over");
                 for (int i = 0; i < inputProcessors.Count; ++i)
                 {
                     inputProcessors[i].ProcessInput();

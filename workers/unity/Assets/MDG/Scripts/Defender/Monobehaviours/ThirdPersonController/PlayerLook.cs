@@ -103,6 +103,7 @@ namespace MDG.Defender.Monobehaviours
             {
                 UnlockCursor();
             }
+            // This could be triggered after disable is issue. which undoes lock cursor.
             else if (Application.isFocused)
             {
                 LockCursor();
@@ -113,11 +114,13 @@ namespace MDG.Defender.Monobehaviours
         public void Disable()
         {
             UnlockCursor();
+          //  this.enabled = false;
         }
 
         public void Enable()
         {
             LockCursor();
+           
         }
     }
 }

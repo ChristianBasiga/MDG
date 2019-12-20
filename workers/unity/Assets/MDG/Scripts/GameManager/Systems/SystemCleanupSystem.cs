@@ -9,17 +9,19 @@ using MdgSchema.Common;
 using Unity.Collections;
 using Unity.Jobs;
 using Improbable.Gdk.Core.Commands;
-// This has to be on client and server. And systems to remove is from external source depending on that upon connecting.
-// So probably OnConnectionEstablished.
-namespace MDG.Common.Systems
+using MDG.Game.Systems;
+namespace MDG.Game.Systems
 {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]
+    [UpdateAfter(typeof(GameStatusSystem))]
+    // Todo: Rename to be orphan cleaner and be part of clean up system group.
     public class SystemCleanupSystem : JobComponentSystem
     {
         ComponentUpdateSystem componentUpdateSystem;
         CommandSystem commandSystem;
         EntitySystem entitySystem;
+        GameStatusSystem gameStatusSystem;
         List<ComponentSystemBase> systemsToRemove;
 
         NativeQueue<EntityId> orphanQueue;
@@ -30,16 +32,21 @@ namespace MDG.Common.Systems
             base.OnCreate();
             entitySystem = World.GetExistingSystem<EntitySystem>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
+            gameStatusSystem = World.GetOrCreateSystem<GameStatusSystem>();
             orphanQueue = new NativeQueue<EntityId>(Allocator.Persistent);
-            // Need to set all the player entity ids here.
-            // have client and server references file
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            orphanQueue.Dispose();
         }
 
 
         struct CleanUpOrphanedEntitiesJob : IJobForEach<Owner.Component, SpatialEntityId>
         {
 
-            [DeallocateOnJobCompletion]
+            [ReadOnly]
             public NativeHashMap<EntityId, bool> deletedOwners;
 
             [WriteOnly]
@@ -58,8 +65,13 @@ namespace MDG.Common.Systems
 
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
-            List<EntityId> playersRemoved = entitySystem.GetEntitiesRemoved().Where((entityId) => 
-            componentUpdateSystem.HasComponent(PlayerSchema.PlayerMetaData.ComponentId, entityId)).ToList();
+            // Could store removed this frame to avoid iterating through entities removed again.
+            List<EntityId> playersRemoved = entitySystem.GetEntitiesRemoved().Where((entityId) => !gameStatusSystem.PlayerInGame(entityId)).ToList();
+
+            if (playersRemoved.Count == 0)
+            {
+                return inputDeps;
+            }
 
             NativeHashMap<EntityId, bool> nativePlayersRemoved = new NativeHashMap<EntityId, bool>(playersRemoved.Count, Allocator.TempJob);
 
@@ -75,7 +87,7 @@ namespace MDG.Common.Systems
                 deleteQueue = orphanQueue.AsParallelWriter()
             };
             orphanCleanHandle = cleanUpOrphanedEntitiesJob.Schedule(this);
-
+            nativePlayersRemoved.Dispose(orphanCleanHandle);
             return orphanCleanHandle;
         }
 

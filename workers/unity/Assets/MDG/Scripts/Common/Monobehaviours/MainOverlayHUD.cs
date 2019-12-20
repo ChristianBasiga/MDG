@@ -127,17 +127,26 @@ namespace MDG.Common.MonoBehaviours
             UnityClientConnector unityClientConnector = GetComponent<UnityClientConnector>();
 
             yield return new WaitUntil(() => unityClientConnector.GameManagerEntity.SpatialOSEntityId.IsValid());
-            GameStatusSynchronizer gameStatusSynchronizer = gameObject.AddComponent<GameStatusSynchronizer>();
+            GameStatusSynchronizer gameStatusSynchronizer = gameObject.GetComponent<GameStatusSynchronizer>();
+
             gameStatusSynchronizer.OnWinGame += (string text) =>
             {
                 SetEndGameText(text, true);
-                uiCamera.gameObject.SetActive(true);
             };
             gameStatusSynchronizer.OnLoseGame += (string text) =>
             {
                 SetEndGameText(text, false);
-                uiCamera.gameObject.SetActive(true);
             };
+            gameStatusSynchronizer.OnEndGame += () =>
+            {
+                uiCamera.gameObject.SetActive(true);
+                PointSynchonizer pSync = unityClientConnector.ClientGameObjectCreator.PlayerLink.GetComponent<PointSynchonizer>();
+                // Cleaner way to do this later.
+                pSync.OnPointUpdate -= UpdatePoints;
+              //  gameStatusSynchronizer.OnUpdateTime -= UpdateTime;
+
+            };
+
             gameStatusSynchronizer.OnUpdateTime += UpdateTime;
             gameStatusSynchronizer.OnStartGame += GameStatusSynchronizer_OnStartGame;
             yield return new WaitForEndOfFrame();

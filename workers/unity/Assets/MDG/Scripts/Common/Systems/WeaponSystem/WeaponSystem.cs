@@ -154,7 +154,6 @@ namespace MDG.Common.Systems.Weapon
                 int currentHits = damageComponent.Hits;
                 foreach (KeyValuePair<EntityId, CollisionPoint> entityIdToCollision in collisionComponent.Triggers)
                 {
-                    UnityEngine.Debug.Log("hey here");
                     // Later don't query worker to be in view, just use component update system
                     // to get snapshot.
                     if (workerSystem.TryGetEntity(entityIdToCollision.Value.CollidingWith, out Entity collidedEntity))

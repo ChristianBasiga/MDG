@@ -25,6 +25,8 @@ using MDG.DTO;
 using Improbable.Gdk.Subscriptions;
 using System.Collections.Generic;
 using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours.Synchronizers;
+using Improbable.Gdk.Core.Commands;
 
 namespace MDG
 {
@@ -92,6 +94,8 @@ namespace MDG
             switch (metadata.EntityType)
             {
                 case "GameManager":
+                    GameStatusSynchronizer gameStatusSynchronizer = gameObject.AddComponent<GameStatusSynchronizer>();
+                    gameStatusSynchronizer.OnEndGame += GameStatusSynchronizer_OnEndGame;
                     GameManagerEntity = spatialOSEntity;
                     break;
                 case "Territory":
@@ -100,7 +104,18 @@ namespace MDG
             }
         }
 
-        
+        private void GameStatusSynchronizer_OnEndGame()
+        {
+            if (LoadedUI != null)
+            {
+                var keys = LoadedUI.Keys;
+                foreach (string key in keys)
+                {
+                    Destroy(LoadedUI[key]);
+                }
+                LoadedUI.Clear();
+            }
+        }
 
         private void SpawnPlayer(MdgSchema.Common.GameEntityTypes type)
         {
@@ -157,7 +172,8 @@ namespace MDG
             {
                 Payload = new GameSchema.PlayerJoinRequest
                 {
-                    PlayerRole = PlayerRole
+                    PlayerRole = PlayerRole,
+                    EntityId = createdEntityId
                 },
                 TargetEntityId = GameManagerEntity.SpatialOSEntityId
             });
@@ -197,11 +213,17 @@ namespace MDG
                 StartCoroutine(ActivateAfterSync(obj));
                 if (obj.TryGetComponent(out IPlayerSynchronizer playerSynchronizer))
                 {
-                    playerSynchronizer.LinkClientWorker(this);
+                    StartCoroutine(LinkPlayerToWorker(playerSynchronizer));
                 }
             }
         }
 
+
+        IEnumerator LinkPlayerToWorker(IPlayerSynchronizer playerSynchronizer)
+        {
+            yield return new WaitUntil(() => GameManagerEntity.SpatialOSEntityId.IsValid());
+            playerSynchronizer.LinkClientWorker(this);
+        }
         IEnumerator ActivateAfterSync(GameObject spawned)
         {
             yield return new WaitForEndOfFrame();
@@ -236,16 +258,23 @@ namespace MDG
             for (int i = 0; i < defenderUI.Length; ++i)
             {
                 GameObject gameObject = defenderUI[i] as GameObject;
+                // Better to load in each time.
                 GameObject instance = Instantiate(gameObject);
                 Debug.Log("gameObject name " + gameObject.name);
                 LoadedUI.Add(gameObject.name, instance);
                 yield return new WaitForEndOfFrame();
             }
         }
-        
+
 
         public void CloseConnection()
         {
+            // When it closes connection, delete player entity
+            // so all entities owned by player get orphaned and removed by clean up systesm.
+            commandSystem.SendCommand(new WorldCommands.DeleteEntity.Request
+            {
+                EntityId = ClientGameObjectCreator.PlayerLink.EntityId
+            });
             Application.Quit();
         }
 
@@ -265,6 +294,7 @@ namespace MDG
                             PlayerFinishedLoading = true;
                             break;
                         default:
+                            Debug.LogError(responses[0].Message);
                             Debug.LogError("Failed to join the game");
                             break;
                     }

@@ -23,6 +23,7 @@ using MDG.Common.MonoBehaviours;
 using Improbable.Gdk.Core;
 using MDG.Invader.Monobehaviours.InputProcessors;
 using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours.Synchronizers;
 
 namespace MDG.Invader.Monobehaviours {
 
@@ -154,6 +155,22 @@ namespace MDG.Invader.Monobehaviours {
         public void LinkClientWorker(UnityClientConnector unityClientConnector)
         {
             ClientWorker = unityClientConnector;
+
+            if (unityClientConnector.TryGetComponent(out GameStatusSynchronizer gameStatusSynchronizer))
+            {
+                if (TryGetComponent(out InputProcessorManager inputProcessorManager))
+                {
+                    inputProcessorManager.SetSynchronizer(gameStatusSynchronizer);
+                }
+                else
+                {
+                    Debug.LogError("Player synchronizer is missing input processor manager");
+                }
+            }
+            else
+            {
+                Debug.LogError("Client worker is missing game status synchronizer.");
+            }
         }
     }
 }

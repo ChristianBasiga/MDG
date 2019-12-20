@@ -28,13 +28,12 @@ namespace MDG.Common.MonoBehaviours.Synchronizers
             clientConnector = GetComponent<UnityClientConnector>();
             mainOverlayHUD = GetComponent<MainOverlayHUD>();
             componentUpdateSystem = clientConnector.Worker.World.GetExistingSystem<ComponentUpdateSystem>();
-            
+
         }
 
         // Update is called once per frame
         void Update()
         {
-
             var startGameEvent = componentUpdateSystem.GetEventsReceived<GameSchema.GameStatus.StartGame.Event>(clientConnector.GameManagerEntity.SpatialOSEntityId);
             if (startGameEvent.Count > 0)
             {
@@ -46,6 +45,7 @@ namespace MDG.Common.MonoBehaviours.Synchronizers
             // For now just repeat this, later today move this to a common component
             var endGameEventMessages = componentUpdateSystem.GetEventsReceived<GameSchema.GameStatus.EndGame.Event>
                 (clientConnector.GameManagerEntity.SpatialOSEntityId);
+            Debug.Log("end game event message count " + endGameEventMessages.Count);
             if (endGameEventMessages.Count > 0)
             {
                 ref readonly var endGameEvent = ref endGameEventMessages[0];

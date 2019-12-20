@@ -28,6 +28,7 @@ using MDG.Common.MonoBehaviours;
 using MDG.Common.Systems.Spawn;
 using MDG.ScriptableObjects.Game;
 using MdgSchema.Game.Territory;
+using StatSchema = MdgSchema.Common.Stats;
 using MDG.Common.MonoBehaviours.Synchronizers;
 
 namespace MDG
@@ -36,8 +37,8 @@ namespace MDG
     /// <summary>
     /// This creates corresponding game object to entity, as well as adds any extra ECS components
     /// an entity needs. Perhaps ladder can be moved to different.
+    /// Realistically this is more client game object handler cause of toher parts it handles.
     /// </summary>
-    // Use zenject to install stuff here.
     public class ClientGameObjectCreator : IEntityGameObjectCreator
     {
         // For others to know when thish happens.
@@ -48,6 +49,7 @@ namespace MDG
         public Dictionary<EntityId,GameObject> EntityToGameObjects { private set; get; }
         private readonly IEntityGameObjectCreator _default;
         private readonly Unity.Entities.World _world;
+        private ComponentUpdateSystem componentUpdateSystem;
         private readonly string _workerType;
 
         // Link to player at this client.
@@ -76,6 +78,7 @@ namespace MDG
             this._workerType = workerType;
             EntityToGameObjects = new Dictionary<EntityId, GameObject>();
             otherPlayerLinks = new List<LinkedEntityComponent>();
+            componentUpdateSystem = world.GetExistingSystem<ComponentUpdateSystem>();
         }
 
         public void OnEntityCreated(SpatialOSEntity entity, EntityGameObjectLinker linker)
@@ -208,20 +211,21 @@ namespace MDG
 
         public void OnEntityRemoved(EntityId entityId)
         {
-           // Debug.Log("Deleting entityID " + entityId);
+            Debug.Log($"Deleted entity {entityId}");
             _default.OnEntityRemoved(entityId);
             GameObject linkedGameObject;
 
             if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObject) && linkedGameObject != null)
             {
-                // Perhaps custom death and / or death behaviour that plays specific animation.
-                // Or both. Regardless doesn't just make it dissapear.
-                if (Application.isPlaying && linkedGameObject.GetComponent<HealthSynchronizer>() != null)
+                // If not updating health then they're not deleted from damaging.
+                // need cleaner way to determine if killed via orphaning.
+                if (Application.isPlaying && linkedGameObject.TryGetComponent(out HealthSynchronizer healthSynchronizer) && healthSynchronizer.UpdatingHealh)
                 {
-                    return;
+                    Debug.Log("still ticking health down, allow for custom destruction");
                 }
                 else
                 {
+                    Debug.Log("Health synchronizer does not exist or entity was deleted not via health");
                     UnityObjectDestroyer.Destroy(linkedGameObject);
                 }
             }

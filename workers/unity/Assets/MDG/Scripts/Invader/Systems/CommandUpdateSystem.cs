@@ -206,10 +206,24 @@ namespace MDG.Invader.Systems
 
             public void Execute([ReadOnly] ref SpatialEntityId spatialEntityId, [ReadOnly] ref Enemy c1, [ReadOnly] [ChangedFilter] ref StatSchema.Stats.Component c2)
             {
+                // This SHOULD include respawning entities. but incase it doesn't made other job for it.
                 Debug.Log($"looking at entity id {spatialEntityId.EntityId} with health {c2.Health}");
                 if (c2.Health == 0)
                 {
                     deadEnemies.TryAdd(spatialEntityId.EntityId, true);
+                }
+            }
+        }
+
+        struct GetRespawningEnemiesJob : IJobForEach<SpatialEntityId, Enemy, PendingRespawn.Component>
+        {
+            public NativeHashMap<EntityId, bool>.ParallelWriter respawningEnemies;
+
+            public void Execute([ReadOnly] ref SpatialEntityId c0, [ReadOnly] ref Enemy c1, [ReadOnly] ref PendingRespawn.Component c2)
+            {
+                if (c2.RespawnActive)
+                {
+                    respawningEnemies.TryAdd(c0.EntityId, true);
                 }
             }
         }
@@ -220,7 +234,6 @@ namespace MDG.Invader.Systems
         struct MoveToAttackTargetJob : IJobForEachWithEntity<SpatialEntityId, AttackCommand, PositionSchema.LinearVelocity.Component,
             EntityPosition.Component, CombatStats>
         {
-
             public EntityCommandBuffer.Concurrent entityCommandBuffer;
 
             [ReadOnly]
@@ -229,6 +242,8 @@ namespace MDG.Invader.Systems
             [ReadOnly]
             public NativeHashMap<EntityId, bool> killedEnemies;
 
+            [ReadOnly]
+            public NativeHashMap<EntityId, bool> respawningEnemies;
 
             public NativeQueue<AttackPayload>.ParallelWriter attackPayloads;
 
@@ -237,7 +252,7 @@ namespace MDG.Invader.Systems
                 [ReadOnly] ref CombatStats combatStats)
             {
                 Debug.Log("killed enemies length " + killedEnemies.Length);
-                if (killedEnemies.TryGetValue(attackCommand.target, out _))
+                if (killedEnemies.TryGetValue(attackCommand.target, out _) || respawningEnemies.TryGetValue(attackCommand.target, out _)) 
                 {   
                     entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(AttackCommand));
                 }
@@ -418,8 +433,12 @@ namespace MDG.Invader.Systems
             };
             JobHandle tickAttackCoolDownHandle = tickAttackCooldownJob.Schedule(this);
 
-            NativeHashMap<EntityId, Vector3f> attackeePositions = new NativeHashMap<EntityId, Vector3f>(enemyQuery.CalculateEntityCount() , Allocator.TempJob);
-            NativeHashMap<EntityId, bool> killedEnemies = new NativeHashMap<EntityId, bool>(enemyQuery.CalculateEntityCount(), Allocator.TempJob);
+            int enemyCount = enemyQuery.CalculateEntityCount();
+            NativeHashMap<EntityId, Vector3f> attackeePositions = new NativeHashMap<EntityId, Vector3f>(enemyCount, Allocator.TempJob);
+            NativeHashMap<EntityId, bool> killedEnemies = new NativeHashMap<EntityId, bool>(enemyCount, Allocator.TempJob);
+            NativeHashMap<EntityId, bool> respawningEnemies = new NativeHashMap<EntityId, bool>(enemyCount, Allocator.TempJob);
+            
+
             GetTargetPositionsJob getTargetPositionsJob = new GetTargetPositionsJob
             {
                 attackeePositions = attackeePositions.AsParallelWriter()
@@ -432,38 +451,33 @@ namespace MDG.Invader.Systems
                 deadEnemies = killedEnemies.AsParallelWriter()
             };
 
+            GetRespawningEnemiesJob getRespawningEnemiesJob = new GetRespawningEnemiesJob
+            {
+                respawningEnemies = respawningEnemies.AsParallelWriter()
+            };
+
+            // Should also do a get respawning enemies job instead of this.
+
             JobHandle getKilledEnemiesHandle = getKilledEnemiesJob.Schedule(this);
+            JobHandle getRespawningEnemiesHandle = getRespawningEnemiesJob.Schedule(this);
             NativeQueue<AttackPayload> attackPayloads = new NativeQueue<AttackPayload>(Allocator.TempJob);
-           
+
             MoveToAttackTargetJob moveToAttackTargetJob = new MoveToAttackTargetJob
             {
                 attackerToAttackeePosition = attackeePositions,
                 killedEnemies = killedEnemies,
+                respawningEnemies = respawningEnemies,
                 attackPayloads = attackPayloads.AsParallelWriter(),
                 entityCommandBuffer = PostUpdateCommands.ToConcurrent()
             };
             JobHandle attackCommandDependancies = JobHandle.CombineDependencies(getKilledEnemiesHandle, getTargetPositionsHandle, tickAttackCoolDownHandle);
+            attackCommandDependancies = JobHandle.CombineDependencies(attackCommandDependancies, getRespawningEnemiesHandle);
             JobHandle moveToAttackHandle = moveToAttackTargetJob.Schedule(attackQuery, attackCommandDependancies);
-           // getKilledEnemiesHandle.Complete();
-            //getTargetPositionsHandle.Complete()
             moveToAttackHandle.Complete();
 
-
-            // Queue up to a buffer to do later. to avoid concurrency issues.
-            var potentialTargetEntities = attackeePositions.GetKeyArray(Allocator.TempJob);
-            foreach (var potentialTargetId in potentialTargetEntities)
-            {
-                workerSystem.TryGetEntity(potentialTargetId, out Entity targetEntity);
-                if (EntityManager.HasComponent<SpawnSchema.RespawnMetadata.Component>(targetEntity) && EntityManager.GetComponentData<SpawnSchema.PendingRespawn.Component>(targetEntity).RespawnActive)
-                {
-                    attackeePositions.Remove(potentialTargetId);
-                }
-            }
-            potentialTargetEntities.Dispose();
-            attackeePositions.Dispose();
-            killedEnemies.Dispose();
-
-
+            respawningEnemies.Dispose(moveToAttackHandle);
+            attackeePositions.Dispose(moveToAttackHandle);
+            killedEnemies.Dispose(moveToAttackHandle);
             #endregion
             MoveCommandJob moveCommandJob = new MoveCommandJob
             {

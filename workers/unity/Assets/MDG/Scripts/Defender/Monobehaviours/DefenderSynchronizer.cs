@@ -10,6 +10,7 @@ using MDG.ScriptableObjects.Game;
 using MDG.Common.MonoBehaviours;
 using MDG.Common.Interfaces;
 using System.Collections;
+using MDG.Common.MonoBehaviours.Synchronizers;
 
 namespace MDG.Defender.Monobehaviours
 {
@@ -30,7 +31,6 @@ namespace MDG.Defender.Monobehaviours
         private void Start()
         {
             pendingRespawnReader.OnRespawnActiveUpdate += OnRespawnActiveChange;
-            ClientWorker.ClientGameObjectCreator.OnEntityAdded += OnEntityAdded;
             StartCoroutine(InitUIRefs());
             statsReader.OnHealthUpdate += OnHealthUpdate;
         }
@@ -88,6 +88,22 @@ namespace MDG.Defender.Monobehaviours
         public void LinkClientWorker(UnityClientConnector unityClientConnector)
         {
             ClientWorker = unityClientConnector;
+            unityClientConnector.ClientGameObjectCreator.OnEntityAdded += OnEntityAdded;
+            if (unityClientConnector.TryGetComponent(out GameStatusSynchronizer gameStatusSynchronizer))
+            {
+                if (TryGetComponent(out InputProcessorManager inputProcessorManager))
+                {
+                    inputProcessorManager.SetSynchronizer(gameStatusSynchronizer);
+                }
+                else
+                {
+                    Debug.LogError("Player synchronizer is missing input processor manager");
+                }
+            }
+            else
+            {
+                Debug.LogError("Client worker is missing game status synchronizer.");
+            }
         }
     }
 }
