@@ -44,13 +44,13 @@ namespace MDG.Defender.Monobehaviours
 
         public void Shoot()
         {
-            if (timeSinceLastShot > 0)
+           /* if (timeSinceLastShot > 0)
             {
                 timeSinceLastShot -= Time.deltaTime;
             }
             else
             {
-                timeSinceLastShot = Weapon.AttackCooldown;
+                timeSinceLastShot = Weapon.AttackCooldown;*/
                 LinkedEntityComponent linkedEntityComponent = GetComponent<LinkedEntityComponent>();
 
                 Ray ray = shootCamera.ScreenPointToRay(Input.mousePosition);
@@ -75,7 +75,7 @@ namespace MDG.Defender.Monobehaviours
                     Position = bulletStartingPosition,
                     TypeToSpawn = MdgSchema.Common.GameEntityTypes.Weapon,
                 }, OnBulletSpawned, serializedWeaponMetadata, serializedWeapondata);
-            }
+           // }
         }
 
         void OnBulletSpawned(EntityId entityId)

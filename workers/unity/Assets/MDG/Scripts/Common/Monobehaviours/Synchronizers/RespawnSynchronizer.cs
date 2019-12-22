@@ -17,6 +17,7 @@ namespace MDG.Common.MonoBehaviours.Synchronizers
 
         private void PendingRespawnReader_OnRespawnActiveUpdate(bool isRespawning)
         {
+            Debug.Log("I happen?");
             this.gameObject.SetActive(!isRespawning);
         }
     }

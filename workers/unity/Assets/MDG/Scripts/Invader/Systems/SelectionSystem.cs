@@ -129,7 +129,6 @@ namespace MDG.Invader.Systems {
             {
                 return;
             }
-            UnityEngine.Debug.Log("How do i get past this");
             ResetSelectedEntities resetSelectedEntitiesJob = new ResetSelectedEntities();
             resetSelectedEntitiesJob.Schedule(this).Complete();
 

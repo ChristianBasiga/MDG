@@ -31,8 +31,14 @@ namespace MDG.Defender.Monobehaviours
         private void Start()
         {
             pendingRespawnReader.OnRespawnActiveUpdate += OnRespawnActiveChange;
+            pendingRespawnReader.OnTimeTillRespawnUpdate += OnPendingRespawnTimerUpdate;
             StartCoroutine(InitUIRefs());
             statsReader.OnHealthUpdate += OnHealthUpdate;
+        }
+
+        private void OnPendingRespawnTimerUpdate(float time)
+        {
+            DefenderHUD.OnUpdateRespawn(time);
         }
 
         private IEnumerator InitUIRefs()
@@ -58,32 +64,24 @@ namespace MDG.Defender.Monobehaviours
             if (obj.TryGetComponent(out GameMetadata.Component gameMetadata) && gameMetadata.Type == GameEntityTypes.Hunted)
             {
                 GameObject linkedDefender = ClientWorker.ClientGameObjectCreator.GetLinkedGameObjectById(obj.SpatialOSEntityId);
-                if (linkedDefender.CompareTag("Player"))
-                {
-                    Debug.Log("here?");
-                    return;
-                }
                 teamStatusUpdater.AddTeammate(linkedDefender.GetComponent<LinkedEntityComponent>());
             }
         }
-
-        private void GameStatusSynchronizer_OnWinGame()
-        {
-            throw new System.NotImplementedException();
-        }
-
         private void OnHealthUpdate(int currentHealth)
         {
             float pct = currentHealth / (float)statsMetadataReader.Data.Health;
             DefenderHUD.OnUpdateHealth(pct);
         }
-
-
         private void OnRespawnActiveChange(bool respawning)
         {
-            if (!respawning)
+            gameObject.SetActive(!respawning);
+            if (respawning)
             {
-                gameObject.SetActive(true);
+                DefenderHUD.OnRespawning();
+            }
+            else
+            {
+                DefenderHUD.OnDoneRespawning();
             }
         }
 

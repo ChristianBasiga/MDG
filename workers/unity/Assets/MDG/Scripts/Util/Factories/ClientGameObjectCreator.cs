@@ -220,7 +220,7 @@ namespace MDG
 
         public void OnEntityRemoved(EntityId entityId)
         {
-          //  Debug.Log($"Deleted entity {entityId}");
+            Debug.Log($"Deleted entity {entityId}");
             _default.OnEntityRemoved(entityId);
             GameObject linkedGameObject;
 

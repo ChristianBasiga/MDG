@@ -166,10 +166,10 @@ GameObject:
   m_Component:
   - component: {fileID: 2889105243520526778}
   - component: {fileID: 104822039000035198}
-  - component: {fileID: 2739455287541277394}
   - component: {fileID: 2198042882470697421}
   - component: {fileID: 4824240633301027723}
   - component: {fileID: -1937586039582444048}
+  - component: {fileID: 718158878022722101}
   m_Layer: 0
   m_Name: HUNTED
   m_TagString: Untagged
@@ -204,18 +204,6 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2c025beae939ba54a91a665f7c624431, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &2739455287541277394
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 760170104896894990}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 970ff5c0aca59ea48a1bad0b31347f0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &2198042882470697421
@@ -257,6 +245,18 @@ CapsuleCollider:
   m_Height: 2.5226045
   m_Direction: 1
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &718158878022722101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 760170104896894990}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dba9f6408ea9064da0f8560620cd3b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &855024927793793368
 GameObject:
   m_ObjectHideFlags: 0

@@ -27,12 +27,12 @@ namespace MDG.Defender.Monobehaviours
             linkedEntityComponent.Worker.TryGetEntity(linkedEntityComponent.EntityId, out Entity entity);
             PlayerMetaData.Component playerMetaData = linkedEntityComponent.World.EntityManager.GetComponentData<PlayerMetaData.Component>(entity);
             playerName.text = playerMetaData.UserName;
-            healthSynchronizer.OnHealthBarUpdated += UpdateHealthBar;
+            healthSynchronizer.OnUpdateHealth += UpdateHealthBar;
         }
 
-        private void UpdateHealthBar(int fill)
+        private void UpdateHealthBar(float fill)
         {
-            Debug.Log("I eve happen??");
+            UnityEngine.Debug.Log("How foten I happen?");
             healthbar.fillAmount = fill;
         }
 
