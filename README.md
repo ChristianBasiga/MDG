@@ -1,14 +1,18 @@
-# The SpatialOS GDK for Unity Blank Starter Project
+# MDG
 
-This is a blank project that you can use to build your own game with the [SpatialOS GDK for Unity](https://github.com/spatialos/gdk-for-unity).
+This is an online multiplayer 1 versus three Tower Defense Game.
 
 ## Prerequisites
 
-Before using this project, make sure to follow the [machine setup guide](https://docs.improbable.io/unity/alpha/machine-setup).
+## Environment
+
+Runs on Windows and Mac.
+
+Unity Version: 2019.2.15f1
+
+SpatialOS SDK Version: 14.0.1 
+
+GDK for Unity Version: 0.3.1
 
 ## Setup
 
-1. Checkout this repository.
-2. Open the Unity project.
-
-&copy; 2019 Improbable
