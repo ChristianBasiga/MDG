@@ -25,6 +25,10 @@ namespace MDG.Defender.Monobehaviours
 
         [SerializeField]
         Image playerHealthBar;
+
+
+        [SerializeField]
+        Text respawnTimer;
 #pragma warning restore 649
 
         bool newErrorPassed = false;
@@ -36,6 +40,7 @@ namespace MDG.Defender.Monobehaviours
         void Start()
         {
             errorText.gameObject.SetActive(false);
+            respawnTimer.transform.parent.gameObject.SetActive(false);
         }
         // Need more granular way to do this.
         public void SetErrorText(string errorMsg)
@@ -47,6 +52,36 @@ namespace MDG.Defender.Monobehaviours
                 errorClearRoutine = ClearError();
                 StartCoroutine(errorClearRoutine);
             }
+        }
+
+        public void OnRespawning()
+        {
+            respawnTimer.transform.parent.gameObject.SetActive(true);
+        }
+
+        public void OnUpdateRespawn(float time)
+        {
+            // Get minutes and remaining time after remving minutes
+            int minutes = (int)(time / 60);
+            int seconds = (int)(time - (minutes * 60));
+
+            string minuteText = minutes.ToString();
+            if (minutes / 10 == 0)
+            {
+                minuteText = "0" + minuteText;
+            }
+            string secondText = seconds.ToString();
+            if (seconds / 10 == 0)
+            {
+                secondText = "0" + secondText;
+            }
+            respawnTimer.text = $"{minuteText}:{secondText}";
+        }
+
+        public void OnDoneRespawning()
+        {
+            respawnTimer.transform.parent.gameObject.SetActive(false);
+
         }
 
         public void OnUpdateHealth(float healthPct)

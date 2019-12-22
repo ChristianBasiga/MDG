@@ -32,6 +32,8 @@ namespace MDG.Common.Systems.Weapon
         EntityQuery weaponCollisionQuery;
         EntityQuery updateWeaponHitCountQuery;
 
+        Queue<DamageRequestPayload> queuedDamagedRequests; 
+
         struct DamageRequestPayload
         {
             public EntityId weapon_id;
@@ -53,6 +55,7 @@ namespace MDG.Common.Systems.Weapon
         protected override void OnCreate()
         {
             base.OnCreate();
+            queuedDamagedRequests = new Queue<DamageRequestPayload>();
             pendingDamageRequests = new Dictionary<long, DamageRequestPayload>();
             commandSystem = World.GetExistingSystem<CommandSystem>();
             pointRequestSystem = World.GetExistingSystem<Point.PointRequestSystem>();
@@ -118,22 +121,22 @@ namespace MDG.Common.Systems.Weapon
             weaponIdToHitsThisFrame = new NativeHashMap<EntityId, int>(entityCount, Allocator.TempJob);
             destroyedWeapons = new NativeQueue<EntityId>(Allocator.TempJob);
 
+            SendQueuedDamageRequests();
             ProcessDamageRequestResponses();
             ProcessWeaponCollisions();
-
             UpdateWeaponHitCountJob updateWeaponHitCountJob = new UpdateWeaponHitCountJob
             {
                 idToDamage = weaponIdToHitsThisFrame,
                 destroyedWeapons = destroyedWeapons.AsParallelWriter()
             };
-
             updateHitsJobHandle = updateWeaponHitCountJob.Schedule(updateWeaponHitCountQuery);
 
             updateHitsJobHandle.Complete();
-            weaponIdToHitsThisFrame.Dispose();
+            weaponIdToHitsThisFrame.Dispose(updateHitsJobHandle);
 
             while (destroyedWeapons.Count > 0)
             {
+                UnityEngine.Debug.Log("destroyed weapon on hit");
                 EntityId destroyedWeaponId = destroyedWeapons.Dequeue();
                 commandSystem.SendCommand(new WorldCommands.DeleteEntity.Request
                 {
@@ -145,6 +148,10 @@ namespace MDG.Common.Systems.Weapon
 
         // Update UnitRerouteSystem later to also work off like this isntead of off events
         // entityQuery faster than my query yo.
+        // Need to jobify this. Also I REALLY need to move to server.
+        // Need to add team component or something or check owner ids respectively.
+        // down line, for now its okay.
+        // Should prioritized that honeslty tho.
         private void ProcessWeaponCollisions() {
             
             Entities.With(weaponCollisionQuery).ForEach((Entity entity, ref SpatialEntityId spatialEntityId, ref WeaponSchema.Weapon.Component weaponComponent, ref WeaponSchema.Damage.Component damageComponent,
@@ -152,16 +159,20 @@ namespace MDG.Common.Systems.Weapon
             {
 
                 int currentHits = damageComponent.Hits;
+                UnityEngine.Debug.Log("checking triggers of entity " + spatialEntityId.EntityId);
+
                 foreach (KeyValuePair<EntityId, CollisionPoint> entityIdToCollision in collisionComponent.Triggers)
                 {
                     // Later don't query worker to be in view, just use component update system
                     // to get snapshot.
                     if (workerSystem.TryGetEntity(entityIdToCollision.Value.CollidingWith, out Entity collidedEntity))
                     {
+
                         // If collidee not enemy, and what collision hit is enemy on respective client. This makes it so enemies not hitting each other 
                         // on other clients.
                         if (!EntityManager.HasComponent<Enemy>(entity) && EntityManager.HasComponent<Enemy>(collidedEntity))
                         {
+                            UnityEngine.Debug.Log("collided with an enemy");
                             currentHits += 1;
                             // Send damage request to entity hit.
                             UnityEngine.Debug.Log($"Sending damage request to {entityIdToCollision.Value.CollidingWith}");
@@ -173,17 +184,20 @@ namespace MDG.Common.Systems.Weapon
                                 },
                                 TargetEntityId = entityIdToCollision.Key,
                             };
+
                             if (componentUpdateSystem.HasComponent(PointSchema.Point.ComponentId, entityIdToCollision.Key))
                             {
                                 PointSchema.Point.Component pointComponent = EntityManager.GetComponentData<PointSchema.Point.Component>(collidedEntity);
-                                long requestId = commandSystem.SendCommand(request);
-                                pendingDamageRequests.Add(requestId, new DamageRequestPayload
+                                var payload = new DamageRequestPayload
                                 {
                                     weapon_id = spatialEntityId.EntityId,
                                     weaponComponent = weaponComponent,
                                     request = request,
                                     pointComponent = pointComponent
-                                });
+                                };
+                                long requestId = commandSystem.SendCommand(request);
+                                pendingDamageRequests.Add(requestId, payload);
+                               // queuedDamagedRequests.Enqueue(payload);
                             }
                             else
                             {
@@ -194,6 +208,25 @@ namespace MDG.Common.Systems.Weapon
                 }
                 weaponIdToHitsThisFrame[spatialEntityId.EntityId] = currentHits;
             });
+        }
+
+
+        private void SendQueuedDamageRequests()
+        {
+            // Ideally I sum the total damge done
+            while(queuedDamagedRequests.Count > 0)
+            {
+                var request = queuedDamagedRequests.Dequeue();
+                if (componentUpdateSystem.HasComponent(PointSchema.Point.ComponentId, request.request.TargetEntityId))
+                {
+                    long requestId = commandSystem.SendCommand(request.request);
+                    pendingDamageRequests.Add(requestId, request);
+                }
+                else
+                {
+                    UnityEngine.Debug.Log("no point component");
+                }
+            }
         }
         
         private void ProcessDamageRequestResponses()

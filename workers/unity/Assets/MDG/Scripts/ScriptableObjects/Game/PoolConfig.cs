@@ -9,20 +9,13 @@ namespace MDG.ScriptableObjects.Game
     public class PoolConfigItem
     {
         [SerializeField]
-        public GameEntityTypes GameEntityType;
+        public string prefabPath;
         public int PoolSize;
     }
 
     [CreateAssetMenu(menuName = Constants.RootMenuPath + "/" + Constants.GamePath + "/PoolConfig")]
     public class PoolConfig : ScriptableObject
     {
-        public PoolConfigItem[] PoolConfigItems = System.Enum.GetValues(typeof(GameEntityTypes)).OfType<GameEntityTypes>().Select(type =>
-        {
-            return new PoolConfigItem
-            {
-                GameEntityType = type,
-                PoolSize = 0
-            };
-        }).ToArray();
+        public PoolConfigItem[] PoolConfigItems;
     }
 }

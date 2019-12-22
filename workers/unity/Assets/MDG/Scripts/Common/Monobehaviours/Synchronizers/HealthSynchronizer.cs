@@ -16,7 +16,8 @@ namespace MDG.Common.MonoBehaviours.Synchronizers
         [Require] StatSchema.StatsReader statsReader;
         [Require] StatSchema.StatsMetadataReader statsMetaDataReader;
 #pragma warning restore 649
-        public System.Action<int> OnHealthBarUpdated;
+        public System.Action<float> OnUpdateHealth;
+        public System.Action<float> OnHealthBarUpdated;
         public bool UpdatingHealh
         {
             private set;
@@ -36,23 +37,21 @@ namespace MDG.Common.MonoBehaviours.Synchronizers
 
         void OnHealthUpdate(int health, int maxHealth)
         {
+
             float percentageHealth = health / (float)maxHealth;
+            OnUpdateHealth?.Invoke(percentageHealth);
             if (gameObject.activeInHierarchy)
             {
                 UpdatingHealh = true;
                 StartCoroutine(HelperFunctions.UpdateFill(healthbar, percentageHealth, (float pct) =>
                 {
-                    UpdatingHealh = false;
-                    int truncated = (int)pct;
                     // If no call back kill me.
-                    if (truncated <= 0 && OnHealthBarUpdated == null)
+                    OnHealthBarUpdated?.Invoke(pct);
+                    if (pct == 0 && OnHealthBarUpdated == null)
                     {
-                        Destroy(gameObject);
+                       Destroy(gameObject);
                     }
-                    else
-                    {
-                        OnHealthBarUpdated?.Invoke(truncated);
-                    }
+                    UpdatingHealh = false;
                 }));
             }
         }

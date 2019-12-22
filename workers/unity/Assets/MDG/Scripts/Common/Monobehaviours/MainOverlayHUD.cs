@@ -126,8 +126,9 @@ namespace MDG.Common.MonoBehaviours
             loadingScreen.transform.parent.gameObject.SetActive(true);
             UnityClientConnector unityClientConnector = GetComponent<UnityClientConnector>();
 
-            yield return new WaitUntil(() => unityClientConnector.GameManagerEntity.SpatialOSEntityId.IsValid());
-            GameStatusSynchronizer gameStatusSynchronizer = gameObject.GetComponent<GameStatusSynchronizer>();
+            GameStatusSynchronizer gameStatusSynchronizer = null;
+            yield return new WaitUntil(() => unityClientConnector.GameManagerEntity.SpatialOSEntityId.IsValid() 
+            && gameObject.TryGetComponent(out gameStatusSynchronizer));
 
             gameStatusSynchronizer.OnWinGame += (string text) =>
             {
@@ -140,9 +141,11 @@ namespace MDG.Common.MonoBehaviours
             gameStatusSynchronizer.OnEndGame += () =>
             {
                 uiCamera.gameObject.SetActive(true);
-                PointSynchonizer pSync = unityClientConnector.ClientGameObjectCreator.PlayerLink.GetComponent<PointSynchonizer>();
-                // Cleaner way to do this later.
-                pSync.OnPointUpdate -= UpdatePoints;
+                if (unityClientConnector.ClientGameObjectCreator.PlayerLink.TryGetComponent(out PointSynchonizer pSync))
+                {
+                    // Cleaner way to do this later.
+                    pSync.OnPointUpdate -= UpdatePoints;
+                }
               //  gameStatusSynchronizer.OnUpdateTime -= UpdateTime;
 
             };

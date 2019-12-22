@@ -25,45 +25,42 @@ namespace MDG.Common.MonoBehaviours.Synchronizers
         }
         private void Update()
         {
-            if (dirtyBit)
+            dirtyBit = false;
+            CollisionSchema.Collision.Update update;
+            if (boxColliderReader.Data.IsTrigger)
             {
-                dirtyBit = false;
-                CollisionSchema.Collision.Update update;
-                if (boxColliderReader.Data.IsTrigger)
+                Debug.Log("adding to triggers for id " + GetComponent<LinkedEntityComponent>().EntityId);
+                update = new CollisionSchema.Collision.Update
                 {
-                    Debug.Log("adding to triggers for id " + GetComponent<LinkedEntityComponent>().EntityId);
-                    update = new CollisionSchema.Collision.Update
-                    {
-                        Triggers = collisionBuffer,
-                        TriggerCount = collisionBuffer.Count
-                    };
-                    if (collisionBuffer.Count > 0)
-                    {
-                        collisionWriter.SendTriggerHappenEvent(new CollisionSchema.CollisionEventPayload
-                        {
-                            CollidedWith = collisionBuffer
-                        });
-                    }
-                }
-                else
+                    Triggers = collisionBuffer,
+                    TriggerCount = collisionBuffer.Count
+                };
+                if (collisionBuffer.Count > 0)
                 {
-                    update = new CollisionSchema.Collision.Update
+                    collisionWriter.SendTriggerHappenEvent(new CollisionSchema.CollisionEventPayload
                     {
-                        Collisions = collisionBuffer,
-                        CollisionCount = collisionBuffer.Count,
-
-                    };
-
-                    if (collisionBuffer.Count > 0)
-                    {
-                        collisionWriter.SendCollisionHappenEvent(new CollisionSchema.CollisionEventPayload
-                        {
-                            CollidedWith = collisionBuffer
-                        });
-                    }
+                        CollidedWith = collisionBuffer
+                    });
                 }
-                collisionWriter.SendUpdate(update);
             }
+            else
+            {
+                update = new CollisionSchema.Collision.Update
+                {
+                    Collisions = collisionBuffer,
+                    CollisionCount = collisionBuffer.Count,
+
+                };
+
+                if (collisionBuffer.Count > 0)
+                {
+                    collisionWriter.SendCollisionHappenEvent(new CollisionSchema.CollisionEventPayload
+                    {
+                        CollidedWith = collisionBuffer
+                    });
+                }
+            }
+            collisionWriter.SendUpdate(update);
         }
 
         private void OnTriggerEnter(Collider other)

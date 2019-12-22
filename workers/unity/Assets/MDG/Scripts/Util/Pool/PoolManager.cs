@@ -8,20 +8,20 @@ using System.Threading.Tasks;
 
 namespace MDG.Game.Util.Pool
 {
-    public class PoolManager
+    public class PoolManager : MonoBehaviour
     {
         // Pool General GameObjects under type. More specific types will have additional componetns added through a builder.
         // Due to deadlines, do this later on.
-        Dictionary<GameEntityTypes, Queue<GameObject>> pools;
+        Dictionary<string, Queue<GameObject>> pools;
         const string PrefabPath = "Prefabs/UnityClient";
 
         // Inject this via zenject later.
-        string configSetting = "Base";
+        string configSetting = "BasePoolConfig";
 
         PoolConfig poolConfig;
         ResourceRequest poolConfigPromise;
 
-        public PoolManager()
+        public void Start()
         {
             poolConfigPromise = Resources.LoadAsync<PoolConfig>($"ScriptableObjects/GameConfigs/PoolConfigs/{configSetting}");
             poolConfigPromise.completed += OnPoolConfigLoaded;
@@ -37,40 +37,52 @@ namespace MDG.Game.Util.Pool
         }
 
         // Async due to the I/O calls.
-        private async void Init(PoolConfig poolConfig)
+        private void Init(PoolConfig poolConfig)
         {
-            pools = new Dictionary<GameEntityTypes, Queue<GameObject>>();
-            var gameEntityTypes = System.Enum.GetValues(typeof(GameEntityTypes));
-            foreach (GameEntityTypes gameEntityType in gameEntityTypes)
+            pools = new Dictionary<string, Queue<GameObject>>();
+            for (int i = 0; i < poolConfig.PoolConfigItems.Length; ++i)
             {
-                Queue<GameObject> pool = new Queue<GameObject>();
-                string enumString = gameEntityType.ToString();
-                GameObject prefab = Resources.Load($"{PrefabPath}/{enumString}") as GameObject;
-
-                await Task.Run(() =>
-                {
-                    PoolConfigItem poolConfigItem = poolConfig.PoolConfigItems.First(x => x.GameEntityType.Equals(gameEntityType));
-                    for (int i = 0; i < poolConfigItem.PoolSize; ++i)
-                    {
-                        GameObject instance = MonoBehaviour.Instantiate(prefab);
-                        Reusable reusableComponent = instance.AddComponent<Reusable>();
-                        reusableComponent.OnReuse += (GameObject toReuse) =>
-                        {
-                            pools[gameEntityType].Enqueue(toReuse);
-                        };
-                        instance.SetActive(false);
-                        pool.Enqueue(instance);
-                    }
-                });
+                PoolConfigItem poolConfigItem = poolConfig.PoolConfigItems[i];
+                Debug.Log($"Creating pool for {poolConfigItem.prefabPath}");
+                GameObject prefab = Resources.Load($"{PrefabPath}/{poolConfigItem.prefabPath}") as GameObject;
+                StartCoroutine(LoadPool(prefab, poolConfigItem));
             }
         }
 
 
-        public GameObject GetFromPool(GameEntityTypes gameEntityType)
+        IEnumerator LoadPool(GameObject prefab, PoolConfigItem poolConfigItem)
         {
-            GameObject gameObject = pools[gameEntityType].Dequeue();
-            gameObject.SetActive(true);
-            return gameObject;
+            Queue<GameObject> pool = new Queue<GameObject>();
+            string fullPath = $"{PrefabPath}/{poolConfigItem.prefabPath}";
+            for (int i = 0; i < poolConfigItem.PoolSize; ++i)
+            {
+                GameObject instance = Instantiate(prefab);
+                Reusable reusableComponent = instance.AddComponent<Reusable>();
+                instance.SetActive(false);
+                reusableComponent.OnReuse += (GameObject toReuse) =>
+                {
+                    pools[fullPath].Enqueue(toReuse);
+                };
+                pool.Enqueue(instance);
+                if (i % 5 == 0)
+                {
+                    yield return new WaitForEndOfFrame();
+                }
+            }
+            pools.Add(fullPath, pool);
+        }
+
+        public bool TryGetFromPool(string key, out GameObject gameObject)
+        {
+            if (pools.TryGetValue(key, out Queue<GameObject> queue))
+            {
+                gameObject = queue.Dequeue();
+            }
+            else
+            {
+                gameObject = null;
+            }
+            return gameObject != null;
         }
     }
 }

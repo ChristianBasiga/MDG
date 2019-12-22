@@ -65,7 +65,7 @@ namespace MDG
             Worker.World.GetOrCreateSystem<StatMonitorSystem>();
             Worker.World.GetOrCreateSystem<SystemCleanupSystem>();
             Worker.World.GetOrCreateSystem<StructureMonitorSystem>();
-            Worker.World.GetOrCreateSystem<WeaponSystem>();
+            //Worker.World.GetOrCreateSystem<WeaponSystem>();
 
             Worker.World.GetOrCreateSystem<GameStatusSystem>();
             Worker.World.GetOrCreateSystem<TerritoryMonitorSystem>();

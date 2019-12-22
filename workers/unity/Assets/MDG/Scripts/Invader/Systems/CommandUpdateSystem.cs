@@ -494,7 +494,7 @@ namespace MDG.Invader.Systems
 
             JobHandle moveToDestHandle = moveCommandJob.Schedule(entityQuery, moveToAttackHandle);
 
-            authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<CollectCommand>();
+            /*authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<CollectCommand>();
             authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
 
             entityQueryDesc = new EntityQueryDesc
@@ -511,7 +511,7 @@ namespace MDG.Invader.Systems
             moveToDestHandle.Complete();
             JobHandle moveToCollectHandle = moveToResourceJob.Schedule(entityQuery, moveToDestHandle);
             moveToCollectHandle.Complete();
-
+            */
             authVelocityGroup[authVelocityGroup.Length - 1] = ComponentType.ReadWrite<BuildCommand>();
             authVelocityGroup[authVelocityGroup.Length - 2] = ComponentType.ReadOnly<SpatialEntityId>();
             entityQuery = GetEntityQuery(entityQueryDesc);
@@ -523,7 +523,7 @@ namespace MDG.Invader.Systems
                 entitiesBuilding = buildingUnits.AsParallelWriter(),
             };
 
-            JobHandle moveToBuildHandle = moveToBuildLocation.Schedule(entityQuery, moveToCollectHandle);
+            JobHandle moveToBuildHandle = moveToBuildLocation.Schedule(entityQuery, moveToDestHandle);
 
             ProcessPendingAttacks(pendingAttacks);
 
@@ -537,7 +537,7 @@ namespace MDG.Invader.Systems
 
                 updateBuildHandle = updateBuildCommandJob.Schedule(this, moveToBuildHandle);
             }
-            RunCollectCommandRequests();
+         //   RunCollectCommandRequests();
             moveToBuildHandle.Complete();
             ProcessBuildCommand(buildingUnits);
             buildingUnits.Dispose();

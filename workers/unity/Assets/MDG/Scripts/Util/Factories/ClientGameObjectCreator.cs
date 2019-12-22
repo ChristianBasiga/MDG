@@ -30,6 +30,7 @@ using MDG.ScriptableObjects.Game;
 using MdgSchema.Game.Territory;
 using StatSchema = MdgSchema.Common.Stats;
 using MDG.Common.MonoBehaviours.Synchronizers;
+using MDG.Game.Util.Pool;
 
 namespace MDG
 {
@@ -50,6 +51,7 @@ namespace MDG
         private readonly IEntityGameObjectCreator _default;
         private readonly Unity.Entities.World _world;
         private ComponentUpdateSystem componentUpdateSystem;
+        private PoolManager poolManager;
         private readonly string _workerType;
 
         // Link to player at this client.
@@ -71,11 +73,12 @@ namespace MDG
 
         public List<LinkedEntityComponent> otherPlayerLinks { private set; get; }
 
-        public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType)
+        public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType, PoolManager poolManager)
         {
             this._default = _default;
             this._world = world;
             this._workerType = workerType;
+            this.poolManager = poolManager;
             EntityToGameObjects = new Dictionary<EntityId, GameObject>();
             otherPlayerLinks = new List<LinkedEntityComponent>();
             componentUpdateSystem = world.GetExistingSystem<ComponentUpdateSystem>();
@@ -113,7 +116,7 @@ namespace MDG
                     }
                     else if (gameMetadata.Type == GameEntityTypes.Hunter)
                     {
-                        pathToEntity = $"{pathToEntity}/Invader";
+                        pathToPlayer = $"{pathToEntity}/Invader";
 
                     }
                 }
@@ -135,6 +138,7 @@ namespace MDG
                 LinkedEntityComponent linkedEntityComponent = g.GetComponent<LinkedEntityComponent>();
                 if (!hasAuthority)
                 {
+                    g.tag = type.ToString();
                     otherPlayerLinks.Add(linkedEntityComponent);
                 }
                 else
@@ -231,7 +235,7 @@ namespace MDG
                 else
                 {
                     Debug.Log("Health synchronizer does not exist or entity was deleted not via health");
-                    UnityObjectDestroyer.Destroy(linkedGameObject);
+                    linkedGameObject.SetActive(false);
                 }
             }
             EntityToGameObjects.Remove(entityId);
@@ -240,9 +244,14 @@ namespace MDG
 
         GameObject CreateEntityObject(SpatialOSEntity entity, EntityGameObjectLinker linker, string pathToEntity, Transform parent = null, System.Type[] ecsComponents = null)
         {
+
             //Change to get from pool instead later on in final version of project.
             Object prefab = Resources.Load(pathToEntity);
-            GameObject gameObject = Object.Instantiate(prefab) as GameObject;
+            if (!poolManager.TryGetFromPool(pathToEntity, out GameObject gameObject))
+            {
+                gameObject = Object.Instantiate(prefab) as GameObject;
+            }
+
             if (parent)
             {
                 gameObject.transform.parent = parent;
