@@ -12,10 +12,8 @@ type ActiveToggleResponse{
     bool active = 2;
 }
 
-import "player/type.schema";
 
 type RoomJoinRequest{
-    player.PlayerType type = 1;
     string user_name = 2;
     int32 room_id = 3;
 }

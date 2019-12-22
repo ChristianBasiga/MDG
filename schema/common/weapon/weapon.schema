@@ -1,0 +1,19 @@
+package mdg_schema.common.weapon;
+
+// Not scalable like this, fine for now. Again. Working to display the main premise of the game
+// can alwas add content and update this later
+enum WeaponType{
+    Projectile = 1;
+    Melee = 2;
+}
+
+// Prob create WeaponMetadata  that would have weapon type and weapon id sinc those don't change.
+// unless I do change it.
+component Weapon{
+    id = 960;
+    WeaponType weapon_type = 1;
+    string weapon_id = 2;
+    int32 base_damage = 3;
+    int32 durability = 4;
+    EntityId wielder_id = 5;
+}

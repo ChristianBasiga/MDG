@@ -1,0 +1,25 @@
+{
+    "name": "PlaymodeTests",
+    "references": [
+        "Unity.Entities",
+        "Unity.Entities.Tests",
+        "MDG",
+        "Improbable.Gdk.Core",
+        "Improbable.Gdk.Generated",
+        "Improbable.Gdk.TestUtils.EditmodeTests",
+        "Improbable.Gdk.TestUtils",
+        "Zenject",
+        "Unity.Collections"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

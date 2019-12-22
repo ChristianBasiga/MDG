@@ -1,0 +1,8 @@
+package mdg_schema.common.spawn;
+import "common/util.schema";
+
+component RespawnMetadata{
+    id = 832;
+    float base_respawn_time = 1;
+    mdg_schema.common.util.Vector3f base_respawn_position = 2;
+}

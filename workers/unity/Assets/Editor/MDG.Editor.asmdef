@@ -1,5 +1,5 @@
 {
-    "name": "MDG.Editor",
+    "name": "BlankProject.Editor",
     "references": [
         "Improbable.Gdk.BuildSystem",
         "Improbable.Gdk.Core",
@@ -7,7 +7,6 @@
         "Unity.Entities",
         "MDG"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],

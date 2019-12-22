@@ -1,0 +1,5 @@
+package mdg_schema.game;
+component Occupied{
+    id = 528;
+    list<EntityId> occupants = 1;
+}

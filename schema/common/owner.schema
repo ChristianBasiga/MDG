@@ -1,0 +1,12 @@
+package mdg_schema.common;
+
+
+
+component Owner
+{
+    id = 768;
+    EntityId owner_id = 1;
+}
+
+
+

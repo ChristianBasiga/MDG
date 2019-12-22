@@ -1,0 +1,39 @@
+package mdg_schema.common.inventory;
+
+enum InventoryRequestErrorTypes{
+    INVENTORY_FULL = 1;
+    INVALID_ITEM = 2;
+    INVALID_POSITION = 3;
+}
+type Item {
+    int32 id = 1;
+    // Information like durability, and wther it stacks will be stored in sets of 4 bits in this variable.
+    uint64 item_metadata = 2;
+}
+
+type InventoryAddItemRequest {
+    EntityId inventory_owner = 1;
+    Item to_add = 2;
+    int32 count = 3;
+}
+
+type InventoryRemoveItemRequest {
+    EntityId inventory_owner = 1;
+    int32 item_position = 2;
+}
+
+type InventoryServiceResponse {
+    bool success = 1;
+    option<string> error = 2;
+    option<InventoryRequestErrorTypes> error_type = 3;
+}
+
+component Inventory {
+    id = 804;
+    map<int32, Item> inventory = 1;
+    // This meta data prob fine to just seperate into variables instead of doing bitwise stuff.
+    // since it won't be changing often.
+    int32 inventory_size = 2;
+    command InventoryServiceResponse add_item_to_inventory(InventoryAddItemRequest);
+    command InventoryServiceResponse remove_item_from_inventory(InventoryRemoveItemRequest);
+}

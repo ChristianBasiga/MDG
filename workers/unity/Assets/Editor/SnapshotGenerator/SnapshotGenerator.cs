@@ -1,8 +1,11 @@
 using Improbable;
 using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
+using WorldObjects = MDG.ScriptableObjects.World;
+using MdgSchema.Common.Util;
 using UnityEngine;
 using Snapshot = Improbable.Gdk.Core.Snapshot;
+using MDG.ScriptableObjects.Game;
 
 namespace MDG.Editor
 {
@@ -27,15 +30,48 @@ namespace MDG.Editor
             var snapshot = new Snapshot();
 
             AddPlayerSpawner(snapshot);
-            // AddLobby(snapshot);
-            //AddUnitSpawner(snapshot);
+            AddGameManager(snapshot);
+            AddTerritories(snapshot);   
             return snapshot;
         }
 
-        // Should also add GameManager
-        private static void AddUnitSpawner(Snapshot snapshot)
+        private static void AddGameManager(Snapshot snapshot)
         {
-            snapshot.AddEntity(MDG.Hunter.Unit.Templates.GetUnitSpawnerTemplate());
+            //Todo: Do based on env
+            GameConfig gameConfig = Resources.Load("ScriptableObjects/GameConfigs/BaseGameConfig") as GameConfig;
+            snapshot.AddEntity(Templates.GameTemplates.CreateGameManagerTemplate(gameConfig));
+        }
+
+        private static void AddTerritories(Snapshot snapshot)
+        {
+
+            object[] loadedTerritoryObjects = Resources.LoadAll("ScriptableObjects/World/Territories/");
+
+            for (int i = 0; i < loadedTerritoryObjects.Length; ++i)
+            {
+                WorldObjects.Territory territory = loadedTerritoryObjects[i] as WorldObjects.Territory;
+                snapshot.AddEntity(Templates.WorldTemplates.GetTerritoryTemplate(territory));
+            }
+        }
+
+        private static void AddSpawnManager(Snapshot snapshot)
+        {
+            var serverAttribute = UnityGameLogicConnector.WorkerType;
+
+            EntityTemplate template = new EntityTemplate();
+            template.AddComponent(new Position.Snapshot(), serverAttribute);
+            template.AddComponent(new Metadata.Snapshot { EntityType = "SpawnManager" }, serverAttribute);
+            template.AddComponent(new Persistence.Snapshot(), serverAttribute);
+            template.AddComponent(new MdgSchema.Common.Spawn.SpawnManager.Snapshot(), serverAttribute);
+
+            template.SetReadAccess(UnityClientConnector.WorkerType, UnityGameLogicConnector.WorkerType, MobileClientWorkerConnector.WorkerType);
+            template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
+
+            snapshot.AddEntity(template);
+        }
+        private static void AddResources(Snapshot snapshot)
+        {
+            snapshot.AddEntity(MDG.Templates.WorldTemplates.GetResourceTemplate());
         }
 
         private static void AddLobby(Snapshot snapshot)
@@ -52,10 +88,8 @@ namespace MDG.Editor
             template.AddComponent(new Metadata.Snapshot { EntityType = "PlayerCreator" }, serverAttribute);
             template.AddComponent(new Persistence.Snapshot(), serverAttribute);
             template.AddComponent(new PlayerCreator.Snapshot(), serverAttribute);
-
             template.SetReadAccess(UnityClientConnector.WorkerType, UnityGameLogicConnector.WorkerType, MobileClientWorkerConnector.WorkerType);
             template.SetComponentWriteAccess(EntityAcl.ComponentId, serverAttribute);
-
             snapshot.AddEntity(template);
         }
     }

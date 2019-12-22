@@ -1,0 +1,7 @@
+package mdg_schema.common.position;
+import "common/util.schema";
+
+component AngularVelocity{
+    id = 852;
+    mdg_schema.common.util.Vector3f angular_velocity = 1;
+}

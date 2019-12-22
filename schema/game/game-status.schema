@@ -1,0 +1,45 @@
+package mdg_schema.game;
+import "common/metadata.schema";
+
+enum WinConditions{
+    TimedOut = 1;
+    TerritoriesClaimed = 2;
+}
+
+enum GameStates{
+    RoleSelection = 1;
+    WaitingForPlayers = 2;
+    Playing = 3;
+    Over = 4;
+}
+
+
+type StartGameEventPayload{
+    int32 session_id = 1;
+    GameStates game_state = 2;
+}
+type GameEndEventPayload{
+    WinConditions win_condition_met = 1;
+    GameStates game_state = 2;
+
+}
+
+type PlayerJoinRequest
+{
+    mdg_schema.common.GameEntityTypes player_role = 1;
+    EntityId entity_id = 2;
+}
+
+type PlayerJoinResponse
+{
+    mdg_schema.common.GameEntityTypes player_role = 1;
+    EntityId entity_id = 2;
+}
+component GameStatus{
+    id = 506;
+    GameStates game_state = 1;
+    float time_left = 2;
+    event StartGameEventPayload start_game;
+    event GameEndEventPayload end_game;
+    command PlayerJoinResponse join_game(PlayerJoinRequest);
+} 

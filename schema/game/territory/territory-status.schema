@@ -1,0 +1,36 @@
+package mdg_schema.game.territory;
+
+enum TerritoryStatusTypes{
+    Claimed = 1;
+    Released = 2;
+    Interrupted = 3;
+    Claiming = 4;
+}
+
+
+type UpdateTerritoryStatusRequest
+{
+   TerritoryStatusTypes status = 1;
+}
+
+type UpdateTerritoryStatusResponse
+{
+    
+}
+
+
+type ClaimRequest
+{
+    float progress = 1;
+}
+
+type ClaimResponse{
+
+}
+
+component TerritoryStatus{
+    id = 505;
+    TerritoryStatusTypes status = 1;
+    float claim_progress = 2;
+    command UpdateTerritoryStatusResponse update_claim(UpdateTerritoryStatusRequest);
+}

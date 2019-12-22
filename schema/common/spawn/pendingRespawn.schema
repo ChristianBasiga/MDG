@@ -1,0 +1,11 @@
+package mdg_schema.common.spawn;
+import "common/util.schema";
+
+
+// Spawning will be 830-840
+component PendingRespawn {
+    id = 830;
+    bool respawn_active = 1;
+    float time_till_respawn = 2;
+    mdg_schema.common.util.Vector3f position_to_respawn = 3;
+}
