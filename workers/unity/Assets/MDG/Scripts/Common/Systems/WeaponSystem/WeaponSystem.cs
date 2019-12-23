@@ -146,12 +146,6 @@ namespace MDG.Common.Systems.Weapon
             destroyedWeapons.Dispose();
         }
 
-        // Update UnitRerouteSystem later to also work off like this isntead of off events
-        // entityQuery faster than my query yo.
-        // Need to jobify this. Also I REALLY need to move to server.
-        // Need to add team component or something or check owner ids respectively.
-        // down line, for now its okay.
-        // Should prioritized that honeslty tho.
         private void ProcessWeaponCollisions() {
             
             Entities.With(weaponCollisionQuery).ForEach((Entity entity, ref SpatialEntityId spatialEntityId, ref WeaponSchema.Weapon.Component weaponComponent, ref WeaponSchema.Damage.Component damageComponent,
