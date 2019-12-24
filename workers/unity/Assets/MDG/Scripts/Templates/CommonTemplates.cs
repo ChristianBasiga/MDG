@@ -2,8 +2,6 @@
 using Improbable.Gdk.Core;
 using MdgSchema.Common;
 using MdgSchema.Common.Util;
-using System.Collections;
-using System.Collections.Generic;
 
 using GameSchema = MdgSchema.Common;
 namespace MDG.Templates

@@ -1,23 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using MdgSchema.Lobby;
+﻿using Improbable;
 using Improbable.Gdk.Core;
-using Improbable;
-using Improbable.Gdk.PlayerLifecycle;
-using Improbable.Gdk.TransformSynchronization;
+using MDG.Common;
 using MdgSchema.Common;
-using MdgSchema.Units;
 using MdgSchema.Common.Point;
+using MdgSchema.Common.Util;
 using MdgSchema.Game.Resource;
-using MdgSchema.Common.Spawn;
+using System.Collections.Generic;
 using CollisionSchema = MdgSchema.Common.Collision;
 using TerritorySchema = MdgSchema.Game.Territory;
-using MdgSchema.Common.Util;
 using WorldObjects = MDG.ScriptableObjects.World;
-using MDG.Common;
-using Improbable.Gdk.QueryBasedInterest;
-using StructureSchema = MdgSchema.Common.Structure;
 
 namespace MDG.Templates
 {

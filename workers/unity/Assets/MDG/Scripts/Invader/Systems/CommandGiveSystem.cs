@@ -1,22 +1,17 @@
-﻿using Unity.Entities;
-using Unity.Jobs;
-using Unity.Collections;
-using MDG.Invader.Components;
-using MDG.Common.Components;
-using Improbable.Gdk.Core;
-using UnityEngine.Jobs;
-using MDG.Common.Systems;
-using MdgSchema.Common;
-using UnityEngine;
-using Unity.Mathematics;
-using MdgSchema.Units;
+﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using Improbable;
-using MDG.Invader.Monobehaviours;
 using MDG.Common;
-using MdgSchema.Common.Util;
+using MDG.Common.Components;
 using MDG.Common.MonoBehaviours;
-using Unity.Burst;
+using MDG.Invader.Components;
+using MdgSchema.Common;
+using MdgSchema.Common.Util;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using Unity.Mathematics;
+using UnityEngine;
+using UnityEngine.Jobs;
 
 namespace MDG.Invader.Systems
 {

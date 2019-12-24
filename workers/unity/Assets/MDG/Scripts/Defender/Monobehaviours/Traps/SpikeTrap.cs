@@ -1,10 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Improbable.Gdk.Core;
+﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using MDG.Common;
-using Unity.Entities;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using StatSchema = MdgSchema.Common.Stats;
 using StructureSchema = MdgSchema.Common.Structure;

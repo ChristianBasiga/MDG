@@ -1,16 +1,14 @@
-﻿using System.Collections;
+﻿using Improbable.Gdk.Subscriptions;
+using MDG.Common.MonoBehaviours;
+using MDG.Factories;
+using MDG.ScriptableObjects.Items;
 using System.Collections.Generic;
 using UnityEngine;
-using Improbable.Gdk.Subscriptions;
-using MDG.Common.MonoBehaviours;
-using MDG.ScriptableObjects.Items;
 using InventorySchema = MdgSchema.Common.Inventory;
-using MDG.Factories;
-using UnityEngine.UI;
 
 namespace MDG.Invader.Monobehaviours
 {
-   
+
     public class UnitInventoryUI : MonoBehaviour
     {
         [Require] InventorySchema.InventoryReader InventoryReader = null;

@@ -1,8 +1,6 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using CollisionSchema = MdgSchema.Common.Collision;

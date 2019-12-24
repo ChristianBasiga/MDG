@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using Improbable.Gdk.Core;
 using Unity.Entities;
-using Improbable.Gdk.Core;
 using Unity.Mathematics;
 
 namespace MDG.Invader.Components

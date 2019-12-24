@@ -1,7 +1,7 @@
-using System;
 using Improbable.Gdk.Core;
 using Improbable.Gdk.Mobile;
 using Improbable.Gdk.PlayerLifecycle;
+using System;
 using UnityEngine;
 
 namespace MDG

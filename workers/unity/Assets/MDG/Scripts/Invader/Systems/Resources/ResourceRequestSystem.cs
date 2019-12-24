@@ -1,15 +1,9 @@
-﻿using System.Collections;
+﻿using Improbable.Gdk.Core;
+using Improbable.Worker.CInterop;
+using MdgSchema.Game.Resource;
+using System;
 using System.Collections.Generic;
 using Unity.Entities;
-using Improbable.Worker.CInterop.Query;
-using EntityQuery = Improbable.Worker.CInterop.Query.EntityQuery;
-using MdgSchema.Game.Resource;
-using Improbable.Gdk.Core;
-using Improbable.Worker.CInterop;
-using Improbable.Gdk.Core.Commands;
-using System.Linq;
-using MDG.Common.Components;
-using System;
 
 namespace MDG.Invader.Systems
 {

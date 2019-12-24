@@ -1,25 +1,15 @@
-﻿using Improbable;
-using Improbable.Gdk.Core;
-using Improbable.Gdk.GameObjectCreation;
+﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.PlayerLifecycle;
-using Improbable.Gdk.Subscriptions;
-using Improbable.Gdk.TransformSynchronization;
 using Improbable.Worker.CInterop;
-using UnityEngine;
-using MdgSchema.Player;
-using MdgSchema.Lobby;
-
-using MDG.Invader.Systems;
 using MDG.Common.Systems;
-using MDG.Common.Systems.Inventory;
-using MDG.Common.Systems.Spawn;
 using MDG.Common.Systems.Point;
 using MDG.Common.Systems.Position;
+using MDG.Common.Systems.Spawn;
 using MDG.Common.Systems.Stat;
-using MDG.Common.Systems.Weapon;
 using MDG.Common.Systems.Structure;
-using MDG.Templates;
 using MDG.Game.Systems;
+using MDG.Templates;
+using UnityEngine;
 
 namespace MDG
 {

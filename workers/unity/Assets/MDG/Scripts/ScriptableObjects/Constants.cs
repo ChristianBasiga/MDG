@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-
-namespace MDG.ScriptableObjects
+﻿namespace MDG.ScriptableObjects
 {
     public static class Constants 
     {

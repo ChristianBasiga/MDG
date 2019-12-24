@@ -1,6 +1,6 @@
-using System;
 using Improbable.Gdk.Core;
 using Improbable.Worker.CInterop;
+using System;
 using Unity.Entities;
 using UnityEngine;
 

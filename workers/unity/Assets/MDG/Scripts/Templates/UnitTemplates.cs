@@ -1,27 +1,21 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using MdgSchema.Lobby;
+﻿using Improbable;
 using Improbable.Gdk.Core;
-using Improbable;
-using Improbable.Gdk.PlayerLifecycle;
-using Improbable.Gdk.TransformSynchronization;
+using MDG.Common;
+using MDG.Common.Components;
+using MDG.DTO;
+using MDG.Invader.Components;
 using MdgSchema.Common;
+using MdgSchema.Common.Position;
+using MdgSchema.Common.Util;
+using MdgSchema.Units;
+using System.Collections.Generic;
+using Unity.Entities;
+using UnityEngine;
+using CollisionSchema = MdgSchema.Common.Collision;
 using InventorySchema = MdgSchema.Common.Inventory;
 using PointSchema = MdgSchema.Common.Point;
-using UnitsSchema = MdgSchema.Units;
-using UnitComponents = MDG.Invader.Components;
-using Unity.Entities;
-using MDG.Common.Components;
-using MDG.Invader.Components;
-using MdgSchema.Units;
-using CollisionSchema = MdgSchema.Common.Collision;
 using StatSchema = MdgSchema.Common.Stats;
-using MdgSchema.Common.Position;
-using MDG.DTO;
-using SpawnSchema = MdgSchema.Common.Spawn;
-using MDG.Common;
-using MdgSchema.Common.Util;
+using UnitsSchema = MdgSchema.Units;
 
 namespace MDG.Templates
 {

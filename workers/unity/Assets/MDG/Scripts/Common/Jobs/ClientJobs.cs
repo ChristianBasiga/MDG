@@ -1,15 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using Improbable.Gdk.Core;
+using MDG.Common.Components;
+using MdgSchema.Common.Util;
+using Unity.Collections;
 using Unity.Entities;
-using Unity.Jobs;
+using UnityEngine;
 using CollisionSchema = MdgSchema.Common.Collision;
 using CommonSchema = MdgSchema.Common;
-using MDG.Common.Components;
-using Unity.Collections;
-using Improbable.Gdk.Core;
-using Improbable;
-using MdgSchema.Common.Util;
 
 namespace MDG.Common.Jobs
 {

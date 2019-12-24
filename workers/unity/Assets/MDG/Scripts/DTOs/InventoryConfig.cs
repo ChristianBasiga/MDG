@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using MdgSchema.Common.Inventory;
 using System;
-using MdgSchema.Common.Inventory;
+using System.Collections.Generic;
 
 // Move these comments to read me of dtos.
 // Move all DTOs to be scriptable objects instead.

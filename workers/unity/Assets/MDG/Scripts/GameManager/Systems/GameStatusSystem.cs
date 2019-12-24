@@ -1,14 +1,9 @@
 ﻿using Improbable.Gdk.Core;
 using MDG.ScriptableObjects.Game;
-using MdgSchema.Common;
 using MdgSchema.Player;
 using System.Collections.Generic;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Jobs;
-using Unity.Mathematics;
-using Unity.Transforms;
 using UnityEngine;
 using static Unity.Mathematics.math;
 using GameSchema = MdgSchema.Game;

@@ -1,15 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Unity.Entities;
-using Improbable.Gdk.Core;
-using MDG.Common.Components;
-using ResourceSchema = MdgSchema.Game.Resource;
-using System;
-using MdgSchema.Common.Spawn;
-using Unity.Jobs;
+﻿using Improbable.Gdk.Core;
 using MdgSchema.Common;
+using MdgSchema.Common.Spawn;
 using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using ResourceSchema = MdgSchema.Game.Resource;
 
 namespace MDG.Invader.Systems
 {

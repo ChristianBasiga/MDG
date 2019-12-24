@@ -1,9 +1,5 @@
 ﻿using MDG.Common.Interfaces;
 using MDG.Common.MonoBehaviours;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace MDG.Invader.Monobehaviours.InputProcessors

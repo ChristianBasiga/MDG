@@ -6,8 +6,8 @@ using MDG.Common.Systems.Spawn;
 using MDG.DTO;
 using MdgSchema.Common.Point;
 using MdgSchema.Common.Util;
-using UnityEngine;
 using System.Linq;
+using UnityEngine;
 using ScriptableStructures = MDG.ScriptableObjects.Structures;
 
 namespace MDG.Defender.Monobehaviours

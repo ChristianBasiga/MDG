@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-//using log4net.Appender;
+﻿//using log4net.Appender;
 //using log4net.Core;
 
 

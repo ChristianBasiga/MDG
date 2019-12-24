@@ -1,17 +1,15 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Improbable.Gdk.Core;
-using Unity.Entities;
-using Unity.Jobs;
-using Unity.Collections;
-using PositionSchema = MdgSchema.Common.Position;
-using CollisionSchema = MdgSchema.Common.Collision;
-using Improbable;
+﻿using Improbable.Gdk.Core;
+using MDG.Common;
 using MDG.Invader.Components;
 using MdgSchema.Common;
-using MDG.Common;
 using MdgSchema.Common.Util;
+using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using UnityEngine;
+using CollisionSchema = MdgSchema.Common.Collision;
+using PositionSchema = MdgSchema.Common.Position;
 
 namespace MDG.Invader.Systems
 {

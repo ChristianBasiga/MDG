@@ -1,19 +1,17 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Unity.Entities;
-using Unity.Collections;
-using Unity.Jobs;
-using MDG.Common.Datastructures;
-using Improbable;
+﻿using Improbable;
 using Improbable.Gdk.Core;
-using MdgSchema.Common;
-using PositionSchema = MdgSchema.Common.Position;
-using StatSchema = MdgSchema.Common.Stats;
+using MDG.Common.Datastructures;
 using MDG.Common.Systems.Collision;
 using MDG.ScriptableObjects.Game;
-using MDG.Common;
+using MdgSchema.Common;
 using MdgSchema.Common.Util;
+using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using UnityEngine;
+using PositionSchema = MdgSchema.Common.Position;
+using StatSchema = MdgSchema.Common.Stats;
 
 namespace MDG.Common.Systems.Position
 {

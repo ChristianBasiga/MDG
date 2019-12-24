@@ -1,13 +1,11 @@
 ﻿using Improbable.Gdk.Subscriptions;
 using MDG.Common;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 using StructureSchema = MdgSchema.Common.Structure;
-using StatSchema = MdgSchema.Common.Stats;
-namespace MDG.Invader.Monobehaviours.Structures {
+namespace MDG.Invader.Monobehaviours.Structures
+{
 
     public class StructureHUD : MonoBehaviour
     {

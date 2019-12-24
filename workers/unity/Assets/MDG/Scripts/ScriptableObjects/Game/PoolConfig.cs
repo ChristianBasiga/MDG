@@ -1,8 +1,5 @@
-﻿using MdgSchema.Common;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
-using System.Linq;
 namespace MDG.ScriptableObjects.Game
 {
     [Serializable]

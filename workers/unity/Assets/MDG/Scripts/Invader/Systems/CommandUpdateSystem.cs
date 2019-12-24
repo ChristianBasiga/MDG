@@ -1,40 +1,31 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using Unity.Entities;
-using Unity.Jobs;
-using UnityEngine.Jobs;
-using Unity.Collections;
+﻿using Improbable;
 using Improbable.Gdk.Core;
-using MdgSchema.Common;
-using Improbable;
-using Improbable.Gdk.PlayerLifecycle;
-using Unity.Mathematics;
-using MdgSchema.Game.Resource;
-using MDG.Invader.Components;
-using MDG.Common.Systems;
-using MDG.Common.Components;
-using MDG.Logging;
-using PositionSchema = MdgSchema.Common.Position;
-using CommonJobs = MDG.Common.Jobs;
-using CollisionSchema = MdgSchema.Common.Collision;
-using SpawnSchema = MdgSchema.Common.Spawn;
-using StructureSchema = MdgSchema.Common.Structure;
-
-using PointSchema = MdgSchema.Common.Point;
-using MDG.Common.Systems.Point;
-using Improbable.Gdk.Subscriptions;
-using MDG.Common.Systems.Position;
-using MDG.Common.Datastructures;
 using MDG.Common;
+using MDG.Common.Components;
+using MDG.Common.Datastructures;
+using MDG.Common.Systems.Point;
+using MDG.Common.Systems.Position;
 using MDG.Common.Systems.Spawn;
 using MDG.DTO;
-
+using MDG.Invader.Components;
 using MDG.ScriptableObjects.Weapons;
-using MDG.Common.Systems.Structure;
-using MdgSchema.Common.Util;
-using StatSchema = MdgSchema.Common.Stats;
-using Unity.Burst;
+using MdgSchema.Common;
 using MdgSchema.Common.Spawn;
+using MdgSchema.Common.Util;
+using MdgSchema.Game.Resource;
+using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using UnityEngine;
+using UnityEngine.Jobs;
+using CollisionSchema = MdgSchema.Common.Collision;
+using CommonJobs = MDG.Common.Jobs;
+using PointSchema = MdgSchema.Common.Point;
+using PositionSchema = MdgSchema.Common.Position;
+using SpawnSchema = MdgSchema.Common.Spawn;
+using StatSchema = MdgSchema.Common.Stats;
+using StructureSchema = MdgSchema.Common.Structure;
 
 // DEFINITELY CAN SEPERATE THIS INTO THREE DIFFERENT CLASSES.
 // OR AT THE VERY LEAST MOVE THE RESPECTIVE JOBS IN OWN CLASSES.

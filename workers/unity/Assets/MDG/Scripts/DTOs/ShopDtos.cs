@@ -1,10 +1,5 @@
-﻿using Improbable.Gdk.Core;
-using ScriptableItems = MDG.ScriptableObjects.Items;
+﻿using MDG.ScriptableObjects;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using MDG.ScriptableObjects;
 using UnitSchema = MdgSchema.Units;
 
 namespace MDG.DTO

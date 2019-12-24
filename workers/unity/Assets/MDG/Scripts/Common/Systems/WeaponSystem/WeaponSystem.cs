@@ -1,16 +1,15 @@
 ﻿using Improbable.Gdk.Core;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Entities;
-using Unity.Collections;
-using WeaponSchema = MdgSchema.Common.Weapon;
-using CollisionSchema = MdgSchema.Common.Collision;
-using StatSchema = MdgSchema.Common.Stats;
-using PointSchema = MdgSchema.Common.Point;
-using MdgSchema.Common.Collision;
 using Improbable.Gdk.Core.Commands;
-using Unity.Jobs;
 using MdgSchema.Common;
+using MdgSchema.Common.Collision;
+using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using CollisionSchema = MdgSchema.Common.Collision;
+using PointSchema = MdgSchema.Common.Point;
+using StatSchema = MdgSchema.Common.Stats;
+using WeaponSchema = MdgSchema.Common.Weapon;
 
 namespace MDG.Common.Systems.Weapon
 {

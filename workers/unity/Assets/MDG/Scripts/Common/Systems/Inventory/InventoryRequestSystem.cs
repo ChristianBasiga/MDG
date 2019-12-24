@@ -1,8 +1,7 @@
 ﻿using Improbable.Gdk.Core;
+using MDG.Common.Components;
 using System.Collections.Generic;
 using Unity.Entities;
-using Unity.Collections;
-using MDG.Common.Components;
 using InventorySchema = MdgSchema.Common.Inventory;
 
 namespace MDG.Common.Systems.Inventory

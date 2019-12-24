@@ -1,6 +1,4 @@
-﻿using Improbable;
-using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
+﻿using Improbable.Gdk.Core;
 using MDG.Common.Components;
 using MDG.Common.MonoBehaviours;
 using MDG.Invader.Components;
@@ -9,12 +7,12 @@ using MdgSchema.Common.Util;
 using MdgSchema.Units;
 using System;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 
-namespace MDG.Invader.Systems {
+namespace MDG.Invader.Systems
+{
 
     [DisableAutoCreation]
     [UpdateInGroup(typeof(EntitySelectionGroup))]

@@ -1,16 +1,12 @@
-﻿using Improbable;
-using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
+﻿using Improbable.Gdk.Subscriptions;
+using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours;
+using MDG.Common.MonoBehaviours.Synchronizers;
 using MdgSchema.Common;
+using System.Collections;
 using UnityEngine;
 using SpawnSchema = MdgSchema.Common.Spawn;
 using StatSchema = MdgSchema.Common.Stats;
-using GameSchema = MdgSchema.Game;
-using MDG.ScriptableObjects.Game;
-using MDG.Common.MonoBehaviours;
-using MDG.Common.Interfaces;
-using System.Collections;
-using MDG.Common.MonoBehaviours.Synchronizers;
 
 namespace MDG.Defender.Monobehaviours
 {

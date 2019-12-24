@@ -1,12 +1,6 @@
 ﻿using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
-using Improbable.Worker.CInterop;
-using MDG;
-using MDG.Common.MonoBehaviours;
 using MdgSchema.Common;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using GameSchema = MdgSchema.Game;
 

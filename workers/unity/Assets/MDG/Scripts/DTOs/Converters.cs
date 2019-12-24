@@ -1,14 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using MDG.Common;
+﻿using MDG.Common;
+using MDG.ScriptableObjects.Items;
 using MDG.ScriptableObjects.Weapons;
 using MdgSchema.Common.Inventory;
-using StructureSchema = MdgSchema.Common.Structure;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using ScriptableStructures = MDG.ScriptableObjects.Structures;
-using MDG.ScriptableObjects.Items;
+using StructureSchema = MdgSchema.Common.Structure;
 
 namespace MDG.DTO
 {

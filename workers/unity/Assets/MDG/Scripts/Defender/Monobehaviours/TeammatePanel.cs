@@ -1,5 +1,4 @@
 ﻿using Improbable.Gdk.Subscriptions;
-using MDG.Common.MonoBehaviours;
 using MDG.Common.MonoBehaviours.Synchronizers;
 using MdgSchema.Player;
 using Unity.Entities;

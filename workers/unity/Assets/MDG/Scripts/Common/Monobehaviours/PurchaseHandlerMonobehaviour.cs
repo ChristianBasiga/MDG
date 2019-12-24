@@ -1,7 +1,5 @@
 ﻿using Improbable.Gdk.Subscriptions;
 using MDG.ScriptableObjects.Items;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace MDG.Common.MonoBehaviours.Shopping

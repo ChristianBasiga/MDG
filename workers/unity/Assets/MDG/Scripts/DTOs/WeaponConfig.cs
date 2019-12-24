@@ -1,8 +1,4 @@
-﻿
-
-using Improbable;
-using Improbable.Gdk.Core;
-using MdgSchema.Common.Util;
+﻿using MdgSchema.Common.Util;
 using System;
 using WeaponSchema = MdgSchema.Common.Weapon;
 namespace MDG.DTO

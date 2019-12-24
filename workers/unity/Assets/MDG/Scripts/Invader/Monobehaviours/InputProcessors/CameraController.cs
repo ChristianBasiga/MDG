@@ -1,11 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Unity.Entities;
-using Improbable;
-using MDG.ScriptableObjects.Game;
-using MDG.Common.Interfaces;
+﻿using MDG.Common.Interfaces;
 using MDG.Common.MonoBehaviours;
+using MDG.ScriptableObjects.Game;
+using UnityEngine;
 
 namespace MDG.Invader.Monobehaviours.InputProcessors
 {

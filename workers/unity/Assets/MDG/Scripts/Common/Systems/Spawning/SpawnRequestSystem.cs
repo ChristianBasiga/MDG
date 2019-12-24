@@ -1,19 +1,15 @@
-﻿using System.Collections.Generic;
-using Improbable.Gdk.Core;
+﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Core.Commands;
-using Improbable.Worker.CInterop;
-using Unity.Entities;
-using SpawnSchema = MdgSchema.Common.Spawn;
-using CommonSchema = MdgSchema.Common;
 using Improbable.Gdk.PlayerLifecycle;
-using MdgSchema.Common;
-using Unity.Collections;
-using Unity.Jobs;
-using System;
-using MdgSchema.Units;
-using EntityTemplates = MDG.Templates;
-using MDG.Templates;
+using Improbable.Worker.CInterop;
 using MDG.DTO;
+using MDG.Templates;
+using System;
+using System.Collections.Generic;
+using Unity.Entities;
+using CommonSchema = MdgSchema.Common;
+using EntityTemplates = MDG.Templates;
+using SpawnSchema = MdgSchema.Common.Spawn;
 
 namespace MDG.Common.Systems.Spawn
 {

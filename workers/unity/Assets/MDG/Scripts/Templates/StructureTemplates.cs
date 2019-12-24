@@ -1,16 +1,15 @@
 ﻿using Improbable;
 using Improbable.Gdk.Core;
-using InventorySchema = MdgSchema.Common.Inventory;
-using StructureSchema = MdgSchema.Common.Structure;
-using CollisionSchema = MdgSchema.Common.Collision;
-using PointSchema = MdgSchema.Common.Point;
-using MDG.DTO;
-using Improbable.Gdk.PlayerLifecycle;
-using Unity.Entities;
 using MDG.Common;
+using MDG.DTO;
+using MdgSchema.Common;
 using MdgSchema.Common.Stats;
 using MdgSchema.Common.Util;
-using MdgSchema.Common;
+using Unity.Entities;
+using CollisionSchema = MdgSchema.Common.Collision;
+using InventorySchema = MdgSchema.Common.Inventory;
+using PointSchema = MdgSchema.Common.Point;
+using StructureSchema = MdgSchema.Common.Structure;
 
 namespace MDG.Templates
 {

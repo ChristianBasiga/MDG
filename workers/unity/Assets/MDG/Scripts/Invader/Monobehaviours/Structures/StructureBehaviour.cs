@@ -1,6 +1,5 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using MDG.Common.MonoBehaviours;
 using MDG.Common.MonoBehaviours.Shopping;
 using MDG.DTO;
 using MDG.Invader.Monobehaviours.UserInterface;
@@ -8,7 +7,6 @@ using MDG.Invader.Systems;
 using MDG.ScriptableObjects.Items;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using StructureSchema = MdgSchema.Common.Structure;
 

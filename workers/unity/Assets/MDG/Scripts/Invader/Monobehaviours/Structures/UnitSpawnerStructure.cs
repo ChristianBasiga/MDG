@@ -1,19 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using MDG.Common.MonoBehaviours.Shopping;
-using MDG.ScriptableObjects.Items;
-using MDG.DTO;
+﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using Improbable.Gdk.Core;
 using MDG.Common;
-using StructureSchema = MdgSchema.Common.Structure;
-using MdgSchema.Units;
 using MDG.Common.Systems.Spawn;
+using MDG.DTO;
+using MDG.ScriptableObjects.Items;
 using MDG.ScriptableObjects.Units;
-using System.Linq;
 using MdgSchema.Common.Util;
+using MdgSchema.Units;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using StructureSchema = MdgSchema.Common.Structure;
 
 // Need to change where this goes since longer monobehaviour.
 namespace MDG.Invader.Monobehaviours.Structures

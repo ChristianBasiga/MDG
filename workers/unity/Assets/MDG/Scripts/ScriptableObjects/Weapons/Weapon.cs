@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using WeaponSchema = MdgSchema.Common.Weapon;
 
 // Factory should have all of these scriptable objects.

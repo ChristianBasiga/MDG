@@ -1,16 +1,14 @@
-﻿using Improbable;
-using Improbable.Gdk.Core;
-using WeaponSchema = MdgSchema.Common.Weapon;
-using PositionSchema = MdgSchema.Common.Position;
+﻿using Improbable.Gdk.Core;
+using MDG.Common;
+using MDG.DTO;
+using MdgSchema.Common;
+using MdgSchema.Common.Util;
+using Unity.Entities;
 using CollisionSchema = MdgSchema.Common.Collision;
 using CommonSchema = MdgSchema.Common;
-using MDG.DTO;
-using Unity.Entities;
-using MDG.Common;
-using Improbable.Gdk.PlayerLifecycle;
+using PositionSchema = MdgSchema.Common.Position;
 using StatSchema = MdgSchema.Common.Stats;
-using MdgSchema.Common.Util;
-using MdgSchema.Common;
+using WeaponSchema = MdgSchema.Common.Weapon;
 
 namespace MDG.Templates
 {

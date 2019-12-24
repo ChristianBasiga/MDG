@@ -1,6 +1,5 @@
 ﻿using MDG.Common.Interfaces;
 using MDG.Common.MonoBehaviours.Synchronizers;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using GameSchema = MdgSchema.Game;

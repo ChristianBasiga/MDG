@@ -1,11 +1,8 @@
-﻿using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
+﻿using Improbable.Gdk.Subscriptions;
 using Improbable.Worker.CInterop;
 using MDG.Common.Systems.Point;
 using MDG.ScriptableObjects.Items;
 using MdgSchema.Common.Point;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace MDG.Common.MonoBehaviours.Shopping

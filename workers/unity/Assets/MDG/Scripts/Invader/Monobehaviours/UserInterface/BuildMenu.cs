@@ -1,8 +1,6 @@
 ﻿using MDG.ScriptableObjects.Items;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using static MDG.ScriptableObjects.Constants;
 using ScriptableObjectStructures = MDG.ScriptableObjects.Structures;

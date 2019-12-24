@@ -1,6 +1,4 @@
-﻿using Improbable.Gdk.Core;
-using MdgSchema.Common;
-using Unity.Entities;
+﻿using Unity.Entities;
 
 
 namespace MDG.Common.Components.Structure

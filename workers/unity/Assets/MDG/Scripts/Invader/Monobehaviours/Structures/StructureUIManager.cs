@@ -1,9 +1,7 @@
-﻿using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
+﻿using Improbable.Gdk.Subscriptions;
 using MDG.Invader.Monobehaviours.UserInterface;
 using MDG.ScriptableObjects.Items;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using StructureSchema = MdgSchema.Common.Structure;

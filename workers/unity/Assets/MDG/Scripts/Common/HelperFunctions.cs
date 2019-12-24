@@ -1,12 +1,9 @@
 ﻿using Improbable;
-using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using MDG.Invader.Systems;
 using MdgSchema.Common;
 using MdgSchema.Common.Util;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 

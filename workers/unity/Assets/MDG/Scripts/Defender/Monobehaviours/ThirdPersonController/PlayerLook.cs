@@ -1,13 +1,10 @@
-﻿using Improbable;
-using Improbable.Gdk.Subscriptions;
+﻿using Improbable.Gdk.Subscriptions;
 using MDG.Common;
 using MDG.Common.Interfaces;
 using MDG.Common.MonoBehaviours;
 using MDG.ScriptableObjects.Game;
 using MdgSchema.Common;
-using MdgSchema.Common.Util;
 using UnityEngine;
-using PositionSchema = MdgSchema.Common.Position;
 
 namespace MDG.Defender.Monobehaviours
 {

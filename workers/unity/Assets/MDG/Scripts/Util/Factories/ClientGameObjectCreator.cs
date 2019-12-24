@@ -1,35 +1,19 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using Improbable.Gdk.GameObjectCreation;
+﻿using Improbable;
 using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
+using Improbable.Gdk.GameObjectCreation;
 using Improbable.Gdk.PlayerLifecycle;
-using Unity.Entities;
-using Improbable;
-using MdgSchema.Player;
-using MDG.Common.Components;
-using MDG.Invader.Components;
-using UnitSchema = MdgSchema.Units;
-using WeaponSchema = MdgSchema.Common.Weapon;
-using StructureSchema = MdgSchema.Common.Structure;
-using MdgSchema.Common;
-using Unity.Transforms;
-using MDG.Common.Systems;
-using Templates = MDG.Templates;
-using SpawnSystems = MDG.Common.Systems.Spawn;
-using InvaderSystems =  MDG.Invader.Systems;
-using MdgSchema.Units;
-using MDG.Templates;
-using MDG.DTO;
-using GameScriptableObjects = MDG.ScriptableObjects.Game;
-using MDG.Common;
-using MDG.Common.MonoBehaviours;
-using MDG.Common.Systems.Spawn;
-using MDG.ScriptableObjects.Game;
-using MdgSchema.Game.Territory;
-using StatSchema = MdgSchema.Common.Stats;
+using Improbable.Gdk.Subscriptions;
 using MDG.Common.MonoBehaviours.Synchronizers;
 using MDG.Game.Util.Pool;
+using MDG.Templates;
+using MdgSchema.Common;
+using MdgSchema.Game.Territory;
+using System.Collections.Generic;
+using Unity.Entities;
+using UnityEngine;
+using StructureSchema = MdgSchema.Common.Structure;
+using UnitSchema = MdgSchema.Units;
+using WeaponSchema = MdgSchema.Common.Weapon;
 
 namespace MDG
 {

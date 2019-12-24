@@ -1,31 +1,26 @@
-﻿using Improbable.Gdk.Subscriptions;
+﻿using Improbable.Gdk.Core;
+using Improbable.Gdk.GameObjectCreation;
+using Improbable.Gdk.Subscriptions;
+using MDG.Common;
+using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours;
+using MDG.Common.MonoBehaviours.Shopping;
+using MDG.Common.MonoBehaviours.Synchronizers;
 using MDG.Invader.Components;
+using MDG.Invader.Monobehaviours.InputProcessors;
+using MDG.Invader.Monobehaviours.UserInterface;
 using MDG.Invader.Systems;
-using MdgSchema.Common;
-using System.Collections;
+using MDG.ScriptableObjects.Items;
+using MdgSchema.Common.Structure;
+using MdgSchema.Common.Util;
 using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using MDG.DTO;
-using MDG.Invader.Monobehaviours.UserInterface;
-using PointSchema = MdgSchema.Common.Point;
-using MDG.Common.MonoBehaviours.Shopping;
-using MDG.Common;
-using MDG.ScriptableObjects.Items;
 using UnityEngine.EventSystems;
-using MdgSchema.Common.Structure;
-using MDG.Invader.Monobehaviours.Structures;
-using MdgSchema.Common.Util;
-using Improbable.Gdk.GameObjectCreation;
-using System.Linq;
-using MDG.Common.MonoBehaviours;
-using Improbable.Gdk.Core;
-using MDG.Invader.Monobehaviours.InputProcessors;
-using MDG.Common.Interfaces;
-using MDG.Common.MonoBehaviours.Synchronizers;
 
-namespace MDG.Invader.Monobehaviours {
+namespace MDG.Invader.Monobehaviours
+{
 
     public class InvaderSynchronizer : MonoBehaviour, IPlayerSynchronizer
     {

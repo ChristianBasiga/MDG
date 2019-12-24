@@ -1,12 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using MdgSchema.Lobby;
+﻿using Improbable;
 using Improbable.Gdk.Core;
-using Improbable;
-using ResourceSchema = MdgSchema.Game.Resource;
-using GameSchema = MdgSchema.Game;
 using MDG.ScriptableObjects.Game;
+using GameSchema = MdgSchema.Game;
+using ResourceSchema = MdgSchema.Game.Resource;
 
 namespace MDG.Templates
 {

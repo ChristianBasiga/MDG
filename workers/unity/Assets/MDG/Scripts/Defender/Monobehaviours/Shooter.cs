@@ -1,15 +1,12 @@
-﻿using Improbable.Gdk.Subscriptions;
-using MDG.Common.Systems.Spawn;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using SpawnSchema = MdgSchema.Common.Spawn;
-using MDG.DTO;
-using Improbable;
+﻿using Improbable.Gdk.Core;
+using Improbable.Gdk.Subscriptions;
 using MDG.Common;
-using Improbable.Gdk.Core;
+using MDG.Common.Systems.Spawn;
+using MDG.DTO;
 using MDG.ScriptableObjects.Weapons;
 using MdgSchema.Common.Util;
+using UnityEngine;
+using SpawnSchema = MdgSchema.Common.Spawn;
 
 namespace MDG.Defender.Monobehaviours
 {

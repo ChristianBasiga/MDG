@@ -1,8 +1,6 @@
-﻿using Improbable;
-using Improbable.Gdk.Core;
+﻿using Improbable.Gdk.Core;
 using MdgSchema.Common.Util;
 using Unity.Entities;
-using Unity.Mathematics;
 using StructureSchema = MdgSchema.Common.Structure;
 namespace MDG.Invader.Components
 {

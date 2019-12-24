@@ -1,11 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using MdgSchema.Common.Util;
 using System;
 using StructureSchema = MdgSchema.Common.Structure;
-using Improbable.Gdk.Core;
-using Improbable;
-using MdgSchema.Common.Util;
 
 namespace MDG.DTO
 {

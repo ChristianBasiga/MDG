@@ -1,12 +1,8 @@
-﻿using Improbable.Gdk.Core.Commands;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Entities;
-using TerritorySchema = MdgSchema.Game.Territory;
-using StructureSchema = MdgSchema.Common.Structure;
-using Improbable.Gdk.Core;
+﻿using Improbable.Gdk.Core;
 using Unity.Collections;
+using Unity.Entities;
 using Unity.Mathematics;
+using TerritorySchema = MdgSchema.Game.Territory;
 
 namespace MDG.Game.Systems
 {

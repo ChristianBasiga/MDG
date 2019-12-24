@@ -1,12 +1,11 @@
-﻿using System.Collections;
+﻿using Improbable.Gdk.Core;
 using System.Collections.Generic;
-using Unity.Entities;
 using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using UnityEngine;
 using StructureComponents = MDG.Common.Components.Structure;
 using StructureSchema = MdgSchema.Common.Structure;
-using Improbable.Gdk.Core;
-using UnityEngine;
-using Unity.Jobs;
 
 namespace MDG.Common.Systems.Structure
 {

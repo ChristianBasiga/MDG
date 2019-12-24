@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using MDG.Common.MonoBehaviours.Synchronizers;
 using MdgSchema.Common;
-using Improbable.Gdk.Core;
+using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
-using MDG.Common.MonoBehaviours.Synchronizers;
 
 namespace MDG.Common.MonoBehaviours
 {
