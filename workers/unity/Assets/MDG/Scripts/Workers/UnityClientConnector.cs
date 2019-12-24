@@ -129,8 +129,8 @@ namespace MDG
                 TypeToSpawn = type
             }, OnCreatePlayerResponse, DTO.Converters.SerializeArguments(new DTO.PlayerConfig
             {
-                position = HelperFunctions.Vector3fFromUnityVector(position),
-                playerType = type
+                Position = HelperFunctions.Vector3fFromUnityVector(position),
+                PlayerType = type
             }));
         }
 
@@ -147,9 +147,9 @@ namespace MDG
                 {
                     UnitConfig unitConfig = new UnitConfig
                     {
-                        ownerId = createdEntityId.Id,
-                        position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
-                        unitType = MdgSchema.Units.UnitTypes.Worker
+                        OwnerId = createdEntityId.Id,
+                        Position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
+                        UnitType = MdgSchema.Units.UnitTypes.Worker
                     };
                     spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                     {

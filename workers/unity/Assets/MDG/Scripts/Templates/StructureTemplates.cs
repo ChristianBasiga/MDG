@@ -24,7 +24,7 @@ namespace MDG.Templates
 
             StructureConfig structureConfig = Converters.DeserializeArguments<StructureConfig>(structureArgs);
 
-            switch (structureConfig.structureType)
+            switch (structureConfig.StructureType)
             {
                 case StructureSchema.StructureType.Spawning:
                     GetSpawnStructureTemplate(entityTemplate, Converters.DeserializeArguments<SpawnStructureConfig>(structureArgs), clientAttribute, serverAttribute);
@@ -42,7 +42,7 @@ namespace MDG.Templates
 
             entityTemplate.AddComponent(new Owner.Snapshot
             {
-                OwnerId = new EntityId(structureConfig.ownerId)
+                OwnerId = new EntityId(structureConfig.OwnerId)
             }, serverAttribute);
 
           
@@ -59,14 +59,14 @@ namespace MDG.Templates
             });
             entityTemplate.AddComponent(new StructureSchema.StructureMetadata.Snapshot
             {
-                StructureType = structureConfig.structureType,
-                ConstructionTime = structureConfig.constructionTime,
-                OwnerId = new EntityId(structureConfig.ownerId)
+                StructureType = structureConfig.StructureType,
+                ConstructionTime = structureConfig.ConstructionTime,
+                OwnerId = new EntityId(structureConfig.OwnerId)
             }, serverAttribute);
 
             entityTemplate.AddComponent(new StructureSchema.Structure.Snapshot
             {
-                Constructing = structureConfig.constructing,
+                Constructing = structureConfig.Constructing,
             }, serverAttribute);
 
             return entityTemplate;
@@ -82,11 +82,11 @@ namespace MDG.Templates
 
             template.AddComponent(new Stats.Snapshot
             {
-                Health = structureConfig.health
+                Health = structureConfig.Health
             }, serverAttribute);
             template.AddComponent(new StatsMetadata.Snapshot
             {
-                Health = structureConfig.health
+                Health = structureConfig.Health
             }, serverAttribute);
 
             template.AddComponent(new InventorySchema.Inventory.Snapshot
@@ -117,11 +117,11 @@ namespace MDG.Templates
             }, serverAttribute);
             template.AddComponent(new Stats.Snapshot
             {
-                Health = claimConfig.health
+                Health = claimConfig.Health
             }, serverAttribute);
             template.AddComponent(new StatsMetadata.Snapshot
             {
-                Health = claimConfig.health
+                Health = claimConfig.Health
             }, serverAttribute);
 
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
@@ -130,7 +130,7 @@ namespace MDG.Templates
             }, serverAttribute);
 
             template.AddComponent(new StructureSchema.ClaimStructure.Snapshot{
-                TerritoryClaiming = new EntityId(claimConfig.territoryId)
+                TerritoryClaiming = new EntityId(claimConfig.TerritoryId)
             }, serverAttribute);
 
             // Could add collisions here for structure.
@@ -142,7 +142,7 @@ namespace MDG.Templates
             {
                 Damage = trapConfig.Damage,
                 OneTimeUse = trapConfig.OneTimeUse,
-                PrefabName = trapConfig.prefabName
+                PrefabName = trapConfig.PrefabName
             }, serverAttribute);
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {

@@ -56,13 +56,13 @@ namespace MDG.Templates
             UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(spawnArgs);
             template.AddComponent(new Unit.Snapshot
             {
-                OwnerId = new EntityId(unitConfig.ownerId),
-                Type = unitConfig.unitType
+                OwnerId = new EntityId(unitConfig.OwnerId),
+                Type = unitConfig.UnitType
             }, serverAttribute);
 
             template.AddComponent(new Owner.Snapshot
             {
-                OwnerId = new EntityId(unitConfig.ownerId)
+                OwnerId = new EntityId(unitConfig.OwnerId)
             }, serverAttribute);
 
             template.AddComponent(new StatSchema.MovementSpeed.Snapshot
@@ -71,7 +71,7 @@ namespace MDG.Templates
                 AngularSpeed = 10.0f
             }, serverAttribute);
 
-            switch (unitConfig.unitType)
+            switch (unitConfig.UnitType)
             {
                 case UnitsSchema.UnitTypes.Worker:
                     MakeWorkerUnit(template, clientAttribute);

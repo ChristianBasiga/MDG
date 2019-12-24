@@ -8,7 +8,8 @@ namespace MDG.DTO
     [Serializable]
     public class PlayerConfig
     {
-        public GameEntityTypes playerType;
-        public Vector3f position;
+        public GameEntityTypes PlayerType;
+        public string UserName;
+        public Vector3f Position;
     }
 }

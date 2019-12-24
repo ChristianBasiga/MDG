@@ -41,12 +41,12 @@ namespace MDG.DTO
         {
             ProjectileConfig projectileConfig = new ProjectileConfig
             {
-                projectileId = projectile.WeaponId,
-                dimensions = HelperFunctions.Vector3fFromUnityVector(projectile.Dimensions),
-                lifeTime = projectile.LifeTime,
-                maximumHits = projectile.Durability,
-                damage = projectile.Damage,
-                projectileSpeed = projectile.ProjectileSpeed
+                ProjectileId = projectile.WeaponId,
+                Dimensions = HelperFunctions.Vector3fFromUnityVector(projectile.Dimensions),
+                LifeTime = projectile.LifeTime,
+                MaximumHits = projectile.Durability,
+                Damage = projectile.Damage,
+                ProjectileSpeed = projectile.ProjectileSpeed
             };
             return projectileConfig;
         }
@@ -55,9 +55,9 @@ namespace MDG.DTO
         {
             return new WeaponMetadata
             {
-                attackCooldown = weapon.AttackCooldown,
-                weaponType = weapon.weaponType,
-                prefabName = weapon.PrefabPath
+                AttackCooldown = weapon.AttackCooldown,
+                WeaponType = weapon.weaponType,
+                PrefabName = weapon.PrefabPath
             };
         }
 
@@ -87,9 +87,9 @@ namespace MDG.DTO
                     SpawnStructureConfig spawnConfig = new SpawnStructureConfig
                     {
                         
-                        structureType = structure.StructureType,
-                        constructionTime = structure.ConstructionTime,
-                        inventoryConfig = inventoryConfig
+                        StructureType = structure.StructureType,
+                        ConstructionTime = structure.ConstructionTime,
+                        InventoryConfig = inventoryConfig
                     };
 
                     return spawnConfig;
@@ -97,8 +97,8 @@ namespace MDG.DTO
                     // Add other stuff.
                     ClaimConfig claimConfig = new ClaimConfig
                     {
-                        structureType = structure.StructureType,
-                        constructionTime = structure.ConstructionTime,
+                        StructureType = structure.StructureType,
+                        ConstructionTime = structure.ConstructionTime,
                     };
                     return claimConfig;
 
@@ -118,9 +118,9 @@ namespace MDG.DTO
                     ShopUnit shopUnit = shopItem as ShopUnit;
                     shopItemDto = new ShopUnitDto
                     {
-                        unitType = shopUnit.UnitType,
-                        shopItemType = shopItem.shopItemType,
-                        constructionTime = shopUnit.ConstructTime
+                        UnitType = shopUnit.UnitType,
+                        ShopItemType = shopItem.shopItemType,
+                        ConstructionTime = shopUnit.ConstructTime
                     };
                     break;
                 default:

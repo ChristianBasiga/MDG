@@ -8,8 +8,8 @@ namespace MDG.DTO
     [Serializable]
     public class UnitConfig
     {
-        public UnitTypes unitType;
-        public long ownerId;
-        public Vector3f position;
+        public UnitTypes UnitType;
+        public long OwnerId;
+        public Vector3f Position;
     }
 }

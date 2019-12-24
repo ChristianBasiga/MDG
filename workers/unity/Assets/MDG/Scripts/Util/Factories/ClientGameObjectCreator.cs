@@ -54,7 +54,7 @@ namespace MDG
             }
         }
 
-        public List<LinkedEntityComponent> otherPlayerLinks { private set; get; }
+        public List<LinkedEntityComponent> OtherPlayerLinks { private set; get; }
 
         public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType, PoolManager poolManager)
         {
@@ -63,7 +63,7 @@ namespace MDG
             this._workerType = workerType;
             this.poolManager = poolManager;
             EntityToGameObjects = new Dictionary<EntityId, GameObject>();
-            otherPlayerLinks = new List<LinkedEntityComponent>();
+            OtherPlayerLinks = new List<LinkedEntityComponent>();
             componentUpdateSystem = world.GetExistingSystem<ComponentUpdateSystem>();
         }
 
@@ -122,7 +122,7 @@ namespace MDG
                 if (!hasAuthority)
                 {
                     g.tag = type.ToString();
-                    otherPlayerLinks.Add(linkedEntityComponent);
+                    OtherPlayerLinks.Add(linkedEntityComponent);
                 }
                 else
                 {
@@ -205,9 +205,8 @@ namespace MDG
         {
             Debug.Log($"Deleted entity {entityId}");
             _default.OnEntityRemoved(entityId);
-            GameObject linkedGameObject;
 
-            if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObject) && linkedGameObject != null)
+            if (EntityToGameObjects.TryGetValue(entityId, out GameObject linkedGameObject) && linkedGameObject != null)
             {
                 // If not updating health then they're not deleted from damaging.
                 // need cleaner way to determine if killed via orphaning.
@@ -255,8 +254,7 @@ namespace MDG
 
         public GameObject GetLinkedGameObjectById(EntityId entityId)
         {
-            GameObject linkedObject = null;
-            if (!EntityToGameObjects.TryGetValue(entityId, out linkedObject))
+            if (!EntityToGameObjects.TryGetValue(entityId, out GameObject linkedObject))
             {
             }
             return linkedObject;

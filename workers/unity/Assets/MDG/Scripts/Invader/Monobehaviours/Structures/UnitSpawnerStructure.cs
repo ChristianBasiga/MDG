@@ -91,19 +91,19 @@ namespace MDG.Invader.Monobehaviours.Structures
         public void StartJob(byte[] jobContext)
         {
             PurchasePayload purchasePayload = Converters.DeserializeArguments<PurchasePayload>(jobContext);
-            ShopUnitDto shopUnit = purchasePayload.shopItem as ShopUnitDto;
+            ShopUnitDto shopUnit = purchasePayload.ShopItem as ShopUnitDto;
 
             // Should set combat stats too, etc. So from shop unit to load specific invader units.
             // So send run job requests with spawn request as serialzied payload.
             UnitConfig unitConfig = new UnitConfig
             {
-                ownerId = purchasePayload.purchaserId,
-                position = SpawnPoints[spawnPointIndex],
-                unitType = shopUnit.unitType,
+                OwnerId = purchasePayload.PurchaserId,
+                Position = SpawnPoints[spawnPointIndex],
+                UnitType = shopUnit.UnitType,
             };
             Debug.Log("spawning at " + HelperFunctions.Vector3fToVector3(spawnPoints[spawnPointIndex]));
 
-            Debug.Log("Shop unit construction time " + shopUnit.constructionTime);
+            Debug.Log("Shop unit construction time " + shopUnit.ConstructionTime);
 
             byte[] jobPayload = Converters.SerializeArguments<UnitConfig>(unitConfig);
             // Don't care about the response right now.
@@ -117,7 +117,7 @@ namespace MDG.Invader.Monobehaviours.Structures
                 Payload = new StructureSchema.JobRequestPayload
                 {
                     JobData = Converters.SerializeArguments<UnitConfig>(unitConfig),
-                    EstimatedJobCompletion = shopUnit.constructionTime,
+                    EstimatedJobCompletion = shopUnit.ConstructionTime,
                 },
                 TargetEntityId = linkedStructure.EntityId
             }, (response)=> {
@@ -140,7 +140,7 @@ namespace MDG.Invader.Monobehaviours.Structures
             // Will be removed when I include spawnPos in the byte payload for spawnMetaData.
             UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(jobData);
             //Todo: Debug how it got to 40, like it added y of structure pos.
-            unitConfig.position.Y = 20;
+            unitConfig.Position.Y = 20;
 
             // Need to delay this to be synced up with bar, but it's fine.
 
@@ -148,7 +148,7 @@ namespace MDG.Invader.Monobehaviours.Structures
             {
                 TypeToSpawn = MdgSchema.Common.GameEntityTypes.Unit,
                 Count = 1,
-                Position = unitConfig.position
+                Position = unitConfig.Position
             }, OnUnitSuccessfullySpawned, jobData);
         }
 

@@ -136,8 +136,8 @@ namespace MDG.Invader.Monobehaviours.Structures
             ShopItemDto shopItemDto = Converters.ShopItemToDto(shopItem);
             PurchasePayload purchasePayload = new PurchasePayload
             {
-                shopItem = shopItemDto,
-                purchaserId = purchaser.EntityId.Id
+                ShopItem = shopItemDto,
+                PurchaserId = purchaser.EntityId.Id
             };
 
             if (jobQueue[nextJobIndex] != null)

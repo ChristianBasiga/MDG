@@ -58,11 +58,11 @@ namespace MDG.Defender.Monobehaviours
                 Vector3f bulletLinearVelocity = HelperFunctions.Scale(HelperFunctions.Vector3fFromUnityVector(ray.direction), projectile.ProjectileSpeed);
 
                 ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(projectile);
-                projectileConfig.startingPosition = bulletStartingPosition;
-                projectileConfig.linearVelocity = bulletLinearVelocity;
+                projectileConfig.StartingPosition = bulletStartingPosition;
+                projectileConfig.LinearVelocity = bulletLinearVelocity;
 
                 WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(Weapon);
-                weaponMetadata.wielderId = linkedEntityComponent.EntityId.Id;
+                weaponMetadata.WielderId = linkedEntityComponent.EntityId.Id;
 
                 byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
                 byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);

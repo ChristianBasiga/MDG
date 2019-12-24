@@ -42,8 +42,8 @@ namespace MDG.Invader.Monobehaviours.Structures
 
             ClaimConfig claimConfig = new ClaimConfig
             {
-                territoryId = claimStructureComponent.TerritoryClaiming.Id,
-                constructionTime = structureMetadata.ConstructionTime
+                TerritoryId = claimStructureComponent.TerritoryClaiming.Id,
+                ConstructionTime = structureMetadata.ConstructionTime
             };
             commandSystem.SendCommand(new TerritorySchema.TerritoryStatus.UpdateClaim.Request
             {

@@ -819,12 +819,12 @@ namespace MDG.Invader.Systems
                 // will retrieve this from scriptable object instead of hardcoding the nums here.
                 // Scriptable Object.
                 ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(unitWeapon as Projectile);
-                projectileConfig.startingPosition = attackPayload.startingPosition;
+                projectileConfig.StartingPosition = attackPayload.startingPosition;
                 // this part is fine
                 Debug.Log($"{attackPayload.positionToAttack.X} {attackPayload.positionToAttack.Y} {attackPayload.positionToAttack.Z}");
-                projectileConfig.linearVelocity = HelperFunctions.Subtract(attackPayload.positionToAttack, attackPayload.startingPosition);
+                projectileConfig.LinearVelocity = HelperFunctions.Subtract(attackPayload.positionToAttack, attackPayload.startingPosition);
                 WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(unitWeapon);
-                weaponMetadata.wielderId = clientGameObjectCreator.PlayerLink.EntityId.Id;
+                weaponMetadata.WielderId = clientGameObjectCreator.PlayerLink.EntityId.Id;
                 byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
                 byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);
                 spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
@@ -924,21 +924,21 @@ namespace MDG.Invader.Systems
                         case StructureSchema.StructureType.Claiming:
                             structureConfig = new ClaimConfig
                             {
-                                constructing = true,
-                                health = 100,
-                                ownerId = clientGameObjectCreator.PlayerLink.EntityId.Id,
-                                structureType = StructureSchema.StructureType.Claiming,
-                                territoryId = buildCommand.TerritoryId.Value.Id
+                                Constructing = true,
+                                Health = 100,
+                                OwnerId = clientGameObjectCreator.PlayerLink.EntityId.Id,
+                                StructureType = StructureSchema.StructureType.Claiming,
+                                TerritoryId = buildCommand.TerritoryId.Value.Id
                             };
                             break;
                         case StructureSchema.StructureType.Spawning:
                             structureConfig = new SpawnStructureConfig
                             {
-                                structureType = buildCommand.StructureType,
-                                constructionTime = buildCommand.ConstructionTime,
-                                constructing = true,
-                                health = 10,
-                                ownerId = clientGameObjectCreator.PlayerLink.EntityId.Id
+                                StructureType = buildCommand.StructureType,
+                                ConstructionTime = buildCommand.ConstructionTime,
+                                Constructing = true,
+                                Health = 10,
+                                OwnerId = clientGameObjectCreator.PlayerLink.EntityId.Id
                             };
                             break;
                         default:

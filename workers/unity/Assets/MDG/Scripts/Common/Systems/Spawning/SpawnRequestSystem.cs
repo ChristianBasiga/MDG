@@ -127,8 +127,8 @@ namespace MDG.Common.Systems.Spawn
 
                         requestId = commandSystem.SendCommand(
                             new WorldCommands.CreateEntity.Request(
-                                WeaponTemplates.GetWeaponEntityTemplate(workerSystem.WorkerId, weaponMetadata.weaponType,
-                                new EntityId(weaponMetadata.wielderId), weaponMetadata.prefabName, request.spawnData
+                                WeaponTemplates.GetWeaponEntityTemplate(workerSystem.WorkerId, weaponMetadata.WeaponType,
+                                new EntityId(weaponMetadata.WielderId), weaponMetadata.PrefabName, request.spawnData
                                 )
                             ));
                         break;

@@ -7,20 +7,20 @@ namespace MDG.DTO
     [Serializable]
     public class PurchasePayload
     {
-        public ShopItemDto shopItem;
-        public long purchaserId;
+        public ShopItemDto ShopItem;
+        public long PurchaserId;
     }
 
     [Serializable]
     public class ShopItemDto
     {
-        public Constants.ShopItemType shopItemType;
+        public Constants.ShopItemType ShopItemType;
     }
 
     [Serializable]
     public class ShopUnitDto: ShopItemDto
     {
-        public UnitSchema.UnitTypes unitType;
-        public float constructionTime;
+        public UnitSchema.UnitTypes UnitType;
+        public float ConstructionTime;
     }
 }

@@ -5,17 +5,14 @@ using StructureSchema = MdgSchema.Common.Structure;
 namespace MDG.DTO
 {
 
-    // Tbh what I'm doing is going from scriptable object, to dtos, to bytes, to dtos on server side
-    // to apply config. But config IS essentially the scriptable object minus sprite, etc. Actually with that 
-    // in mind, this is fine. Configs have only what's needed to create template.
     [Serializable]
     public class StructureConfig
     {
-        public StructureSchema.StructureType structureType;
-        public int constructionTime;
-        public bool constructing;
-        public int health;
-        public long ownerId;
+        public StructureSchema.StructureType StructureType;
+        public int ConstructionTime;
+        public bool Constructing;
+        public int Health;
+        public long OwnerId;
     }
 
     [Serializable]
@@ -27,20 +24,20 @@ namespace MDG.DTO
     [Serializable]
     public class SpawnStructureConfig : InvaderStructureConfig
     {
-        public InventoryConfig inventoryConfig;
+        public InventoryConfig InventoryConfig;
     }
 
     [Serializable]
     public class ClaimConfig : StructureConfig
     {
-        public long territoryId;
+        public long TerritoryId;
     }
 
     [Serializable]
     public class TrapConfig : StructureConfig
     {
         public int Damage;
-        public string prefabName;
+        public string PrefabName;
         public Vector3f ColliderDimensions;
         public bool OneTimeUse;
     }

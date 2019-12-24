@@ -68,13 +68,13 @@ namespace MDG.Defender.Monobehaviours
             SpawnRequestSystem spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
             TrapConfig trapConfig = new TrapConfig
             {
-                prefabName = trap.PrefabPath,
+                PrefabName = trap.PrefabPath,
                 Damage = trap.Damage,
-                structureType = MdgSchema.Common.Structure.StructureType.Trap,
+                StructureType = MdgSchema.Common.Structure.StructureType.Trap,
                 ColliderDimensions = HelperFunctions.Vector3fFromUnityVector(trap.ColliderDimensions),
-                constructionTime = trap.SetupTime,
+                ConstructionTime = trap.SetupTime,
                 OneTimeUse = trap.OneTimeUse,
-                ownerId = linkedEntityComponent.EntityId.Id
+                OwnerId = linkedEntityComponent.EntityId.Id
             };
             Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit[] raycastHits = Physics.RaycastAll(ray, Mathf.Infinity);

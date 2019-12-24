@@ -37,19 +37,19 @@ namespace MDG.Templates
             template.AddComponent(new PlayerMetaData.Snapshot("username"), clientAttribute);
             template.AddComponent(new GameMetadata.Snapshot
             {
-                Type = creationArgs.playerType
+                Type = creationArgs.PlayerType
             }, serverAttribute);
-            template = creationArgs.playerType == GameEntityTypes.Hunter ?
+            template = creationArgs.PlayerType == GameEntityTypes.Hunter ?
                     AddInvaderComponents(clientAttribute, template)
                 : AddDefenderComponents(clientAttribute, template);
             template.AddComponent(new EntityPosition.Snapshot
             {
-                Position = creationArgs.position
+                Position = creationArgs.Position
             }, serverAttribute);
 
             template.AddComponent(new Position.Snapshot
             {
-                Coords = new Coordinates(creationArgs.position.X, creationArgs.position.Y, creationArgs.position.Z)
+                Coords = new Coordinates(creationArgs.Position.X, creationArgs.Position.Y, creationArgs.Position.Z)
             }, serverAttribute);
 
 
