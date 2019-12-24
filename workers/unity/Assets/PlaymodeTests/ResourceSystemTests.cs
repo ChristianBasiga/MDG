@@ -19,7 +19,6 @@ using SpawnSchema = MdgSchema.Common.Spawn;
 using ResourceSchema = MdgSchema.Game.Resource;
 using PointSchema = MdgSchema.Common.Point;
 using PointSystems = MDG.Common.Systems.Point;
-using DefenderComponents = MDG.Defender.Components;
 using MDG.Common.MonoBehaviours;
 
 using Improbable;

@@ -17,7 +17,6 @@ using SpawnSystems = MDG.Common.Systems.Spawn;
 using SpawnSchema = MdgSchema.Common.Spawn;
 using PointSchema = MdgSchema.Common.Point;
 using PointSystems = MDG.Common.Systems.Point;
-using DefenderComponents = MDG.Defender.Components;
 namespace PlaymodeTests
 {
     public class PointSystemTests : IPrebuildSetup

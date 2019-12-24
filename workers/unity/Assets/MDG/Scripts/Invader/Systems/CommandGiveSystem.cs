@@ -4,7 +4,6 @@ using Unity.Collections;
 using MDG.Invader.Components;
 using MDG.Common.Components;
 using Improbable.Gdk.Core;
-using MDG.Invader.Commands;
 using UnityEngine.Jobs;
 using MDG.Common.Systems;
 using MdgSchema.Common;
@@ -77,8 +76,8 @@ namespace MDG.Invader.Systems
                     // Remove it, then add interrupt, to do rest of clean up.
                     entityCommandBuffer.AddComponent(index, entity, new CommandInterrupt
                     {
-                        interrupting = commandListener.CommandType,
-                        target = commandGiven.TargetId
+                        Interrupting = commandListener.CommandType,
+                        Target = commandGiven.TargetId
                     });
                     commandListener.CommandType = commandGiven.CommandType;
                     commandListener.TargetPosition = commandGiven.TargetPosition;
@@ -87,13 +86,13 @@ namespace MDG.Invader.Systems
                     switch (commandGiven.CommandType)
                     {
                         case CommandType.Move:
-                            entityCommandBuffer.AddComponent(index, entity, new MoveCommand { destination = commandGiven.TargetPosition});    
+                            entityCommandBuffer.AddComponent(index, entity, new MoveCommand { Destination = commandGiven.TargetPosition});    
                             break;
                         case CommandType.Attack:
-                            entityCommandBuffer.AddComponent(index, entity, new AttackCommand { target = commandGiven.TargetId });
+                            entityCommandBuffer.AddComponent(index, entity, new AttackCommand { Target = commandGiven.TargetId });
                             break;
                         case CommandType.Collect:
-                            entityCommandBuffer.AddComponent(index, entity, new CollectCommand { destination = commandGiven.TargetPosition, resourceId = commandGiven.TargetId });
+                            entityCommandBuffer.AddComponent(index, entity, new CollectCommand { Destination = commandGiven.TargetPosition, ResourceId = commandGiven.TargetId });
                             break;
                         case CommandType.Build:
                             entityCommandBuffer.AddComponent(index, entity, buildCommand.Value);

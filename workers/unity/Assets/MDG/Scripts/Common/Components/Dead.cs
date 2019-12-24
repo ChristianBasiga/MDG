@@ -7,12 +7,12 @@ namespace MDG.Common.Components
     [RemoveAtEndOfTick]
     public struct JustDied: IComponentData
     {
-        public EntityId killedBy;
+        public EntityId KilledBy;
     }
 
     // Tempoary component to remove once respawned.
     public struct Dead: IComponentData
     {
-        public EntityId killedBy;
+        public EntityId KilledBy;
     }
 }

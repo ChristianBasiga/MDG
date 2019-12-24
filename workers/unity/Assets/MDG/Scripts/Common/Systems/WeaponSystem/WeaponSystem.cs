@@ -7,7 +7,6 @@ using WeaponSchema = MdgSchema.Common.Weapon;
 using CollisionSchema = MdgSchema.Common.Collision;
 using StatSchema = MdgSchema.Common.Stats;
 using PointSchema = MdgSchema.Common.Point;
-using MDG.Common.Components.Weapon;
 using MdgSchema.Common.Collision;
 using Improbable.Gdk.Core.Commands;
 using Unity.Jobs;

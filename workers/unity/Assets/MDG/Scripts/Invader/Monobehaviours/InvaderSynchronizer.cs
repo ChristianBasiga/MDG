@@ -118,12 +118,12 @@ namespace MDG.Invader.Monobehaviours {
             Vector3 position = HelperFunctions.GetMousePosition(inputCamera);
             commandGiveSystem.GiveBuildCommand(new BuildCommand
             {
-                buildLocation = new Vector3f(position.x, 20, position.z),
-                structureType = scriptableStructure.StructureType,
-                minDistanceToBuild = scriptableStructure.MinDistanceToBuild,
-                structureId = new Improbable.Gdk.Core.EntityId(-1),
-                constructionTime = scriptableStructure.ConstructionTime,
-                territoryId =  clickedTerritory
+                BuildLocation = new Vector3f(position.x, 20, position.z),
+                StructureType = scriptableStructure.StructureType,
+                MinDistanceToBuild = scriptableStructure.MinDistanceToBuild,
+                StructureId = new Improbable.Gdk.Core.EntityId(-1),
+                ConstructionTime = scriptableStructure.ConstructionTime,
+                TerritoryId =  clickedTerritory
             });
             clickedTerritory = new EntityId(-1);
         }
@@ -144,8 +144,8 @@ namespace MDG.Invader.Monobehaviours {
                 float3 topRight = new float3(math.max(convertedStart.x, convertedEnd.x), math.max(convertedStart.z, convertedEnd.z), 0);
                 selectionSystem.SetSelectionBounds(new SelectionSystem.SelectionBounds
                 {
-                    botLeft = botLeft,
-                    topRight = topRight
+                    BotLeft = botLeft,
+                    TopRight = topRight
                 });
             }
         }

@@ -29,8 +29,8 @@ namespace MDG.Invader.Systems {
 
         public struct SelectionBounds
         {
-            public float3 botLeft;
-            public float3 topRight;
+            public float3 BotLeft;
+            public float3 TopRight;
         }
 
 
@@ -113,8 +113,8 @@ namespace MDG.Invader.Systems {
             {
                 Vector3f position = EntityPosition.Position;
                 // Check if position of clickable entity is within selection bounds.
-                if (position.X > selectionBounds.botLeft.x && position.Z > selectionBounds.botLeft.y
-                    && position.X < selectionBounds.topRight.x && position.Z < selectionBounds.topRight.y)
+                if (position.X > selectionBounds.BotLeft.x && position.Z > selectionBounds.BotLeft.y
+                    && position.X < selectionBounds.TopRight.x && position.Z < selectionBounds.TopRight.y)
                 {
                     clickable.Clicked = true;
                     clickable.ClickedEntityId = invaderId;

@@ -125,13 +125,13 @@ namespace MDG.Invader.Systems
                 ref CommandListener commandListener)
             {
 
-                Vector3f sameY = new Vector3f(moveCommand.destination.X, EntityPosition.Position.Y, moveCommand.destination.Z);
+                Vector3f sameY = new Vector3f(moveCommand.Destination.X, EntityPosition.Position.Y, moveCommand.Destination.Z);
                 Vector3f direction = HelperFunctions.Subtract(sameY,EntityPosition.Position);
                 float distance = HelperFunctions.Magnitude(direction);
-                if (!moveCommand.applied)
+                if (!moveCommand.Applied)
                 {
                     linearVelocityComponent.Velocity = direction;
-                    moveCommand.applied = true;
+                    moveCommand.Applied = true;
                 }
                 else if (distance <= HelperFunctions.Magnitude(boxCollider.Dimensions))
                 {
@@ -152,7 +152,7 @@ namespace MDG.Invader.Systems
                 ref EntityPosition.Component EntityPosition, ref PositionSchema.LinearVelocity.Component linearVelocityComponent,
                 [ReadOnly] ref CollisionSchema.BoxCollider.Component boxCollider, ref CommandListener commandListener)
             {
-                Vector3f sameY = new Vector3f(collectCommand.destination.X, EntityPosition.Position.Y, collectCommand.destination.Z);
+                Vector3f sameY = new Vector3f(collectCommand.Destination.X, EntityPosition.Position.Y, collectCommand.Destination.Z);
                 Vector3f direction = HelperFunctions.Subtract(sameY, EntityPosition.Position);
                 float distance = HelperFunctions.Magnitude(direction);
 
@@ -175,7 +175,7 @@ namespace MDG.Invader.Systems
                 {
                     collectCommand.IsCollecting = true;
                     // Otherwise we can begin collecting.
-                    occupyPayloads.Enqueue(new CollectPayload { requestingOccupant = spatialEntityId.EntityId, resourceId = collectCommand.resourceId });
+                    occupyPayloads.Enqueue(new CollectPayload { requestingOccupant = spatialEntityId.EntityId, resourceId = collectCommand.ResourceId });
                 }
             }
         }
@@ -252,11 +252,11 @@ namespace MDG.Invader.Systems
                 [ReadOnly] ref CombatStats combatStats)
             {
                 Debug.Log("killed enemies length " + killedEnemies.Length);
-                if (killedEnemies.TryGetValue(attackCommand.target, out _) || respawningEnemies.TryGetValue(attackCommand.target, out _)) 
+                if (killedEnemies.TryGetValue(attackCommand.Target, out _) || respawningEnemies.TryGetValue(attackCommand.Target, out _)) 
                 {   
                     entityCommandBuffer.RemoveComponent(jobIndex, entity, typeof(AttackCommand));
                 }
-                else if (attackerToAttackeePosition.TryGetValue(attackCommand.target, out Vector3f targetPosition))
+                else if (attackerToAttackeePosition.TryGetValue(attackCommand.Target, out Vector3f targetPosition))
                 {
                     Vector3f sameY = new Vector3f(targetPosition.X, EntityPosition.Position.Y, targetPosition.Z);
                     Vector3f direction = HelperFunctions.Subtract(sameY, EntityPosition.Position);
@@ -270,16 +270,16 @@ namespace MDG.Invader.Systems
                                 attackerId = spatialEntityId.EntityId,
                                 positionToAttack = targetPosition,
                                 startingPosition = EntityPosition.Position,
-                                attackeeId = attackCommand.target
+                                attackeeId = attackCommand.Target
                             });
-                            attackCommand.attacking = true;
+                            attackCommand.Attacking = true;
                         }
                         linearVelocityComponent.Velocity = new Vector3f(0, 0, 0);
                     }
                     else
                     {
                         // If no longer in range, stop attacking, start following again.
-                        attackCommand.attacking = false;
+                        attackCommand.Attacking = false;
                         linearVelocityComponent.Velocity = direction;
                     }
                 }
@@ -302,29 +302,29 @@ namespace MDG.Invader.Systems
             public void Execute(Entity entity, int jobIndex, [ReadOnly] ref SpatialEntityId spatialEntityId, ref BuildCommand buildCommand, ref PositionSchema.LinearVelocity.Component linearVelocityComponent, 
             [ReadOnly] ref EntityPosition.Component EntityPositionComponent )
             {
-                float distance = HelperFunctions.Distance(buildCommand.buildLocation, EntityPositionComponent.Position);
+                float distance = HelperFunctions.Distance(buildCommand.BuildLocation, EntityPositionComponent.Position);
 
-                if (buildCommand.isBuilding && buildCommand.structureId.IsValid())
+                if (buildCommand.IsBuilding && buildCommand.StructureId.IsValid())
                 {
                     // If building add to queue for sending requests.
                     entitiesBuilding.TryAdd(spatialEntityId.EntityId, buildCommand);
                 }
-                else if (distance <= buildCommand.minDistanceToBuild)
+                else if (distance <= buildCommand.MinDistanceToBuild)
                 {
-                    if (!buildCommand.structureId.IsValid() && !buildCommand.isBuilding)
+                    if (!buildCommand.StructureId.IsValid() && !buildCommand.IsBuilding)
                     {
-                        buildCommand.isBuilding = true;
-                        buildCommand.builderId = spatialEntityId.EntityId;
+                        buildCommand.IsBuilding = true;
+                        buildCommand.BuilderId = spatialEntityId.EntityId;
                         entitiesBuilding.TryAdd(spatialEntityId.EntityId, buildCommand);
                         linearVelocityComponent.Velocity = new Vector3f(0, 0, 0);
                     }
                 }
                 else
                 {
-                    Vector3f normalizedDirection = HelperFunctions.Normalize(HelperFunctions.Subtract(buildCommand.buildLocation,EntityPositionComponent.Position));
+                    Vector3f normalizedDirection = HelperFunctions.Normalize(HelperFunctions.Subtract(buildCommand.BuildLocation,EntityPositionComponent.Position));
 
                     linearVelocityComponent.Velocity = normalizedDirection;
-                    buildCommand.isBuilding = false;
+                    buildCommand.IsBuilding = false;
                 }
             }
         }
@@ -337,7 +337,7 @@ namespace MDG.Invader.Systems
             {
                 if (pendingUpdates.TryGetValue(spatialEntityId.EntityId, out BuildCommand newBuildCommand))
                 {
-                    buildCommand.structureId = newBuildCommand.structureId; 
+                    buildCommand.StructureId = newBuildCommand.StructureId; 
                 }
             }
         }
@@ -630,7 +630,7 @@ namespace MDG.Invader.Systems
 
                         CollectCommand collectCommand = entityManager.GetComponentData<CollectCommand>(entity);
 
-                        List<QuadNode> quadNodes = positionSystem.querySpatialPartition(collectCommand.destination);
+                        List<QuadNode> quadNodes = positionSystem.querySpatialPartition(collectCommand.Destination);
 
                         CollectCommand? closestNewResource = null;
                         float shortestDistance = float.PositiveInfinity;
@@ -642,15 +642,15 @@ namespace MDG.Invader.Systems
                                 {
                                     EntityPosition.Component resourceTransform = entityManager.GetComponentData<EntityPosition.Component>(potentialResourceEntity);
                                     Vector3 pos = HelperFunctions.Vector3fToVector3(resourceTransform.Position);
-                                    Vector3 dest = HelperFunctions.Vector3fToVector3(collectCommand.destination);
+                                    Vector3 dest = HelperFunctions.Vector3fToVector3(collectCommand.Destination);
                                     float currDistance = Vector3.Distance(pos, dest);
                                     if ( currDistance < shortestDistance)
                                     {
                                         shortestDistance = currDistance;
                                         closestNewResource = new CollectCommand
                                         {
-                                            resourceId = quadNode.entityId,
-                                            destination = quadNode.position
+                                            ResourceId = quadNode.entityId,
+                                            Destination = quadNode.position
                                         };
                                     }
                                 }
@@ -726,7 +726,7 @@ namespace MDG.Invader.Systems
             // Do job like it.
            Entities.With(interruptedGroup).ForEach((Entity entity, ref SpatialEntityId spatialEntityId,  ref CommandInterrupt commandInterrupted) =>
            {
-               switch (commandInterrupted.interrupting)
+               switch (commandInterrupted.Interrupting)
                {
                    case CommandType.Attack:
                       break;
@@ -734,7 +734,7 @@ namespace MDG.Invader.Systems
                        resourceRequestSystem.SendRequest(new ResourceRequestSystem.ResourceRequestHeader
                        {
                            OccupantId = spatialEntityId.EntityId,
-                           ResourceId = commandInterrupted.target.Value,
+                           ResourceId = commandInterrupted.Target.Value,
                            ResourceRequestType = ResourceRequestType.RELEASE
                        });
                        break;
@@ -924,11 +924,11 @@ namespace MDG.Invader.Systems
                 }
                 BuildCommand buildCommand = buildingUnits[builderIds[i]];
 
-                if (!buildCommand.structureId.IsValid())
+                if (!buildCommand.StructureId.IsValid())
                 {
                     StructureConfig structureConfig;
 
-                    switch (buildCommand.structureType)
+                    switch (buildCommand.StructureType)
                     {
                         case StructureSchema.StructureType.Claiming:
                             structureConfig = new ClaimConfig
@@ -937,14 +937,14 @@ namespace MDG.Invader.Systems
                                 health = 100,
                                 ownerId = clientGameObjectCreator.PlayerLink.EntityId.Id,
                                 structureType = StructureSchema.StructureType.Claiming,
-                                territoryId = buildCommand.territoryId.Value.Id
+                                territoryId = buildCommand.TerritoryId.Value.Id
                             };
                             break;
                         case StructureSchema.StructureType.Spawning:
                             structureConfig = new SpawnStructureConfig
                             {
-                                structureType = buildCommand.structureType,
-                                constructionTime = buildCommand.constructionTime,
+                                structureType = buildCommand.StructureType,
+                                constructionTime = buildCommand.ConstructionTime,
                                 constructing = true,
                                 health = 10,
                                 ownerId = clientGameObjectCreator.PlayerLink.EntityId.Id
@@ -955,10 +955,10 @@ namespace MDG.Invader.Systems
                     }
 
                     byte[] serialized = Converters.SerializeArguments(structureConfig);
-                    Debug.Log("BUild location " + buildCommand.buildLocation);
+                    Debug.Log("BUild location " + buildCommand.BuildLocation);
                     spawnRequestSystem.RequestSpawn(new SpawnSchema.SpawnRequest
                     {
-                        Position = buildCommand.buildLocation,
+                        Position = buildCommand.BuildLocation,
                         TypeToSpawn = GameEntityTypes.Structure
                     }, (EntityId structureId) =>
                     {
@@ -967,20 +967,20 @@ namespace MDG.Invader.Systems
                 }
                 else
                 {
-                    if (buildCommands.ContainsKey(buildCommand.builderId))
+                    if (buildCommands.ContainsKey(buildCommand.BuilderId))
                     {
                         continue;
                     }
                     // Otherwise send build requests.
                     // Maybe map   builder id to request id and that is the request cooldown.
                     // that way not sending every frame, but only after last build request processed.
-                    Debug.Log("Sending build request for structure with id " + buildCommand.structureId);
+                    Debug.Log("Sending build request for structure with id " + buildCommand.StructureId);
                     long requestId = commandSystem.SendCommand(new StructureSchema.Structure.Build.Request
                     {
-                        TargetEntityId = buildCommand.structureId,
+                        TargetEntityId = buildCommand.StructureId,
                         Payload = new StructureSchema.BuildRequestPayload
                         {
-                            BuilderId = buildCommand.builderId,
+                            BuilderId = buildCommand.BuilderId,
                             BuildRate = 1
                         }
                     });
@@ -993,8 +993,8 @@ namespace MDG.Invader.Systems
 
         private void OnStructureBuilt(EntityId structureId, BuildCommand buildCommand)
         {
-            buildCommand.structureId = structureId;
-            buildCommands.TryAdd(buildCommand.builderId, buildCommand);
+            buildCommand.StructureId = structureId;
+            buildCommands.TryAdd(buildCommand.BuilderId, buildCommand);
         }
 
         private void ProcessBuildResponses()
@@ -1009,8 +1009,8 @@ namespace MDG.Invader.Systems
                 {
                     case Improbable.Worker.CInterop.StatusCode.Success:
                         bool stopBuilding = response.ResponsePayload.Value.FinishedBuilding || response.ResponsePayload.Value.AlreadyBuilt;
-                        buildCommand.isBuilding = !stopBuilding;
-                        workerSystem.TryGetEntity(buildCommand.builderId, out Entity builderEntity);
+                        buildCommand.IsBuilding = !stopBuilding;
+                        workerSystem.TryGetEntity(buildCommand.BuilderId, out Entity builderEntity);
                         PostUpdateCommands.RemoveComponent(builderEntity, typeof(BuildCommand));
                         break;
                 }

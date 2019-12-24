@@ -24,7 +24,6 @@ namespace MDG.Invader.Monobehaviours.UserInterface
         [SerializeField]
         Text pointText;
 
-
         Dictionary<StructureType, StructureUIManager> TypeToOverlay;
      
 

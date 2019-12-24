@@ -149,6 +149,27 @@ namespace MDG.Common
 
         #endregion
        
+
+        public static string FloatToTimeStamp(float time)
+        {
+            // Get minutes and remaining time after remving minutes
+            int minutes = (int)(time / 60);
+            int seconds = (int)(time - (minutes * 60));
+
+            string minuteText = minutes.ToString();
+            if (minutes / 10 == 0)
+            {
+                minuteText = "0" + minuteText;
+            }
+            string secondText = seconds.ToString();
+            if (seconds / 10 == 0)
+            {
+                secondText = "0" + secondText;
+            }
+            string timestamp = $"{minuteText}:{secondText}";
+            return timestamp;
+        }
+
         #region UI related helper functions.
         public static IEnumerator UpdateFill(UnityEngine.UI.Image image, float pct, Action<float> OnFillUpdated = null, float timeToUpdate = 2.2f, System.Func<bool> interruptCheck = null)
         {

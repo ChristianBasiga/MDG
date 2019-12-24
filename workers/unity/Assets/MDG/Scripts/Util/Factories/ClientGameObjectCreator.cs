@@ -9,7 +9,6 @@ using Improbable;
 using MdgSchema.Player;
 using MDG.Common.Components;
 using MDG.Invader.Components;
-using MDG.Invader.Commands;
 using UnitSchema = MdgSchema.Units;
 using WeaponSchema = MdgSchema.Common.Weapon;
 using StructureSchema = MdgSchema.Common.Structure;

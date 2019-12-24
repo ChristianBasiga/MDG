@@ -2,37 +2,21 @@
 using MdgSchema.Common;
 using Unity.Entities;
 
+
 namespace MDG.Common.Components.Structure
 {
-
-    // Include enum of all job types accordingly.
-    // Actually this should be stored in dictionary somewhere. Add to datastructures folder.
-    enum SpawnStructureJobTypes
-    {
-
-    }
-
-    // Progress components for keeping track of action of structure and updating UI and other clients.
+    #region Components for structures used only in server side for structure monitor system
     public struct RunningJobComponent : IComponentData
     {
-        public float jobProgress;
-        public float estimatedJobCompletion;
-        public int jobId;
+        public float JobProgress;
+        public float EstimatedJobCompletion;
+        public int JobId;
     }
 
     public struct BuildingComponent : IComponentData
     {
-        public int buildProgress;
-        public int estimatedBuildCompletion;
+        public int BuildProgress;
+        public int EstimatedBuildCompletion;
     }
-
-    public struct ClaimingJob : IComponentData
-    {
-        public EntityId territoryId;
-    }
-
-    public struct SpawningJob : IComponentData
-    {
-        public GameEntityTypes typeSpawning;
-    }
+    #endregion
 }
