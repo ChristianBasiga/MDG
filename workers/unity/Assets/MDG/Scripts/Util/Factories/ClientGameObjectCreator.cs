@@ -79,6 +79,7 @@ namespace MDG
                 bool hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
                 string pathToPlayer = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
 
+                // Replace interpolaton to string builder.
 
                 GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
@@ -92,21 +93,13 @@ namespace MDG
                     // connection unless I can yield selecting role untill all spawned. Has to be connection param based to do it right.
                     playerLink.Worker.TryGetEntity(playerLink.EntityId, out Entity playerEntity);
                     GameMetadata.Component gameMetadata = playerLink.World.EntityManager.GetComponentData<GameMetadata.Component>(playerEntity);
-                    if (gameMetadata.Type == GameEntityTypes.Hunted)
+                    pathToPlayer = $"{pathToPlayer}/{gameMetadata.Type.ToString()}";
+                    if (gameMetadata.Type == GameEntityTypes.Defender)
                     {
-                        pathToPlayer = $"{pathToEntity}/Defender";
-                        isAlly = type == GameEntityTypes.Hunted;
-                    }
-                    else if (gameMetadata.Type == GameEntityTypes.Hunter)
-                    {
-                        pathToPlayer = $"{pathToEntity}/Invader";
-
+                        isAlly = type == GameEntityTypes.Defender;
                     }
                 }
-
-
-
-                if (type == GameEntityTypes.Hunter)
+                if (type == GameEntityTypes.Invader)
                 {
                     PlayerArchtypes.AddInvaderArchtype(worker.EntityManager, ecsEntity, hasAuthority);
                 }
@@ -114,7 +107,6 @@ namespace MDG
                 {
                     PlayerArchtypes.AddDefenderArchtype(worker.EntityManager, ecsEntity, hasAuthority, isAlly);
                 }
-
                 pathToPlayer = $"{pathToPlayer}/{type.ToString()}";
                 Debug.Log("Path to Player " + pathToPlayer);
                 GameObject g = CreateEntityObject(entity, linker, pathToPlayer);

@@ -12,8 +12,6 @@ namespace MDG.Defender.Monobehaviours
     public class PlayerLook : MonoBehaviour, IProcessInput
     {
 #pragma warning disable 649
-        [SerializeField]
-        private GameObject playerBody;
 
         [SerializeField]
         private GameObject playerCamera;

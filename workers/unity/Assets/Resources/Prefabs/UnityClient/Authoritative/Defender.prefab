@@ -1308,7 +1308,7 @@ GameObject:
   - component: {fileID: -8597465488288566245}
   - component: {fileID: 1641710286}
   m_Layer: 0
-  m_Name: HUNTED
+  m_Name: Defender
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1380,7 +1380,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72f6f3b7d442b644e8c7fcdb31687a6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerBody: {fileID: 2431640234666028470}
   playerCamera: {fileID: 6326104654939109282}
   target: {fileID: 6531976277096799103}
 --- !u!114 &789712602400511307
@@ -2449,7 +2448,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6326104654939109282}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -4.5}
+  m_LocalPosition: {x: 1.5, y: 0.5, z: -4.5}
   m_LocalScale: {x: 20, y: 20, z: 20}
   m_Children: []
   m_Father: {fileID: 6531976277096799103}

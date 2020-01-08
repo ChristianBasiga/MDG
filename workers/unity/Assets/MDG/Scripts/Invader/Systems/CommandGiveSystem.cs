@@ -221,7 +221,7 @@ namespace MDG.Invader.Systems
                     commandListener.TargetId = spatialEntityId.EntityId;
                     switch (gameMetadata.Type)
                     {
-                        case GameEntityTypes.Hunted:
+                        case GameEntityTypes.Defender:
                             commandListener.CommandType = CommandType.Attack;
                             break;
                         case GameEntityTypes.Resource:

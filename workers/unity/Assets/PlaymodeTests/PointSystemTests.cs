@@ -47,7 +47,7 @@ namespace PlaymodeTests
             EntityId spawnedId = new EntityId(-1);
             spawnReqSystem.RequestSpawn(new SpawnSchema.SpawnRequest
             {
-                TypeToSpawn = GameEntityTypes.Hunter
+                TypeToSpawn = GameEntityTypes.Invader
             }, (EntityId id) => {
                 spawnedId = id;
             });

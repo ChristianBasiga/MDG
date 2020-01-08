@@ -105,8 +105,8 @@ namespace MDG.Common.Systems.Spawn
                                 request.spawnMetaData)
                               ));
                         break;
-                    case CommonSchema.GameEntityTypes.Hunted:
-                    case CommonSchema.GameEntityTypes.Hunter:
+                    case CommonSchema.GameEntityTypes.Defender:
+                    case CommonSchema.GameEntityTypes.Invader:
                         sendCreatePlayerRequestSystem.RequestPlayerCreation(request.spawnMetaData,
                             (PlayerCreator.CreatePlayer.ReceivedResponse response) =>
                             {

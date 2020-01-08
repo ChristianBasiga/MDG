@@ -117,7 +117,7 @@ namespace MDG
         {
             Vector3 position = GameConfig.DefenderSpawnPoints[0];
             PlayerRole = type;
-            if (type == GameEntityTypes.Hunter)
+            if (type == GameEntityTypes.Invader)
             {
                 position = GameConfig.InvaderSpawnPoint;
             }
@@ -137,7 +137,7 @@ namespace MDG
         //Move this and the creation requests to manager and just have this call it from manager.
         private void OnCreatePlayerResponse(EntityId createdEntityId)
         {
-            if (PlayerRole == GameEntityTypes.Hunter)
+            if (PlayerRole == GameEntityTypes.Invader)
             {
                 AddInvaderSystems();
                 SpawnRequestSystem spawnRequestSystem = Worker.World.GetExistingSystem<SpawnRequestSystem>();
@@ -159,7 +159,7 @@ namespace MDG
                     },null, Converters.SerializeArguments(unitConfig));
                 }
             }
-            else if (PlayerRole == GameEntityTypes.Hunted)
+            else if (PlayerRole == GameEntityTypes.Defender)
             {
                 StartCoroutine(LoadDefenderUI());
             }

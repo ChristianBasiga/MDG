@@ -49,10 +49,10 @@ namespace MDG.Common.MonoBehaviours.Synchronizers
                     case GameSchema.WinConditions.TimedOut:
                         switch (clientConnector.PlayerRole)
                         {
-                            case GameEntityTypes.Hunted:
+                            case GameEntityTypes.Defender:
                                 OnWinGame?.Invoke("You have defended");
                                 break;
-                            case GameEntityTypes.Hunter:
+                            case GameEntityTypes.Invader:
                                 OnLoseGame?.Invoke("You have failed to invade");
                                 break;
                         }
@@ -60,10 +60,10 @@ namespace MDG.Common.MonoBehaviours.Synchronizers
                     case GameSchema.WinConditions.TerritoriesClaimed:
                         switch (clientConnector.PlayerRole)
                         {
-                            case GameEntityTypes.Hunted:
+                            case GameEntityTypes.Defender:
                                 OnLoseGame?.Invoke("You have failed to defend");
                                 break;
-                            case GameEntityTypes.Hunter:
+                            case GameEntityTypes.Invader:
                                 OnWinGame?.Invoke("You have invaded");
                                 break;
                         }

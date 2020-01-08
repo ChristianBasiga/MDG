@@ -39,7 +39,7 @@ namespace MDG.Templates
             {
                 Type = creationArgs.PlayerType
             }, serverAttribute);
-            template = creationArgs.PlayerType == GameEntityTypes.Hunter ?
+            template = creationArgs.PlayerType == GameEntityTypes.Invader ?
                     AddInvaderComponents(clientAttribute, template)
                 : AddDefenderComponents(clientAttribute, template);
             template.AddComponent(new EntityPosition.Snapshot

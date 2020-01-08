@@ -3,8 +3,8 @@ package mdg_schema.common;
 // Gotta think about how handle specific Units
 // specific resources & specific buildings.
 enum GameEntityTypes{
-    Hunted = 1;
-    Hunter = 2;
+    Defender = 1;
+    Invader = 2;
     Unit = 3;
     Resource = 4;
     Structure = 5;

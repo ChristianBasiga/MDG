@@ -46,7 +46,7 @@ namespace MDG.Defender.Monobehaviours
 
             ClientWorker.LoadedUI.TryGetValue("TeammateCanvas", out GameObject statusUpdater);
             teamStatusUpdater = statusUpdater.transform.GetChild(0).GetComponent<TeamStatusUpdater>();
-            var defenderLinks = ClientWorker.ClientGameObjectCreator.OtherPlayerLinks.FindAll((link) => link.CompareTag(GameEntityTypes.Hunted.ToString()));
+            var defenderLinks = ClientWorker.ClientGameObjectCreator.OtherPlayerLinks.FindAll((link) => link.CompareTag(GameEntityTypes.Defender.ToString()));
             for (int i = 0; i < defenderLinks.Count; ++i)
             {
                 teamStatusUpdater.AddTeammate(defenderLinks[i]);
@@ -57,7 +57,7 @@ namespace MDG.Defender.Monobehaviours
 
         private void OnEntityAdded(Improbable.Gdk.GameObjectCreation.SpatialOSEntity obj)
         {
-            if (obj.TryGetComponent(out GameMetadata.Component gameMetadata) && gameMetadata.Type == GameEntityTypes.Hunted)
+            if (obj.TryGetComponent(out GameMetadata.Component gameMetadata) && gameMetadata.Type == GameEntityTypes.Defender)
             {
                 GameObject linkedDefender = ClientWorker.ClientGameObjectCreator.GetLinkedGameObjectById(obj.SpatialOSEntityId);
                 teamStatusUpdater.AddTeammate(linkedDefender.GetComponent<LinkedEntityComponent>());
