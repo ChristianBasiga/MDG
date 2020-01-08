@@ -1,10 +1,7 @@
 ﻿using MDG.ScriptableObjects.Items;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using ScriptableObjectStructures = MDG.ScriptableObjects.Structures;
 
 namespace MDG.Invader.Monobehaviours.UserInterface
 {

@@ -1,18 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using MDG.Common.MonoBehaviours.Shopping;
-using MDG.ScriptableObjects.Items;
-using MDG.DTO;
-using Improbable.Gdk.Subscriptions;
 using Improbable.Gdk.Core;
-using MDG.Common;
+using Improbable.Gdk.Subscriptions;
+using MDG.DTO;
+using Unity.Entities;
+using UnityEngine;
 using StructureSchema = MdgSchema.Common.Structure;
 using TerritorySchema = MdgSchema.Game.Territory;
-using MdgSchema.Units;
-using MDG.Common.Systems.Spawn;
-using Unity.Entities;
 
 namespace MDG.Invader.Monobehaviours.Structures
 {
@@ -50,8 +42,8 @@ namespace MDG.Invader.Monobehaviours.Structures
 
             ClaimConfig claimConfig = new ClaimConfig
             {
-                territoryId = claimStructureComponent.TerritoryClaiming.Id,
-                constructionTime = structureMetadata.ConstructionTime
+                TerritoryId = claimStructureComponent.TerritoryClaiming.Id,
+                ConstructionTime = structureMetadata.ConstructionTime
             };
             commandSystem.SendCommand(new TerritorySchema.TerritoryStatus.UpdateClaim.Request
             {

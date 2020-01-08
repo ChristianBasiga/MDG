@@ -1,6 +1,4 @@
-﻿using Improbable;
-using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
+﻿using Improbable.Gdk.Core;
 using MDG.Common.Components;
 using MDG.Common.MonoBehaviours;
 using MDG.Invader.Components;
@@ -9,12 +7,12 @@ using MdgSchema.Common.Util;
 using MdgSchema.Units;
 using System;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 
-namespace MDG.Invader.Systems {
+namespace MDG.Invader.Systems
+{
 
     [DisableAutoCreation]
     [UpdateInGroup(typeof(EntitySelectionGroup))]
@@ -29,8 +27,8 @@ namespace MDG.Invader.Systems {
 
         public struct SelectionBounds
         {
-            public float3 botLeft;
-            public float3 topRight;
+            public float3 BotLeft;
+            public float3 TopRight;
         }
 
 
@@ -113,8 +111,8 @@ namespace MDG.Invader.Systems {
             {
                 Vector3f position = EntityPosition.Position;
                 // Check if position of clickable entity is within selection bounds.
-                if (position.X > selectionBounds.botLeft.x && position.Z > selectionBounds.botLeft.y
-                    && position.X < selectionBounds.topRight.x && position.Z < selectionBounds.topRight.y)
+                if (position.X > selectionBounds.BotLeft.x && position.Z > selectionBounds.BotLeft.y
+                    && position.X < selectionBounds.TopRight.x && position.Z < selectionBounds.TopRight.y)
                 {
                     clickable.Clicked = true;
                     clickable.ClickedEntityId = invaderId;

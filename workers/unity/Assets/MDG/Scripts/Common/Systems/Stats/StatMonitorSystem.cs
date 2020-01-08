@@ -1,14 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using Improbable.Gdk.Core;
+using Improbable.Gdk.Core.Commands;
+using MDG.Common.Components;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Collections;
-using StatSchema = MdgSchema.Common.Stats;
+using UnityEngine;
 using SpawnSchema = MdgSchema.Common.Spawn;
-using Improbable.Gdk.Core;
-using MDG.Common.Components;
-using Improbable.Gdk.Core.Commands;
+using StatSchema = MdgSchema.Common.Stats;
 
 namespace MDG.Common.Systems.Stat
 {

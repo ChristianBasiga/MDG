@@ -1,12 +1,12 @@
-﻿using System.Collections;
+﻿using Improbable.Gdk.Core;
 using System.Collections.Generic;
-using UnityEngine;
-using Unity.Entities;
 using Unity.Collections;
+using Unity.Entities;
+using UnityEngine;
 using InventorySchema = MdgSchema.Common.Inventory;
-using Improbable.Gdk.Core;
 
-namespace MDG.Common.Systems.Inventory {
+namespace MDG.Common.Systems.Inventory
+{
 
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]

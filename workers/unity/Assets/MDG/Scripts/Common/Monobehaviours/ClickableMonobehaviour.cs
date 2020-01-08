@@ -1,8 +1,4 @@
-﻿using Improbable.Gdk.Subscriptions;
-using MDG.Invader.Systems;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MDG.Common.MonoBehaviours
 {

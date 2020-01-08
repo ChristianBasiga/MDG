@@ -1,19 +1,17 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Unity.Entities;
-using Unity.Jobs;
-using Unity.Collections;
-using Improbable.Gdk.Core;
-using CollisionSchema = MdgSchema.Common.Collision;
-using PositionSchema = MdgSchema.Common.Position;
-using Improbable;
+﻿using Improbable.Gdk.Core;
+using MDG.Common.Systems.Position;
 using MdgSchema.Common;
 using MdgSchema.Common.Stats;
-using MDG.Common.Systems.Position;
 using MdgSchema.Common.Util;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using UnityEngine;
+using CollisionSchema = MdgSchema.Common.Collision;
+using PositionSchema = MdgSchema.Common.Position;
 
-namespace MDG.Common.Systems.Collision {
+namespace MDG.Common.Systems.Collision
+{
 
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SpatialOSUpdateGroup))]

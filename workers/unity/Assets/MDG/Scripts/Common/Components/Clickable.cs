@@ -1,7 +1,5 @@
-﻿using Unity.Entities;
-using Improbable.Gdk.Core;
-using UnityEngine;
-using System;
+﻿using Improbable.Gdk.Core;
+using Unity.Entities;
 
 namespace MDG.Common.Components
 {

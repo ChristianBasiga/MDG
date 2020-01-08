@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Unity.Entities;
-using Improbable.Gdk.Core;
-using MDG.Common.Components;
-using ResourceSchema = MdgSchema.Game.Resource;
+﻿using Improbable.Gdk.Core;
 using System;
-using MdgSchema.Common.Spawn;
+using System.Collections.Generic;
+using Unity.Entities;
+using UnityEngine;
+using ResourceSchema = MdgSchema.Game.Resource;
 
 namespace MDG.Common.Systems
 {

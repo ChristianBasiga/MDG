@@ -1,6 +1,4 @@
 ﻿using MDG.Invader.Monobehaviours.InputProcessors;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace MDG.Invader.Monobehaviours.UserInterface

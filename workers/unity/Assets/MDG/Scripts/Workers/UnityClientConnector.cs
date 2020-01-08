@@ -1,33 +1,28 @@
-﻿using System;
+﻿using Improbable;
 using Improbable.Gdk.Core;
+using Improbable.Gdk.Core.Commands;
 using Improbable.Gdk.GameObjectCreation;
 using Improbable.Gdk.PlayerLifecycle;
-using Improbable.Gdk.TransformSynchronization;
-using Improbable.Worker.CInterop;
-using MDG.Common.Systems;
-using MDG.Invader.Systems;
-using UnityEngine;
-using Improbable;
-using Unity.Entities;
-using MDG.Templates;
-using MDG.Common.Systems.Inventory;
-using MDG.Common.Systems.Spawn;
-using MDG.Common.Systems.Point;
-using MDG.Common.Systems.Weapon;
-using MDG.Common.Systems.Structure;
-using GameSchema = MdgSchema.Game;
-using MDG.ScriptableObjects.Game;
-using System.Collections;
-using MDG.Common.MonoBehaviours;
-using MdgSchema.Common;
-using MDG.Common;
-using MDG.DTO;
 using Improbable.Gdk.Subscriptions;
-using System.Collections.Generic;
+using Improbable.Worker.CInterop;
+using MDG.Common;
 using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours;
 using MDG.Common.MonoBehaviours.Synchronizers;
-using Improbable.Gdk.Core.Commands;
+using MDG.Common.Systems.Point;
+using MDG.Common.Systems.Spawn;
+using MDG.Common.Systems.Weapon;
+using MDG.DTO;
 using MDG.Game.Util.Pool;
+using MDG.Invader.Systems;
+using MDG.ScriptableObjects.Game;
+using MDG.Templates;
+using MdgSchema.Common;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using GameSchema = MdgSchema.Game;
 
 namespace MDG
 {
@@ -122,7 +117,7 @@ namespace MDG
         {
             Vector3 position = GameConfig.DefenderSpawnPoints[0];
             PlayerRole = type;
-            if (type == GameEntityTypes.Hunter)
+            if (type == GameEntityTypes.Invader)
             {
                 position = GameConfig.InvaderSpawnPoint;
             }
@@ -134,15 +129,15 @@ namespace MDG
                 TypeToSpawn = type
             }, OnCreatePlayerResponse, DTO.Converters.SerializeArguments(new DTO.PlayerConfig
             {
-                position = HelperFunctions.Vector3fFromUnityVector(position),
-                playerType = type
+                Position = HelperFunctions.Vector3fFromUnityVector(position),
+                PlayerType = type
             }));
         }
 
         //Move this and the creation requests to manager and just have this call it from manager.
         private void OnCreatePlayerResponse(EntityId createdEntityId)
         {
-            if (PlayerRole == GameEntityTypes.Hunter)
+            if (PlayerRole == GameEntityTypes.Invader)
             {
                 AddInvaderSystems();
                 SpawnRequestSystem spawnRequestSystem = Worker.World.GetExistingSystem<SpawnRequestSystem>();
@@ -152,9 +147,9 @@ namespace MDG
                 {
                     UnitConfig unitConfig = new UnitConfig
                     {
-                        ownerId = createdEntityId.Id,
-                        position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
-                        unitType = MdgSchema.Units.UnitTypes.Worker
+                        OwnerId = createdEntityId.Id,
+                        Position = HelperFunctions.Vector3fFromUnityVector(invaderUnitSpawnPoints[i]),
+                        UnitType = MdgSchema.Units.UnitTypes.Worker
                     };
                     spawnRequestSystem.RequestSpawn(new MdgSchema.Common.Spawn.SpawnRequest
                     {
@@ -164,7 +159,7 @@ namespace MDG
                     },null, Converters.SerializeArguments(unitConfig));
                 }
             }
-            else if (PlayerRole == GameEntityTypes.Hunted)
+            else if (PlayerRole == GameEntityTypes.Defender)
             {
                 StartCoroutine(LoadDefenderUI());
             }

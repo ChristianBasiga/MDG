@@ -1,31 +1,26 @@
-﻿using Improbable.Gdk.Subscriptions;
+﻿using Improbable.Gdk.Core;
+using Improbable.Gdk.GameObjectCreation;
+using Improbable.Gdk.Subscriptions;
+using MDG.Common;
+using MDG.Common.Interfaces;
+using MDG.Common.MonoBehaviours;
+using MDG.Common.MonoBehaviours.Shopping;
+using MDG.Common.MonoBehaviours.Synchronizers;
 using MDG.Invader.Components;
+using MDG.Invader.Monobehaviours.InputProcessors;
+using MDG.Invader.Monobehaviours.UserInterface;
 using MDG.Invader.Systems;
-using MdgSchema.Common;
-using System.Collections;
+using MDG.ScriptableObjects.Items;
+using MdgSchema.Common.Structure;
+using MdgSchema.Common.Util;
 using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using MDG.DTO;
-using MDG.Invader.Monobehaviours.UserInterface;
-using PointSchema = MdgSchema.Common.Point;
-using MDG.Common.MonoBehaviours.Shopping;
-using MDG.Common;
-using MDG.ScriptableObjects.Items;
 using UnityEngine.EventSystems;
-using MdgSchema.Common.Structure;
-using MDG.Invader.Monobehaviours.Structures;
-using MdgSchema.Common.Util;
-using Improbable.Gdk.GameObjectCreation;
-using System.Linq;
-using MDG.Common.MonoBehaviours;
-using Improbable.Gdk.Core;
-using MDG.Invader.Monobehaviours.InputProcessors;
-using MDG.Common.Interfaces;
-using MDG.Common.MonoBehaviours.Synchronizers;
 
-namespace MDG.Invader.Monobehaviours {
+namespace MDG.Invader.Monobehaviours
+{
 
     public class InvaderSynchronizer : MonoBehaviour, IPlayerSynchronizer
     {
@@ -118,12 +113,12 @@ namespace MDG.Invader.Monobehaviours {
             Vector3 position = HelperFunctions.GetMousePosition(inputCamera);
             commandGiveSystem.GiveBuildCommand(new BuildCommand
             {
-                buildLocation = new Vector3f(position.x, 20, position.z),
-                structureType = scriptableStructure.StructureType,
-                minDistanceToBuild = scriptableStructure.MinDistanceToBuild,
-                structureId = new Improbable.Gdk.Core.EntityId(-1),
-                constructionTime = scriptableStructure.ConstructionTime,
-                territoryId =  clickedTerritory
+                BuildLocation = new Vector3f(position.x, 20, position.z),
+                StructureType = scriptableStructure.StructureType,
+                MinDistanceToBuild = scriptableStructure.MinDistanceToBuild,
+                StructureId = new Improbable.Gdk.Core.EntityId(-1),
+                ConstructionTime = scriptableStructure.ConstructionTime,
+                TerritoryId =  clickedTerritory
             });
             clickedTerritory = new EntityId(-1);
         }
@@ -144,8 +139,8 @@ namespace MDG.Invader.Monobehaviours {
                 float3 topRight = new float3(math.max(convertedStart.x, convertedEnd.x), math.max(convertedStart.z, convertedEnd.z), 0);
                 selectionSystem.SetSelectionBounds(new SelectionSystem.SelectionBounds
                 {
-                    botLeft = botLeft,
-                    topRight = topRight
+                    BotLeft = botLeft,
+                    TopRight = topRight
                 });
             }
         }

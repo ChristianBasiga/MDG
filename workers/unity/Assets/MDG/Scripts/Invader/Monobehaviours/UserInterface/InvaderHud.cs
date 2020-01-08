@@ -1,12 +1,9 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using MDG;
 using MDG.Invader.Components;
 using MDG.Invader.Monobehaviours.Structures;
-using MdgSchema.Common.Point;
 using MdgSchema.Common.Structure;
 using MdgSchema.Units;
-using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
@@ -23,7 +20,6 @@ namespace MDG.Invader.Monobehaviours.UserInterface
 
         [SerializeField]
         Text pointText;
-
 
         Dictionary<StructureType, StructureUIManager> TypeToOverlay;
      

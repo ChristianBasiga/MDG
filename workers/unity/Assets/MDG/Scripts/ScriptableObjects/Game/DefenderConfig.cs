@@ -1,7 +1,4 @@
-﻿using Improbable;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 
 namespace MDG.ScriptableObjects.Game

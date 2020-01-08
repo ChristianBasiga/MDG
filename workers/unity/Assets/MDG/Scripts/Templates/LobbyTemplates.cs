@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using Improbable;
 using Improbable.Gdk.Core;
-using Improbable;
 
 namespace MDG.Lobby
 {

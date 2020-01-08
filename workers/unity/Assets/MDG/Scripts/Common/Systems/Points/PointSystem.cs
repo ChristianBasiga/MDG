@@ -1,12 +1,8 @@
-﻿using Unity.Entities;
-using Unity.Jobs;
-using Unity.Collections;
+﻿using Improbable.Gdk.Core;
 using System.Collections.Generic;
-using Improbable.Gdk.Core;
-using CommonComponents = MDG.Common.Components;
-using PointSchema = MdgSchema.Common.Point;
+using Unity.Entities;
 using Unity.Mathematics;
-using GameSchema = MdgSchema.Game;
+using PointSchema = MdgSchema.Common.Point;
 
 namespace MDG.Common.Systems.Point
 {

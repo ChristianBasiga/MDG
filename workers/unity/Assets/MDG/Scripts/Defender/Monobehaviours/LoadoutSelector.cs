@@ -1,17 +1,7 @@
-﻿using Improbable;
-using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
-using MDG.Common;
-using MDG.Common.Interfaces;
+﻿using MDG.Common.Interfaces;
 using MDG.Common.MonoBehaviours;
-using MDG.Common.Systems.Point;
-using MDG.Common.Systems.Spawn;
-using MDG.DTO;
 using MDG.ScriptableObjects.Game;
-using MDG.ScriptableObjects.Items;
-using MdgSchema.Common.Point;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using ScriptableStructures = MDG.ScriptableObjects.Structures;
 

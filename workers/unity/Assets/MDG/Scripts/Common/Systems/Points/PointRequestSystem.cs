@@ -1,10 +1,8 @@
-﻿using Unity.Entities;
-using System.Collections.Generic;
-using PointSchema = MdgSchema.Common.Point;
-using Improbable.Gdk.Core;
+﻿using Improbable.Gdk.Core;
 using System;
-using System.Linq;
-using Unity.Collections;
+using System.Collections.Generic;
+using Unity.Entities;
+using PointSchema = MdgSchema.Common.Point;
 
 namespace MDG.Common.Systems.Point
 {

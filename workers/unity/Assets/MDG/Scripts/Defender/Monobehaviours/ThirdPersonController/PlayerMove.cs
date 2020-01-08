@@ -5,8 +5,9 @@ using MDG.Common.MonoBehaviours;
 using MDG.ScriptableObjects.Game;
 using UnityEngine;
 using PositionSchema = MdgSchema.Common.Position;
-namespace MDG.Defender.Monobehaviours {
-    
+namespace MDG.Defender.Monobehaviours
+{
+
     public class PlayerMove : MonoBehaviour, IProcessInput
     {
         public delegate void PlayerMoveHandler(Vector3 position, Vector3 rotation);

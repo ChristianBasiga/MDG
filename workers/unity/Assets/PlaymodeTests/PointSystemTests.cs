@@ -17,7 +17,6 @@ using SpawnSystems = MDG.Common.Systems.Spawn;
 using SpawnSchema = MdgSchema.Common.Spawn;
 using PointSchema = MdgSchema.Common.Point;
 using PointSystems = MDG.Common.Systems.Point;
-using DefenderComponents = MDG.Defender.Components;
 namespace PlaymodeTests
 {
     public class PointSystemTests : IPrebuildSetup
@@ -48,7 +47,7 @@ namespace PlaymodeTests
             EntityId spawnedId = new EntityId(-1);
             spawnReqSystem.RequestSpawn(new SpawnSchema.SpawnRequest
             {
-                TypeToSpawn = GameEntityTypes.Hunter
+                TypeToSpawn = GameEntityTypes.Invader
             }, (EntityId id) => {
                 spawnedId = id;
             });

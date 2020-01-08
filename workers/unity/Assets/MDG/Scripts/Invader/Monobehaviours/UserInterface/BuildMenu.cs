@@ -1,8 +1,6 @@
 ﻿using MDG.ScriptableObjects.Items;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using static MDG.ScriptableObjects.Constants;
 using ScriptableObjectStructures = MDG.ScriptableObjects.Structures;
@@ -10,7 +8,12 @@ using ScriptableObjectStructures = MDG.ScriptableObjects.Structures;
 
 namespace MDG.Invader.Monobehaviours.UserInterface
 {
-    // Ideally spawn structure also uses this.
+    /// <summary>
+    /// Build menu is a generic User Interface monobehaviour.
+    /// - It is used for build menu of unit upon being selected by a Invader.
+    /// - It is used for menu of what kinda of units can spawn for Spawn Structure.
+    /// - It is used for add ons later for upgrading structures if I hve that.
+    /// </summary>
     public class BuildMenu : MonoBehaviour
     {
         MenuSlot[] menuSlots;
@@ -25,12 +28,8 @@ namespace MDG.Invader.Monobehaviours.UserInterface
 
         MenuSlot lastClicked;
         ResourceRequest menuSlotPrefabPromise;
-
-
         public string MenuSlotPrefabPath;
         public string MenuContentsPath;
-
-
         public void SetConfirmation(ConfirmQuery confirmationCall)
         {
             ConfirmCallback = confirmationCall;

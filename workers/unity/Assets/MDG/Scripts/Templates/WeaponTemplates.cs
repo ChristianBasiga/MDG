@@ -1,16 +1,14 @@
-﻿using Improbable;
-using Improbable.Gdk.Core;
-using WeaponSchema = MdgSchema.Common.Weapon;
-using PositionSchema = MdgSchema.Common.Position;
+﻿using Improbable.Gdk.Core;
+using MDG.Common;
+using MDG.DTO;
+using MdgSchema.Common;
+using MdgSchema.Common.Util;
+using Unity.Entities;
 using CollisionSchema = MdgSchema.Common.Collision;
 using CommonSchema = MdgSchema.Common;
-using MDG.DTO;
-using Unity.Entities;
-using MDG.Common;
-using Improbable.Gdk.PlayerLifecycle;
+using PositionSchema = MdgSchema.Common.Position;
 using StatSchema = MdgSchema.Common.Stats;
-using MdgSchema.Common.Util;
-using MdgSchema.Common;
+using WeaponSchema = MdgSchema.Common.Weapon;
 
 namespace MDG.Templates
 {
@@ -57,8 +55,8 @@ namespace MDG.Templates
             EntityId wielder, string prefabName, ProjectileConfig projectileConfig)
         {
             string serverAttribute = UnityGameLogicConnector.WorkerType;
-            CommonTemplates.AddRequiredGameEntityComponents(template, projectileConfig.startingPosition,
-                MdgSchema.Common.GameEntityTypes.Weapon, projectileConfig.projectileId);
+            CommonTemplates.AddRequiredGameEntityComponents(template, projectileConfig.StartingPosition,
+                MdgSchema.Common.GameEntityTypes.Weapon, projectileConfig.ProjectileId);
 
             template.AddComponent(new Owner.Snapshot
             {
@@ -67,8 +65,8 @@ namespace MDG.Templates
            
             template.AddComponent(new WeaponSchema.Weapon.Snapshot
             {
-                BaseDamage = projectileConfig.damage,
-                Durability = projectileConfig.maximumHits,
+                BaseDamage = projectileConfig.Damage,
+                Durability = projectileConfig.MaximumHits,
                 WielderId = wielder,
                 WeaponId = prefabName,
                 WeaponType = WeaponSchema.WeaponType.Projectile
@@ -77,28 +75,28 @@ namespace MDG.Templates
 
             template.AddComponent(new CommonSchema.TimeLimitation.Snapshot
             {
-                TimeLeft = projectileConfig.lifeTime
+                TimeLeft = projectileConfig.LifeTime
             }, serverAttribute);
 
             template.AddComponent(new StatSchema.MovementSpeed.Snapshot
             {
-                LinearSpeed = projectileConfig.projectileSpeed,
+                LinearSpeed = projectileConfig.ProjectileSpeed,
                 AngularSpeed = 0
             }, serverAttribute);
 
             template.AddComponent(new PositionSchema.LinearVelocity.Snapshot
             {
-                Velocity = projectileConfig.linearVelocity
+                Velocity = projectileConfig.LinearVelocity
             }, clientAttribute);
 
             template.AddComponent(new PositionSchema.AngularVelocity.Snapshot
             {
-                AngularVelocity = projectileConfig.angularVelocity
+                AngularVelocity = projectileConfig.AngularVelocity
             }, clientAttribute);
 
             template.AddComponent(new CollisionSchema.BoxCollider.Snapshot
             {
-                Dimensions = projectileConfig.dimensions,
+                Dimensions = projectileConfig.Dimensions,
                 IsTrigger = true,
                 Position = new Vector3f(0,0,0)
             }, serverAttribute);

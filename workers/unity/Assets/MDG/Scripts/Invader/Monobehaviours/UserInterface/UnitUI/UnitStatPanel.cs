@@ -1,15 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using MDG.Common.MonoBehaviours;
-using Improbable.Gdk.Core;
-using MDG;
+﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
 using MDG.Common;
-using Unity.Entities;
-using StatSchema = MdgSchema.Common.Stats;
+using MDG.Common.MonoBehaviours;
 using MdgSchema.Common;
+using Unity.Entities;
+using UnityEngine;
+using UnityEngine.UI;
+using StatSchema = MdgSchema.Common.Stats;
 
 namespace MDG.Invader.Monobehaviours
 {

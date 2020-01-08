@@ -1,16 +1,13 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using System.Collections;
+using MDG.Common;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine;
 using Unity.Entities;
-using StructureSchema = MdgSchema.Common.Structure;
+using UnityEngine;
 using CollisionSchema = MdgSchema.Common.Collision;
-
-using MDG.Common;
-using MDG.Common.Systems.Stat;
+using StructureSchema = MdgSchema.Common.Structure;
 
 namespace MDG.Defender.Monobehaviours.Traps
 {

@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using MDG.Common.MonoBehaviours.Synchronizers;
 using MdgSchema.Common;
-using Improbable.Gdk.Core;
+using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
-using MDG.Common.MonoBehaviours.Synchronizers;
 
 namespace MDG.Common.MonoBehaviours
 {
@@ -12,8 +10,6 @@ namespace MDG.Common.MonoBehaviours
     // Instead of UI Manager this is really MainOverlayUI.
     public class MainOverlayHUD : MonoBehaviour
     {
-
-
 #pragma warning disable 649
 
         [SerializeField]
@@ -21,12 +17,6 @@ namespace MDG.Common.MonoBehaviours
 
         [SerializeField]
         Text loadingScreen;
-
-        [SerializeField]
-        Canvas defenderHUD;
-
-        [SerializeField]
-        Canvas invaderHUD;
 
         [SerializeField]
         Camera uiCamera;
@@ -79,7 +69,7 @@ namespace MDG.Common.MonoBehaviours
         {
             if (Input.GetKeyDown(KeyCode.P))
             {
-                exitGameButton.gameObject.SetActive(exitGameButton.gameObject.activeInHierarchy);
+                exitGameButton.gameObject.SetActive(!exitGameButton.gameObject.activeInHierarchy);
             }
         }
 

@@ -1,17 +1,15 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Improbable.Gdk.Core;
-using Unity.Entities;
-using Unity.Jobs;
-using Unity.Collections;
-using PositionSchema = MdgSchema.Common.Position;
-using CollisionSchema = MdgSchema.Common.Collision;
-using Improbable;
+﻿using Improbable.Gdk.Core;
+using MDG.Common;
 using MDG.Invader.Components;
 using MdgSchema.Common;
-using MDG.Common;
 using MdgSchema.Common.Util;
+using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using UnityEngine;
+using CollisionSchema = MdgSchema.Common.Collision;
+using PositionSchema = MdgSchema.Common.Position;
 
 namespace MDG.Invader.Systems
 {
@@ -61,18 +59,18 @@ namespace MDG.Invader.Systems
                 }
                 else
                 {
-                    if (!rerouteComponent.applied)
+                    if (!rerouteComponent.Applied)
                     {
-                        linearVelocityComponent.Velocity = rerouteComponent.subDestination;
-                        rerouteComponent.applied = true;
+                        linearVelocityComponent.Velocity = rerouteComponent.SubDestination;
+                        rerouteComponent.Applied = true;
                     }
                     else
                     {
                         // I don't want to do this, cause will constantly reroute.
-                        Vector3f velocityTowardsDestination = HelperFunctions.Subtract(rerouteComponent.destination, EntityPosition.Position);
+                        Vector3f velocityTowardsDestination = HelperFunctions.Subtract(rerouteComponent.Destination, EntityPosition.Position);
                         linearVelocityComponent.Velocity = velocityTowardsDestination;
 
-                        Vector3 dest = HelperFunctions.Vector3fToVector3(rerouteComponent.destination);
+                        Vector3 dest = HelperFunctions.Vector3fToVector3(rerouteComponent.Destination);
                         Vector3 pos = HelperFunctions.Vector3fToVector3(EntityPosition.Position);
                         Vector3 dimensions = HelperFunctions.Vector3fToVector3(boxCollider.Dimensions);
                         float distance = Vector3.Distance(dest, pos);
@@ -295,10 +293,10 @@ namespace MDG.Invader.Systems
                     Debug.Log($"Adding reroute component to {scheduleRedirectJob.entityId}");
                     RerouteComponent rerouteComponent = new RerouteComponent
                     {
-                        destination = commandListener.TargetPosition,
-                        subDestination = HelperFunctions.Vector3fFromUnityVector(rerouteVector.Value),
-                        applied = false,
-                        framesPassed = 0
+                        Destination = commandListener.TargetPosition,
+                        SubDestination = HelperFunctions.Vector3fFromUnityVector(rerouteVector.Value),
+                        Applied = false,
+                        FramesPassed = 0
                     };
 
                     // Set destination as velocity plus current position to get destination

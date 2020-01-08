@@ -1,9 +1,6 @@
-﻿using Unity.Entities;
-using MDG.Invader.Commands;
-using Improbable.Gdk.Core;
-using UnityEngine;
-using Improbable;
+﻿using Improbable.Gdk.Core;
 using MdgSchema.Common.Util;
+using Unity.Entities;
 
 namespace MDG.Invader.Components
 {
@@ -14,6 +11,8 @@ namespace MDG.Invader.Components
         public Vector3f TargetPosition;
     }
 
+    // Atm used just as filter for only workers  in entity query.
+    // atm no real reason for this to be a component.
     public struct WorkerUnit : IComponentData
     {
 

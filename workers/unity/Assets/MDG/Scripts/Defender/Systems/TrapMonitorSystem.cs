@@ -1,11 +1,8 @@
 ﻿using Improbable.Gdk.Core;
-using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 using StructureSchema = MdgSchema.Common.Structure;
-using CollisionSchema = MdgSchema.Common.Collision;
 
 namespace MDG.Defender.Systems
 {

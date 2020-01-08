@@ -1,6 +1,5 @@
 ﻿using Improbable.Gdk.Subscriptions;
 using UnityEngine;
-using UnityEngine.UI;
 using TerritorySchema = MdgSchema.Game.Territory;
 namespace MDG.Common.MonoBehaviours.Synchronizers
 {

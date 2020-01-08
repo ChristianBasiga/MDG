@@ -1,23 +1,17 @@
-﻿using Unity.Entities;
-using Unity.Jobs;
-using Unity.Collections;
-using MDG.Invader.Components;
-using MDG.Common.Components;
-using Improbable.Gdk.Core;
-using MDG.Invader.Commands;
-using UnityEngine.Jobs;
-using MDG.Common.Systems;
-using MdgSchema.Common;
-using UnityEngine;
-using Unity.Mathematics;
-using MdgSchema.Units;
+﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using Improbable;
-using MDG.Invader.Monobehaviours;
 using MDG.Common;
-using MdgSchema.Common.Util;
+using MDG.Common.Components;
 using MDG.Common.MonoBehaviours;
-using Unity.Burst;
+using MDG.Invader.Components;
+using MdgSchema.Common;
+using MdgSchema.Common.Util;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using Unity.Mathematics;
+using UnityEngine;
+using UnityEngine.Jobs;
 
 namespace MDG.Invader.Systems
 {
@@ -77,8 +71,8 @@ namespace MDG.Invader.Systems
                     // Remove it, then add interrupt, to do rest of clean up.
                     entityCommandBuffer.AddComponent(index, entity, new CommandInterrupt
                     {
-                        interrupting = commandListener.CommandType,
-                        target = commandGiven.TargetId
+                        Interrupting = commandListener.CommandType,
+                        Target = commandGiven.TargetId
                     });
                     commandListener.CommandType = commandGiven.CommandType;
                     commandListener.TargetPosition = commandGiven.TargetPosition;
@@ -87,13 +81,13 @@ namespace MDG.Invader.Systems
                     switch (commandGiven.CommandType)
                     {
                         case CommandType.Move:
-                            entityCommandBuffer.AddComponent(index, entity, new MoveCommand { destination = commandGiven.TargetPosition});    
+                            entityCommandBuffer.AddComponent(index, entity, new MoveCommand { Destination = commandGiven.TargetPosition});    
                             break;
                         case CommandType.Attack:
-                            entityCommandBuffer.AddComponent(index, entity, new AttackCommand { target = commandGiven.TargetId });
+                            entityCommandBuffer.AddComponent(index, entity, new AttackCommand { Target = commandGiven.TargetId });
                             break;
                         case CommandType.Collect:
-                            entityCommandBuffer.AddComponent(index, entity, new CollectCommand { destination = commandGiven.TargetPosition, resourceId = commandGiven.TargetId });
+                            entityCommandBuffer.AddComponent(index, entity, new CollectCommand { Destination = commandGiven.TargetPosition, ResourceId = commandGiven.TargetId });
                             break;
                         case CommandType.Build:
                             entityCommandBuffer.AddComponent(index, entity, buildCommand.Value);
@@ -227,7 +221,7 @@ namespace MDG.Invader.Systems
                     commandListener.TargetId = spatialEntityId.EntityId;
                     switch (gameMetadata.Type)
                     {
-                        case GameEntityTypes.Hunted:
+                        case GameEntityTypes.Defender:
                             commandListener.CommandType = CommandType.Attack;
                             break;
                         case GameEntityTypes.Resource:

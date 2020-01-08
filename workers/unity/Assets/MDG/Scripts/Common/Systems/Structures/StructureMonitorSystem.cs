@@ -1,12 +1,11 @@
-﻿using System.Collections;
+﻿using Improbable.Gdk.Core;
 using System.Collections.Generic;
-using Unity.Entities;
 using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using UnityEngine;
 using StructureComponents = MDG.Common.Components.Structure;
 using StructureSchema = MdgSchema.Common.Structure;
-using Improbable.Gdk.Core;
-using UnityEngine;
-using Unity.Jobs;
 
 namespace MDG.Common.Systems.Structure
 {
@@ -82,8 +81,8 @@ namespace MDG.Common.Systems.Structure
                 {
                     entityCommandBuffer.AddComponent(jobIndex, entity, new StructureComponents.BuildingComponent
                     {
-                        estimatedBuildCompletion = structureMetadata.ConstructionTime,
-                        buildProgress = 0
+                        EstimatedBuildCompletion = structureMetadata.ConstructionTime,
+                        BuildProgress = 0
                     });
                 }
             }
@@ -102,9 +101,9 @@ namespace MDG.Common.Systems.Structure
             {
                 if (structureIdToSpeed.TryGetValue(c0.EntityId, out int constructionSpeed))
                 {
-                    c3.buildProgress += constructionSpeed;
-                    Debug.Log($"Build progress {c3.buildProgress}");
-                    if (c3.buildProgress >= c3.estimatedBuildCompletion)
+                    c3.BuildProgress += constructionSpeed;
+                    Debug.Log($"Build progress {c3.BuildProgress}");
+                    if (c3.BuildProgress >= c3.EstimatedBuildCompletion)
                     {
                         Debug.Log("BuildCompleted");
                         c2.Constructing = false;
@@ -133,20 +132,20 @@ namespace MDG.Common.Systems.Structure
             public void Execute(Entity entity, int index, [ReadOnly] ref SpatialEntityId spatialEntityId, ref StructureComponents.RunningJobComponent runningJobComponent)
             {
 
-                if (runningJobComponent.jobProgress >= runningJobComponent.estimatedJobCompletion)
+                if (runningJobComponent.JobProgress >= runningJobComponent.EstimatedJobCompletion)
                 {
                     completedJobPayloads.Enqueue(new CompleteJobPayload
                     {
                         entityId = spatialEntityId.EntityId,
-                        jobId = runningJobComponent.jobId
+                        jobId = runningJobComponent.JobId
                     });
                 }
                 else
                 {
-                    float remainingTime = runningJobComponent.jobProgress + deltaTime;
+                    float remainingTime = runningJobComponent.JobProgress + deltaTime;
                     // Bound it to estimated time incase a couple seconds off so that equality will go through properly.
-                    remainingTime = Mathf.Min(remainingTime, runningJobComponent.estimatedJobCompletion);
-                    runningJobComponent.jobProgress = remainingTime;
+                    remainingTime = Mathf.Min(remainingTime, runningJobComponent.EstimatedJobCompletion);
+                    runningJobComponent.JobProgress = remainingTime;
                     // Queue to send event for.
                     toSendEventsFor.Enqueue(new JobEventPayloadHeader
                     {
@@ -210,8 +209,8 @@ namespace MDG.Common.Systems.Structure
                 JobEventPayloadHeader jobEventPayloadHeader = jobsToSendEventsFor.Dequeue();
                 componentUpdateSystem.SendEvent(new StructureSchema.Structure.JobRunning.Event(new StructureSchema.JobRunEventPayload
                 {
-                    EstimatedJobCompletion = jobEventPayloadHeader.jobInfo.estimatedJobCompletion,
-                    JobProgress = jobEventPayloadHeader.jobInfo.jobProgress,
+                    EstimatedJobCompletion = jobEventPayloadHeader.jobInfo.EstimatedJobCompletion,
+                    JobProgress = jobEventPayloadHeader.jobInfo.JobProgress,
                 }), jobEventPayloadHeader.entityId);
 
             }
@@ -234,8 +233,8 @@ namespace MDG.Common.Systems.Structure
                 ConstructionPayloadHeader constructionPayloadHeader = constructionsToSendEventsFor.Dequeue();
                 componentUpdateSystem.SendEvent(new StructureSchema.Structure.Building.Event(new StructureSchema.BuildEventPayload
                 {
-                    BuildProgress = constructionPayloadHeader.buildInfo.buildProgress,
-                    EstimatedBuildCompletion = constructionPayloadHeader.buildInfo.estimatedBuildCompletion
+                    BuildProgress = constructionPayloadHeader.buildInfo.BuildProgress,
+                    EstimatedBuildCompletion = constructionPayloadHeader.buildInfo.EstimatedBuildCompletion
                 }), constructionPayloadHeader.entityId);
             }
             #endregion
@@ -287,9 +286,9 @@ namespace MDG.Common.Systems.Structure
                 jobIdToPayload[jobId] = jobRequest.Payload.JobData;
                 PostUpdateCommands.AddComponent(structureEntity, new StructureComponents.RunningJobComponent
                 {
-                    estimatedJobCompletion = jobRequest.Payload.EstimatedJobCompletion,
-                    jobProgress = 0,
-                    jobId = jobId
+                    EstimatedJobCompletion = jobRequest.Payload.EstimatedJobCompletion,
+                    JobProgress = 0,
+                    JobId = jobId
                 });
                 commandSystem.SendResponse(new StructureSchema.Structure.StartJob.Response
                 {

@@ -1,27 +1,21 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using MdgSchema.Lobby;
+﻿using Improbable;
 using Improbable.Gdk.Core;
-using Improbable;
-using Improbable.Gdk.PlayerLifecycle;
-using Improbable.Gdk.TransformSynchronization;
+using MDG.Common;
+using MDG.Common.Components;
+using MDG.DTO;
+using MDG.Invader.Components;
 using MdgSchema.Common;
+using MdgSchema.Common.Position;
+using MdgSchema.Common.Util;
+using MdgSchema.Units;
+using System.Collections.Generic;
+using Unity.Entities;
+using UnityEngine;
+using CollisionSchema = MdgSchema.Common.Collision;
 using InventorySchema = MdgSchema.Common.Inventory;
 using PointSchema = MdgSchema.Common.Point;
-using UnitsSchema = MdgSchema.Units;
-using UnitComponents = MDG.Invader.Components;
-using Unity.Entities;
-using MDG.Common.Components;
-using MDG.Invader.Components;
-using MdgSchema.Units;
-using CollisionSchema = MdgSchema.Common.Collision;
 using StatSchema = MdgSchema.Common.Stats;
-using MdgSchema.Common.Position;
-using MDG.DTO;
-using SpawnSchema = MdgSchema.Common.Spawn;
-using MDG.Common;
-using MdgSchema.Common.Util;
+using UnitsSchema = MdgSchema.Units;
 
 namespace MDG.Templates
 {
@@ -62,13 +56,13 @@ namespace MDG.Templates
             UnitConfig unitConfig = Converters.DeserializeArguments<UnitConfig>(spawnArgs);
             template.AddComponent(new Unit.Snapshot
             {
-                OwnerId = new EntityId(unitConfig.ownerId),
-                Type = unitConfig.unitType
+                OwnerId = new EntityId(unitConfig.OwnerId),
+                Type = unitConfig.UnitType
             }, serverAttribute);
 
             template.AddComponent(new Owner.Snapshot
             {
-                OwnerId = new EntityId(unitConfig.ownerId)
+                OwnerId = new EntityId(unitConfig.OwnerId)
             }, serverAttribute);
 
             template.AddComponent(new StatSchema.MovementSpeed.Snapshot
@@ -77,7 +71,7 @@ namespace MDG.Templates
                 AngularSpeed = 10.0f
             }, serverAttribute);
 
-            switch (unitConfig.unitType)
+            switch (unitConfig.UnitType)
             {
                 case UnitsSchema.UnitTypes.Worker:
                     MakeWorkerUnit(template, clientAttribute);

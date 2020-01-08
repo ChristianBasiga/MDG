@@ -1819,8 +1819,8 @@ GameObject:
   - component: {fileID: 5780798602553387440}
   - component: {fileID: -9139376717738645816}
   m_Layer: 0
-  m_Name: HUNTED
-  m_TagString: Untagged
+  m_Name: Defender
+  m_TagString: Defender
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

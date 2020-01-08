@@ -1,7 +1,4 @@
-﻿using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
-using System.Collections;
-using System.Collections.Generic;
+﻿using Improbable.Gdk.Subscriptions;
 using UnityEngine;
 using UnityEngine.UI;
 using StatSchema = MdgSchema.Common.Stats;

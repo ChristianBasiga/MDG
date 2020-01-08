@@ -1,13 +1,9 @@
-﻿using MdgSchema.Common;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
 
 
 namespace MDG.Game.Util.Pool
 {
-    // Tbh, should prob make this into single pool namespace instead.
     public class Reusable : MonoBehaviour
     {
         public event Action<GameObject> OnReuse;

@@ -1,36 +1,19 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using Improbable.Gdk.GameObjectCreation;
+﻿using Improbable;
 using Improbable.Gdk.Core;
-using Improbable.Gdk.Subscriptions;
+using Improbable.Gdk.GameObjectCreation;
 using Improbable.Gdk.PlayerLifecycle;
-using Unity.Entities;
-using Improbable;
-using MdgSchema.Player;
-using MDG.Common.Components;
-using MDG.Invader.Components;
-using MDG.Invader.Commands;
-using UnitSchema = MdgSchema.Units;
-using WeaponSchema = MdgSchema.Common.Weapon;
-using StructureSchema = MdgSchema.Common.Structure;
-using MdgSchema.Common;
-using Unity.Transforms;
-using MDG.Common.Systems;
-using Templates = MDG.Templates;
-using SpawnSystems = MDG.Common.Systems.Spawn;
-using InvaderSystems =  MDG.Invader.Systems;
-using MdgSchema.Units;
-using MDG.Templates;
-using MDG.DTO;
-using GameScriptableObjects = MDG.ScriptableObjects.Game;
-using MDG.Common;
-using MDG.Common.MonoBehaviours;
-using MDG.Common.Systems.Spawn;
-using MDG.ScriptableObjects.Game;
-using MdgSchema.Game.Territory;
-using StatSchema = MdgSchema.Common.Stats;
+using Improbable.Gdk.Subscriptions;
 using MDG.Common.MonoBehaviours.Synchronizers;
 using MDG.Game.Util.Pool;
+using MDG.Templates;
+using MdgSchema.Common;
+using MdgSchema.Game.Territory;
+using System.Collections.Generic;
+using Unity.Entities;
+using UnityEngine;
+using StructureSchema = MdgSchema.Common.Structure;
+using UnitSchema = MdgSchema.Units;
+using WeaponSchema = MdgSchema.Common.Weapon;
 
 namespace MDG
 {
@@ -71,7 +54,7 @@ namespace MDG
             }
         }
 
-        public List<LinkedEntityComponent> otherPlayerLinks { private set; get; }
+        public List<LinkedEntityComponent> OtherPlayerLinks { private set; get; }
 
         public ClientGameObjectCreator(IEntityGameObjectCreator _default, Unity.Entities.World world, string workerType, PoolManager poolManager)
         {
@@ -80,7 +63,7 @@ namespace MDG
             this._workerType = workerType;
             this.poolManager = poolManager;
             EntityToGameObjects = new Dictionary<EntityId, GameObject>();
-            otherPlayerLinks = new List<LinkedEntityComponent>();
+            OtherPlayerLinks = new List<LinkedEntityComponent>();
             componentUpdateSystem = world.GetExistingSystem<ComponentUpdateSystem>();
         }
 
@@ -96,6 +79,7 @@ namespace MDG
                 bool hasAuthority = PlayerLifecycleHelper.IsOwningWorker(entity.SpatialOSEntityId, _world);
                 string pathToPlayer = hasAuthority ? $"{pathToEntity}/Authoritative" : pathToEntity;
 
+                // Replace interpolaton to string builder.
 
                 GameMetadata.Component gameMetaData = entity.GetComponent<GameMetadata.Component>();
                 WorkerSystem worker = _world.GetExistingSystem<WorkerSystem>();
@@ -109,21 +93,13 @@ namespace MDG
                     // connection unless I can yield selecting role untill all spawned. Has to be connection param based to do it right.
                     playerLink.Worker.TryGetEntity(playerLink.EntityId, out Entity playerEntity);
                     GameMetadata.Component gameMetadata = playerLink.World.EntityManager.GetComponentData<GameMetadata.Component>(playerEntity);
-                    if (gameMetadata.Type == GameEntityTypes.Hunted)
+                    pathToPlayer = $"{pathToPlayer}/{gameMetadata.Type.ToString()}";
+                    if (gameMetadata.Type == GameEntityTypes.Defender)
                     {
-                        pathToPlayer = $"{pathToEntity}/Defender";
-                        isAlly = type == GameEntityTypes.Hunted;
-                    }
-                    else if (gameMetadata.Type == GameEntityTypes.Hunter)
-                    {
-                        pathToPlayer = $"{pathToEntity}/Invader";
-
+                        isAlly = type == GameEntityTypes.Defender;
                     }
                 }
-
-
-
-                if (type == GameEntityTypes.Hunter)
+                if (type == GameEntityTypes.Invader)
                 {
                     PlayerArchtypes.AddInvaderArchtype(worker.EntityManager, ecsEntity, hasAuthority);
                 }
@@ -131,7 +107,6 @@ namespace MDG
                 {
                     PlayerArchtypes.AddDefenderArchtype(worker.EntityManager, ecsEntity, hasAuthority, isAlly);
                 }
-
                 pathToPlayer = $"{pathToPlayer}/{type.ToString()}";
                 Debug.Log("Path to Player " + pathToPlayer);
                 GameObject g = CreateEntityObject(entity, linker, pathToPlayer);
@@ -139,7 +114,7 @@ namespace MDG
                 if (!hasAuthority)
                 {
                     g.tag = type.ToString();
-                    otherPlayerLinks.Add(linkedEntityComponent);
+                    OtherPlayerLinks.Add(linkedEntityComponent);
                 }
                 else
                 {
@@ -222,9 +197,8 @@ namespace MDG
         {
             Debug.Log($"Deleted entity {entityId}");
             _default.OnEntityRemoved(entityId);
-            GameObject linkedGameObject;
 
-            if (EntityToGameObjects.TryGetValue(entityId, out linkedGameObject) && linkedGameObject != null)
+            if (EntityToGameObjects.TryGetValue(entityId, out GameObject linkedGameObject) && linkedGameObject != null)
             {
                 // If not updating health then they're not deleted from damaging.
                 // need cleaner way to determine if killed via orphaning.
@@ -272,8 +246,7 @@ namespace MDG
 
         public GameObject GetLinkedGameObjectById(EntityId entityId)
         {
-            GameObject linkedObject = null;
-            if (!EntityToGameObjects.TryGetValue(entityId, out linkedObject))
+            if (!EntityToGameObjects.TryGetValue(entityId, out GameObject linkedObject))
             {
             }
             return linkedObject;

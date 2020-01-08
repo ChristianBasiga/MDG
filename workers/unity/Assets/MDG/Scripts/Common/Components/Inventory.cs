@@ -1,14 +1,13 @@
-﻿using Improbable.Gdk.Core;
-using Unity.Entities;
+﻿using Unity.Entities;
 
 namespace MDG.Common.Components
 {
     // Remove at end of tick, prob fine for now but will do manual removal later.
     // incase many pendings that may execute over multiple frames.
-   
+
     // Added to every entity that needs addition to Inventory.
-   // [RemoveAtEndOfTick]
-   // FOr easier testing manually removing after request has been sent and for more control.
+    // [RemoveAtEndOfTick]
+    // FOr easier testing manually removing after request has been sent and for more control.
     public struct PendingInventoryAddition : IComponentData
     {
         public int ItemId;

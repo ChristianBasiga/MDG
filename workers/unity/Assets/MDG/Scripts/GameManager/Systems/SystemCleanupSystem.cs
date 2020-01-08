@@ -1,15 +1,11 @@
 ﻿using Improbable.Gdk.Core;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Entities;
-using GameSchema = MdgSchema.Game;
-using PlayerSchema = MdgSchema.Player;
-using System.Linq;
-using MdgSchema.Common;
-using Unity.Collections;
-using Unity.Jobs;
 using Improbable.Gdk.Core.Commands;
-using MDG.Game.Systems;
+using MdgSchema.Common;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
 namespace MDG.Game.Systems
 {
     [DisableAutoCreation]

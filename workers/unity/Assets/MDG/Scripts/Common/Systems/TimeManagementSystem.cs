@@ -1,13 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Improbable.Gdk.Core;
+using Improbable.Gdk.Core.Commands;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Collections;
-using MDG.Common.Components;
 using CommonSchema = MdgSchema.Common;
-using StatSchema = MdgSchema.Common.Stats;
-using Improbable.Gdk.Core;
-using Improbable.Gdk.Core.Commands;
 
 namespace MDG.Common.Systems
 {

@@ -1,6 +1,5 @@
 ﻿using Improbable.Gdk.Core;
 using Improbable.Gdk.Subscriptions;
-using MDG.Common.MonoBehaviours;
 using MDG.Common.MonoBehaviours.Shopping;
 using MDG.DTO;
 using MDG.Invader.Monobehaviours.UserInterface;
@@ -8,7 +7,6 @@ using MDG.Invader.Systems;
 using MDG.ScriptableObjects.Items;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using StructureSchema = MdgSchema.Common.Structure;
 
@@ -138,8 +136,8 @@ namespace MDG.Invader.Monobehaviours.Structures
             ShopItemDto shopItemDto = Converters.ShopItemToDto(shopItem);
             PurchasePayload purchasePayload = new PurchasePayload
             {
-                shopItem = shopItemDto,
-                purchaserId = purchaser.EntityId.Id
+                ShopItem = shopItemDto,
+                PurchaserId = purchaser.EntityId.Id
             };
 
             if (jobQueue[nextJobIndex] != null)

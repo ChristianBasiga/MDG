@@ -1,17 +1,15 @@
 ﻿using Improbable.Gdk.Core;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Entities;
-using Unity.Collections;
-using WeaponSchema = MdgSchema.Common.Weapon;
-using CollisionSchema = MdgSchema.Common.Collision;
-using StatSchema = MdgSchema.Common.Stats;
-using PointSchema = MdgSchema.Common.Point;
-using MDG.Common.Components.Weapon;
-using MdgSchema.Common.Collision;
 using Improbable.Gdk.Core.Commands;
-using Unity.Jobs;
 using MdgSchema.Common;
+using MdgSchema.Common.Collision;
+using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using CollisionSchema = MdgSchema.Common.Collision;
+using PointSchema = MdgSchema.Common.Point;
+using StatSchema = MdgSchema.Common.Stats;
+using WeaponSchema = MdgSchema.Common.Weapon;
 
 namespace MDG.Common.Systems.Weapon
 {
@@ -146,12 +144,6 @@ namespace MDG.Common.Systems.Weapon
             destroyedWeapons.Dispose();
         }
 
-        // Update UnitRerouteSystem later to also work off like this isntead of off events
-        // entityQuery faster than my query yo.
-        // Need to jobify this. Also I REALLY need to move to server.
-        // Need to add team component or something or check owner ids respectively.
-        // down line, for now its okay.
-        // Should prioritized that honeslty tho.
         private void ProcessWeaponCollisions() {
             
             Entities.With(weaponCollisionQuery).ForEach((Entity entity, ref SpatialEntityId spatialEntityId, ref WeaponSchema.Weapon.Component weaponComponent, ref WeaponSchema.Damage.Component damageComponent,

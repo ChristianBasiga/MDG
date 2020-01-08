@@ -1,15 +1,12 @@
-﻿using Improbable.Gdk.Subscriptions;
-using MDG.Common.Systems.Spawn;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using SpawnSchema = MdgSchema.Common.Spawn;
-using MDG.DTO;
-using Improbable;
+﻿using Improbable.Gdk.Core;
+using Improbable.Gdk.Subscriptions;
 using MDG.Common;
-using Improbable.Gdk.Core;
+using MDG.Common.Systems.Spawn;
+using MDG.DTO;
 using MDG.ScriptableObjects.Weapons;
 using MdgSchema.Common.Util;
+using UnityEngine;
+using SpawnSchema = MdgSchema.Common.Spawn;
 
 namespace MDG.Defender.Monobehaviours
 {
@@ -61,11 +58,11 @@ namespace MDG.Defender.Monobehaviours
                 Vector3f bulletLinearVelocity = HelperFunctions.Scale(HelperFunctions.Vector3fFromUnityVector(ray.direction), projectile.ProjectileSpeed);
 
                 ProjectileConfig projectileConfig = Converters.ProjectileToProjectileConfig(projectile);
-                projectileConfig.startingPosition = bulletStartingPosition;
-                projectileConfig.linearVelocity = bulletLinearVelocity;
+                projectileConfig.StartingPosition = bulletStartingPosition;
+                projectileConfig.LinearVelocity = bulletLinearVelocity;
 
                 WeaponMetadata weaponMetadata = Converters.WeaponToWeaponMetadata(Weapon);
-                weaponMetadata.wielderId = linkedEntityComponent.EntityId.Id;
+                weaponMetadata.WielderId = linkedEntityComponent.EntityId.Id;
 
                 byte[] serializedWeapondata = Converters.SerializeArguments(projectileConfig);
                 byte[] serializedWeaponMetadata = Converters.SerializeArguments(weaponMetadata);

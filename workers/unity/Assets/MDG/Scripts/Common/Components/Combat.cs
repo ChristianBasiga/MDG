@@ -1,8 +1,9 @@
-﻿using Improbable.Gdk.Core;
-using Unity.Entities;
+﻿using Unity.Entities;
 
 namespace MDG.Common.Components
 {
+
+    // This should really be spatial component tbh.
     public struct CombatMetadata : IComponentData
     {
         public float attackCooldown;

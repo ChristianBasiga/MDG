@@ -1,8 +1,6 @@
 ﻿using Improbable.Gdk.Subscriptions;
 using MdgSchema.Common;
 using MdgSchema.Common.Util;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 

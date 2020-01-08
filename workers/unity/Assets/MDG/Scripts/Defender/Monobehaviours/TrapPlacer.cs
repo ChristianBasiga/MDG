@@ -6,8 +6,8 @@ using MDG.Common.Systems.Spawn;
 using MDG.DTO;
 using MdgSchema.Common.Point;
 using MdgSchema.Common.Util;
-using UnityEngine;
 using System.Linq;
+using UnityEngine;
 using ScriptableStructures = MDG.ScriptableObjects.Structures;
 
 namespace MDG.Defender.Monobehaviours
@@ -68,13 +68,13 @@ namespace MDG.Defender.Monobehaviours
             SpawnRequestSystem spawnRequestSystem = linkedEntityComponent.World.GetExistingSystem<SpawnRequestSystem>();
             TrapConfig trapConfig = new TrapConfig
             {
-                prefabName = trap.PrefabPath,
+                PrefabName = trap.PrefabPath,
                 Damage = trap.Damage,
-                structureType = MdgSchema.Common.Structure.StructureType.Trap,
+                StructureType = MdgSchema.Common.Structure.StructureType.Trap,
                 ColliderDimensions = HelperFunctions.Vector3fFromUnityVector(trap.ColliderDimensions),
-                constructionTime = trap.SetupTime,
+                ConstructionTime = trap.SetupTime,
                 OneTimeUse = trap.OneTimeUse,
-                ownerId = linkedEntityComponent.EntityId.Id
+                OwnerId = linkedEntityComponent.EntityId.Id
             };
             Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit[] raycastHits = Physics.RaycastAll(ray, Mathf.Infinity);

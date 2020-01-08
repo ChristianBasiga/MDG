@@ -1,5 +1,4 @@
-﻿using Improbable;
-using Improbable.Gdk.Core;
+﻿using Improbable.Gdk.Core;
 using MdgSchema.Common.Util;
 using System.Collections.Generic;
 using Unity.Collections;

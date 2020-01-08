@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-//using log4net;
+﻿//using log4net;
 
 namespace MDG.Logging
 {

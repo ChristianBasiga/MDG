@@ -4,10 +4,9 @@ namespace MDG.Invader.Components
 {
     public struct RerouteComponent : IComponentData
     {
-        public Vector3f destination;
-        public Vector3f subDestination;
-        public int framesPassed;
-        public bool applied;
-
+        public Vector3f Destination;
+        public Vector3f SubDestination;
+        public int FramesPassed;
+        public bool Applied;
     }
 }

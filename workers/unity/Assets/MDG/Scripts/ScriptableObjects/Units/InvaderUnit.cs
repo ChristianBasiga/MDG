@@ -1,9 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using MDG.ScriptableObjects.Items;
 using UnityEngine;
-using WeaponSchema = MdgSchema.Common.Weapon;
 using UnitSchema = MdgSchema.Units;
-using MDG.ScriptableObjects.Items;
+using WeaponSchema = MdgSchema.Common.Weapon;
 
 namespace MDG.ScriptableObjects.Units
 {

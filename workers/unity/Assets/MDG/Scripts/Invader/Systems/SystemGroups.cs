@@ -1,6 +1,4 @@
 ﻿using Improbable.Gdk.Core;
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Entities;
 
 namespace MDG.Invader.Systems
